@@ -32,7 +32,7 @@ jobs:
       - name: Run linting
         run: npm run lint
 
-      - name: Run type checking
+      - name: Run build
         run: npm run build
 
       - name: Run tests (if available)
@@ -56,13 +56,13 @@ jobs:
           dotnet-version: '8.0.x'
 
       - name: Restore dependencies
-        run: dotnet restore
+        run: dotnet restore Home4Paws.sln
 
-      - name: Build
-        run: dotnet build --no-restore --configuration Release
+      - name: Build solution
+        run: dotnet build Home4Paws.sln --no-restore --configuration Release
 
       - name: Run tests
-        run: dotnet test --no-build --configuration Release --verbosity normal
+        run: dotnet test Home4Paws.sln --no-build --configuration Release --verbosity normal
 
   # Optional: Only run if both frontend and backend pass
   deployment-ready:
