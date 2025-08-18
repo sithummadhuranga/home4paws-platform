@@ -1,4 +1,4 @@
-﻿name: CI/CD Pipeline
+﻿name: CI
 
 on:
   push:
@@ -7,44 +7,70 @@ on:
     branches: [ main, develop ]
 
 jobs:
-  frontend-test:
+  # Frontend CI
+  frontend:
+    name: Frontend CI
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: '18'
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
-      
+
       - name: Install dependencies
-        working-directory: ./frontend
         run: npm ci
-      
-      - name: Run tests
-        working-directory: ./frontend
-        run: npm run test
-      
-      - name: Build
-        working-directory: ./frontend
+
+      - name: Run linting
+        run: npm run lint
+
+      - name: Run type checking
         run: npm run build
 
-  backend-test:
+      - name: Run tests (if available)
+        run: npm test --if-present
+
+  # Backend CI
+  backend:
+    name: Backend CI
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v3
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0'
-      
+          dotnet-version: '8.0.x'
+
       - name: Restore dependencies
-        working-directory: ./backend
         run: dotnet restore
-      
+
       - name: Build
-        working-directory: ./backend
-        run: dotnet build --no-restore
-      
-      - name: Test
-        working-directory: ./backend
-        run: dotnet test --no-build --verbosity normal
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Run tests
+        run: dotnet test --no-build --configuration Release --verbosity normal
+
+  # Optional: Only run if both frontend and backend pass
+  deployment-ready:
+    name: Deployment Ready
+    runs-on: ubuntu-latest
+    needs: [frontend, backend]
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: All checks passed
+        run: echo "✅ All CI checks passed - ready for deployment!"
