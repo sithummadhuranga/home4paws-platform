@@ -1,6 +1,6 @@
 "use client"
 
-import React, { createContext, useContext, useState, useEffect } from 'react'
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
 
 interface User {
   id: string
@@ -43,11 +43,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
-  useEffect(() => {
-    checkAuthStatus()
+  const refreshToken = useCallback(async (): Promise<boolean> => {
+    try {
+      const refreshTokenValue = localStorage.getItem('refreshToken')
+      if (!refreshTokenValue) return false
+
+      const response = await fetch(`${getApiUrl()}/api/auth/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken: refreshTokenValue })
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        localStorage.setItem('accessToken', data.tokens.accessToken)
+        localStorage.setItem('refreshToken', data.tokens.refreshToken)
+        setUser(data.user)
+        return true
+      } else {
+        localStorage.removeItem('accessToken')
+        localStorage.removeItem('refreshToken')
+        return false
+      }
+    } catch (error) {
+      console.error('Token refresh error:', error)
+      return false
+    }
   }, [])
 
-  const checkAuthStatus = async () => {
+  const checkAuthStatus = useCallback(async () => {
     try {
       const token = localStorage.getItem('accessToken')
       if (!token) {
@@ -72,7 +97,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [refreshToken])
+
+  useEffect(() => {
+    checkAuthStatus()
+  }, [checkAuthStatus])
 
   const login = async (email: string, password: string, rememberMe = false) => {
     try {
@@ -160,35 +189,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.removeItem('accessToken')
       localStorage.removeItem('refreshToken')
       setUser(null)
-    }
-  }
-
-  const refreshToken = async (): Promise<boolean> => {
-    try {
-      const refreshTokenValue = localStorage.getItem('refreshToken')
-      if (!refreshTokenValue) return false
-
-      const response = await fetch(`${getApiUrl()}/api/auth/refresh`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refreshToken: refreshTokenValue })
-      })
-
-      const data = await response.json()
-
-      if (data.success) {
-        localStorage.setItem('accessToken', data.tokens.accessToken)
-        localStorage.setItem('refreshToken', data.tokens.refreshToken)
-        setUser(data.user)
-        return true
-      } else {
-        localStorage.removeItem('accessToken')
-        localStorage.removeItem('refreshToken')
-        return false
-      }
-    } catch (error) {
-      console.error('Token refresh error:', error)
-      return false
     }
   }
 

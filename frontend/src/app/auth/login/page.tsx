@@ -34,7 +34,7 @@ export default function LoginPage() {
       } else {
         setError(result.message)
       }
-    } catch (error) {
+    } catch (err) {
       setError("An unexpected error occurred. Please try again.")
     }
   }
@@ -181,7 +181,7 @@ export default function LoginPage() {
           {/* Footer */}
           <div className="text-center mt-8 pt-6 border-t border-gray-100 dark:border-gray-700">
             <p className="text-gray-600 dark:text-gray-400">
-              Don't have an account?{" "}
+              Don&apos;t have an account?{" "}
               <Link href="/auth/signup" className="text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 font-medium transition-colors duration-200">
                 Sign up for free
               </Link>
