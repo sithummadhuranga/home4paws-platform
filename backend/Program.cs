@@ -1,25 +1,48 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
+using Home4Paws.API.DataManager;
+using Home4Paws.API.Services.Auth;
+using Home4Paws.API.Helpers;
+using Home4Paws.API.Middleware;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container
+builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Add CORS
+// Add Memory Cache for session management
+builder.Services.AddMemoryCache();
+
+// Enhanced CORS Configuration
+var allowedOrigins = builder.Configuration.GetSection("CorsSettings:AllowedOrigins").Get<string[]>()
+    ?? ["http://localhost:3000", "http://localhost:3001"];
+
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(corsBuilder =>
     {
-        var allowedOrigins = builder.Configuration.GetSection("CorsSettings:AllowedOrigins").Get<string[]>()
-            ?? new[] { "http://localhost:3000" };
-
         corsBuilder
             .WithOrigins(allowedOrigins)
             .AllowAnyMethod()
             .AllowAnyHeader()
-            .AllowCredentials();
+            .AllowCredentials()
+            .SetPreflightMaxAge(TimeSpan.FromSeconds(86400)); // Cache preflight for 24 hours
+    });
+
+    // Add a more permissive policy for development
+    options.AddPolicy("DevelopmentPolicy", corsBuilder =>
+    {
+        corsBuilder
+            .WithOrigins("http://localhost:3000", "http://localhost:3001", "https://localhost:3000")
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials()
+            .SetIsOriginAllowed(_ => builder.Environment.IsDevelopment()); // Allow any origin in dev
     });
 });
 
@@ -30,11 +53,33 @@ builder.Services.ConfigureHttpJsonOptions(options =>
     options.SerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
 });
 
+// Add JWT Authentication
+var jwtSettings = builder.Configuration.GetSection("JwtSettings");
+var secretKey = jwtSettings.GetValue<string>("SecretKey") ?? throw new ArgumentNullException("JwtSettings:SecretKey", "JWT SecretKey is required");
+var issuer = jwtSettings.GetValue<string>("Issuer") ?? throw new ArgumentNullException("JwtSettings:Issuer", "JWT Issuer is required");
+var audience = jwtSettings.GetValue<string>("Audience") ?? throw new ArgumentNullException("JwtSettings:Audience", "JWT Audience is required");
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = issuer,
+            ValidAudience = audience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(secretKey)),
+            ClockSkew = TimeSpan.Zero
+        };
+    });
+
 // Add Entity Framework with PostgreSQL (Supabase)
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 if (!string.IsNullOrEmpty(connectionString))
 {
-    builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    builder.Services.AddDbContext<Home4Paws.API.Data.ApplicationDbContext>(options =>
     {
         options.UseNpgsql(connectionString, npgsqlOptions =>
         {
@@ -49,6 +94,13 @@ if (!string.IsNullOrEmpty(connectionString))
         }
     });
 }
+
+// Register Dapper for lightweight queries
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+
+// Register Services
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<JwtHelper>();
 
 // Add health checks
 builder.Services.AddHealthChecks()
@@ -66,7 +118,13 @@ logger.LogInformation("🐾 {AppName}", appName);
 logger.LogInformation("{EnvironmentBadge} Environment: {Environment}", environmentBadge, app.Environment.EnvironmentName.ToUpper());
 logger.LogInformation("📊 Database: {DatabaseStatus}", !string.IsNullOrEmpty(connectionString) ? "✅ Configured" : "❌ Not Configured");
 logger.LogInformation("🌐 Base URL: {BaseUrl}", builder.Configuration.GetValue<string>("ExternalServices:BaseUrl"));
+logger.LogInformation("🔐 JWT: ✅ Configured with {Issuer}", issuer);
+logger.LogInformation("💾 Cache: ✅ Memory Cache Enabled");
+logger.LogInformation("🌍 CORS: ✅ Configured for origins: {Origins}", string.Join(", ", allowedOrigins));
 logger.LogInformation("═══════════════════════════════════════════════════════");
+
+// Add Global Exception Middleware
+app.UseMiddleware<GlobalExceptionMiddleware>();
 
 // Configure the HTTP request pipeline
 var enableSwagger = builder.Configuration.GetValue<bool>("Features:EnableSwagger", false);
@@ -101,12 +159,33 @@ if (app.Environment.IsProduction())
     logger.LogInformation("🔒 Security: ✅ HSTS and Exception Handling enabled");
 }
 
-app.UseHttpsRedirection();
-app.UseCors();
+// IMPORTANT: CORS must be before Authentication/Authorization
+// Remove HTTPS redirect that might cause preflight issues
+if (app.Environment.IsProduction())
+{
+    app.UseHttpsRedirection();
+}
+
+// Apply CORS policy
+if (app.Environment.IsDevelopment())
+{
+    app.UseCors("DevelopmentPolicy");
+}
+else
+{
+    app.UseCors();
+}
+
+// Add Authentication & Authorization (AFTER CORS)
+app.UseAuthentication();
+app.UseAuthorization();
+
+// Map Controllers
+app.MapControllers();
 
 // Health check endpoints
 app.MapHealthChecks("/health");
-app.MapGet("/health/database", async (ApplicationDbContext dbContext) =>
+app.MapGet("/health/database", async (Home4Paws.API.Data.ApplicationDbContext dbContext) =>
 {
     try
     {
@@ -144,6 +223,8 @@ app.MapGet("/api/info", (IConfiguration config, IWebHostEnvironment env) => new
     {
         DatabaseConfigured = !string.IsNullOrEmpty(connectionString),
         BaseUrl = config.GetValue<string>("ExternalServices:BaseUrl"),
+        CorsEnabled = true,
+        AllowedOrigins = allowedOrigins,
         Features = new
         {
             EnableSwagger = config.GetValue<bool>("Features:EnableSwagger"),
@@ -163,62 +244,35 @@ app.MapGet("/api/info", (IConfiguration config, IWebHostEnvironment env) => new
 .WithOpenApi()
 .WithSummary("Get comprehensive API information and configuration");
 
-// Sample endpoint for testing - remove in production
-if (app.Environment.IsDevelopment())
-{
-    var summaries = new[]
-    {
-        "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-    };
-
-    app.MapGet("/weatherforecast", () =>
-    {
-        var forecast = Enumerable.Range(1, 5).Select(index =>
-            new WeatherForecast
-            (
-                DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-                Random.Shared.Next(-20, 55),
-                summaries[Random.Shared.Next(summaries.Length)]
-            ))
-            .ToArray();
-        return forecast;
-    })
-    .WithName("GetWeatherForecast")
-    .WithOpenApi()
-    .WithSummary("Development testing endpoint - returns mock weather data");
-    
-    logger.LogInformation("🌤️  Weather Forecast: ✅ Development endpoint enabled");
-}
-
 logger.LogInformation("🎯 Home4Paws API started successfully!");
+logger.LogInformation("📋 Available endpoints:");
+logger.LogInformation("   POST /api/auth/login");
+logger.LogInformation("   POST /api/auth/signup");
+logger.LogInformation("   POST /api/auth/refresh");
+logger.LogInformation("   POST /api/auth/logout");
+logger.LogInformation("   GET  /api/auth/health");
+
 app.Run();
 
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
+namespace Home4Paws.API
 {
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
-
-// Basic DbContext for now - you'll expand this with your actual entities
-public class ApplicationDbContext : DbContext
-{
-    private readonly IWebHostEnvironment _environment;
-
-    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, IWebHostEnvironment environment) : base(options)
+    // Basic DbContext for now - you'll expand this with your actual entities
+    public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, IWebHostEnvironment environment) : DbContext(options)
     {
-        _environment = environment;
-    }
+        private readonly IWebHostEnvironment _environment = environment;
 
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
-    {
-        base.OnModelCreating(modelBuilder);
-        
-        // Configure schema based on environment
-        var schema = _environment.IsDevelopment() ? "development" : "production";
-        modelBuilder.HasDefaultSchema(schema);
-    }
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+            
+            // Configure schema based on environment
+            var schema = _environment.IsDevelopment() ? "development" : "production";
+            modelBuilder.HasDefaultSchema(schema);
+        }
 
-    // TODO: Add your DbSets here as you create entities
-    // public DbSet<User> Users { get; set; }
-    // public DbSet<Pet> Pets { get; set; }
-    // public DbSet<Adoption> Adoptions { get; set; }
+        // TODO: Add your DbSets here as you create entities
+        // public DbSet<User> Users { get; set; }
+        // public DbSet<Pet> Pets { get; set; }
+        // public DbSet<Adoption> Adoptions { get; set; }
+    }
 }
