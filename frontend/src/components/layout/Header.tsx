@@ -4,105 +4,121 @@ import Link from "next/link"
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/common/ThemeToggle"
-import { Container } from "@/components/common/Container"
+import { Menu, X, Heart, ShoppingBag, Users, BookOpen } from "lucide-react"
 
 export default function Header() {
-  const [open, setOpen] = useState(false)
+  const [isOpen, setIsOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
-    const h = () => setScrolled(window.scrollY > 8)
-    window.addEventListener("scroll", h)
-    return () => window.removeEventListener("scroll", h)
+    const handleScroll = () => setScrolled(window.scrollY > 20)
+    window.addEventListener("scroll", handleScroll)
+    return () => window.removeEventListener("scroll", handleScroll)
   }, [])
 
   return (
-    <header className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${scrolled ? "backdrop-blur-xl bg-background/85 border-b border-border/50 shadow-lg shadow-primary/5" : "bg-transparent"}`}>
-      <Container className="flex h-20 items-center justify-between">
-        <Link href="/" className="flex items-center gap-3 group">
-          <div className="relative flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary via-primary/90 to-secondary text-primary-foreground shadow-xl shadow-primary/20 group-hover:scale-110 group-hover:shadow-2xl group-hover:shadow-primary/30 transition-all duration-300">
-            {/* Magical paw icon */}
-            <svg viewBox="0 0 24 24" className="h-6 w-6 drop-shadow-sm" fill="currentColor">
-              <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9C20.3 8.35 19.35 8 18.5 8C17.65 8 16.7 8.35 16 9C15.3 9.65 15.3 10.65 16 11.3C16.7 11.95 17.65 12.3 18.5 12.3C19.35 12.3 20.3 11.95 21 11.3C21.7 10.65 21.7 9.65 21 9ZM8 9C7.3 8.35 6.35 8 5.5 8C4.65 8 3.7 8.35 3 9C2.3 9.65 2.3 10.65 3 11.3C3.7 11.95 4.65 12.3 5.5 12.3C6.35 12.3 7.3 11.95 8 11.3C8.7 10.65 8.7 9.65 8 9ZM17.5 14C16.1 14 15 15.1 15 16.5V21.5C15 22.3 15.7 23 16.5 23C17.3 23 18 22.3 18 21.5V16.5C18 15.1 16.9 14 17.5 14ZM6.5 14C5.1 14 6 15.1 6 16.5V21.5C6 22.3 6.7 23 7.5 23C8.3 23 9 22.3 9 21.5V16.5C9 15.1 7.9 14 6.5 14Z"/>
-            </svg>
-            {/* Sparkle effect */}
-            <div className="absolute -top-1 -right-1 w-3 h-3 bg-accent rounded-full animate-sparkle" />
-          </div>
-          <div className="flex flex-col leading-tight">
-            <span className="font-bold text-lg tracking-tight bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              Home4Paws
-            </span>
-            <span className="text-xs text-muted-foreground font-medium">
-              🐾 Adopt • Care • Love
-            </span>
-          </div>
-        </Link>
-
-        <nav className="hidden lg:flex items-center gap-8 text-sm font-medium">
-          <Link className="hover:text-primary transition-colors duration-200 flex items-center gap-2" href="/pets">
-            <span>🐕</span> Adopt Pets
-          </Link>
-          <Link className="hover:text-primary transition-colors duration-200 flex items-center gap-2" href="/marketplace">
-            <span>🛍️</span> Marketplace
-          </Link>
-          <Link className="hover:text-primary transition-colors duration-200 flex items-center gap-2" href="/resources">
-            <span>📚</span> Resources
-          </Link>
-          <Link className="hover:text-primary transition-colors duration-200 flex items-center gap-2" href="/about">
-            <span>❤️</span> About
-          </Link>
-        </nav>
-
-        <div className="flex items-center gap-3">
-          <ThemeToggle />
-          <div className="hidden md:flex gap-3">
-            <Button asChild variant="ghost" size="sm" className="hover:bg-accent/50">
-              <Link href="/login">Log in</Link>
-            </Button>
-            <Button asChild size="sm" className="shadow-lg hover:shadow-xl shadow-primary/20 hover:shadow-primary/30 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90">
-              <Link href="/signup">Sign up</Link>
-            </Button>
-          </div>
-          <button
-            aria-label="Menu"
-            onClick={() => setOpen(o => !o)}
-            className="lg:hidden inline-flex h-10 w-10 items-center justify-center rounded-xl border bg-background/70 backdrop-blur hover:bg-accent/50 transition-colors"
-          >
-            <svg className="h-5 w-5" stroke="currentColor" fill="none" strokeWidth="2" viewBox="0 0 24 24">
-              {open
-                ? <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-                : <path strokeLinecap="round" strokeLinejoin="round" d="M3 7h18M3 12h18M3 17h18" />}
-            </svg>
-          </button>
-        </div>
-      </Container>
-
-      {open && (
-        <div className="lg:hidden border-t bg-background/95 backdrop-blur-xl">
-          <Container className="py-6 flex flex-col gap-4">
-            <Link href="/pets" className="py-2 flex items-center gap-3 hover:text-primary transition-colors">
-              <span>🐕</span> Adopt Pets
-            </Link>
-            <Link href="/marketplace" className="py-2 flex items-center gap-3 hover:text-primary transition-colors">
-              <span>🛍️</span> Marketplace
-            </Link>
-            <Link href="/resources" className="py-2 flex items-center gap-3 hover:text-primary transition-colors">
-              <span>📚</span> Resources
-            </Link>
-            <Link href="/about" className="py-2 flex items-center gap-3 hover:text-primary transition-colors">
-              <span>❤️</span> About
-            </Link>
-            <div className="flex gap-3 pt-4">
-              <Button asChild variant="outline" className="flex-1" size="sm">
-                <Link href="/login">Log in</Link>
-              </Button>
-              <Button asChild className="flex-1 bg-gradient-to-r from-primary to-secondary" size="sm">
-                <Link href="/signup">Sign up</Link>
-              </Button>
+    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      scrolled 
+        ? "bg-white/95 dark:bg-gray-900/95 backdrop-blur-lg border-b border-gray-200/50 dark:border-gray-700/50 shadow-sm" 
+        : "bg-transparent"
+    }`}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
+          {/* Logo */}
+          <Link href="/" className="flex items-center space-x-3 group">
+            <div className="relative">
+              <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-200">
+                <Heart className="w-5 h-5 text-white" />
+              </div>
+              <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
             </div>
-          </Container>
+            <div className="hidden sm:block">
+              <h1 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                Home4Paws
+              </h1>
+              <p className="text-xs text-gray-500 dark:text-gray-400 -mt-1">Find your perfect companion</p>
+            </div>
+          </Link>
+
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center space-x-8">
+            <Link href="/pets" className="flex items-center space-x-2 text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors duration-200">
+              <Heart className="w-4 h-4" />
+              <span className="font-medium">Adopt</span>
+            </Link>
+            <Link href="/marketplace" className="flex items-center space-x-2 text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors duration-200">
+              <ShoppingBag className="w-4 h-4" />
+              <span className="font-medium">Shop</span>
+            </Link>
+            <Link href="/community" className="flex items-center space-x-2 text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors duration-200">
+              <Users className="w-4 h-4" />
+              <span className="font-medium">Community</span>
+            </Link>
+            <Link href="/resources" className="flex items-center space-x-2 text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors duration-200">
+              <BookOpen className="w-4 h-4" />
+              <span className="font-medium">Resources</span>
+            </Link>
+          </nav>
+
+          {/* Desktop Actions */}
+          <div className="hidden md:flex items-center space-x-4">
+            <ThemeToggle />
+            <Link href="/auth/login">
+              <Button variant="ghost" size="sm" className="font-medium">
+                Sign In
+              </Button>
+            </Link>
+            <Link href="/auth/signup">
+              <Button size="sm" className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-medium px-6 shadow-lg hover:shadow-xl transition-all duration-200">
+                Get Started
+              </Button>
+            </Link>
+          </div>
+
+          {/* Mobile menu button */}
+          <div className="md:hidden flex items-center space-x-2">
+            <ThemeToggle />
+            <button
+              onClick={() => setIsOpen(!isOpen)}
+              className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200"
+            >
+              {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+          </div>
         </div>
-      )}
+
+        {/* Mobile Navigation */}
+        {isOpen && (
+          <div className="md:hidden py-4 border-t border-gray-200/50 dark:border-gray-700/50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-lg">
+            <div className="space-y-4">
+              <Link href="/pets" className="flex items-center space-x-3 px-4 py-2 text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-all duration-200">
+                <Heart className="w-4 h-4" />
+                <span className="font-medium">Adopt Pets</span>
+              </Link>
+              <Link href="/marketplace" className="flex items-center space-x-3 px-4 py-2 text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-all duration-200">
+                <ShoppingBag className="w-4 h-4" />
+                <span className="font-medium">Marketplace</span>
+              </Link>
+              <Link href="/community" className="flex items-center space-x-3 px-4 py-2 text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-all duration-200">
+                <Users className="w-4 h-4" />
+                <span className="font-medium">Community</span>
+              </Link>
+              <Link href="/resources" className="flex items-center space-x-3 px-4 py-2 text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-all duration-200">
+                <BookOpen className="w-4 h-4" />
+                <span className="font-medium">Resources</span>
+              </Link>
+              <div className="flex space-x-3 px-4 pt-4">
+                <Link href="/auth/login" className="flex-1">
+                  <Button variant="outline" className="w-full">Sign In</Button>
+                </Link>
+                <Link href="/auth/signup" className="flex-1">
+                  <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600">Get Started</Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </header>
   )
 }
