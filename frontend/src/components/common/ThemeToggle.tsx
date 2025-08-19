@@ -16,8 +16,16 @@ export function ThemeToggle() {
 
   useEffect(() => {
     setMounted(true)
-    const isDark = document.documentElement.classList.contains("dark")
+    const savedTheme = localStorage.getItem("theme")
+    const systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches
+    const isDark = savedTheme === "dark" || (!savedTheme && systemDark)
+    
     setDark(isDark)
+    if (isDark) {
+      document.documentElement.classList.add("dark")
+    } else {
+      document.documentElement.classList.remove("dark")
+    }
   }, [])
 
   const toggle = () => {
@@ -33,7 +41,13 @@ export function ThemeToggle() {
     }
   }
 
-  if (!mounted) return null
+  if (!mounted) {
+    return (
+      <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white transition-all duration-200">
+        <div className="h-5 w-5" />
+      </div>
+    )
+  }
   
   return (
     <button

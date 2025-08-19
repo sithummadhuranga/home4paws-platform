@@ -64,12 +64,12 @@ export default function Header() {
           <div className="hidden md:flex items-center space-x-4">
             <ThemeToggle />
             <Link href="/auth/login">
-              <Button variant="ghost" size="sm" className="font-medium">
+              <Button variant="ghost" size="sm" className="font-medium" suppressHydrationWarning>
                 Sign In
               </Button>
             </Link>
             <Link href="/auth/signup">
-              <Button size="sm" className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-medium px-6 shadow-lg hover:shadow-xl transition-all duration-200">
+              <Button size="sm" className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-medium px-6 shadow-lg hover:shadow-xl transition-all duration-200" suppressHydrationWarning>
                 Get Started
               </Button>
             </Link>
@@ -81,6 +81,7 @@ export default function Header() {
             <button
               onClick={() => setIsOpen(!isOpen)}
               className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200"
+              suppressHydrationWarning
             >
               {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
@@ -109,10 +110,10 @@ export default function Header() {
               </Link>
               <div className="flex space-x-3 px-4 pt-4">
                 <Link href="/auth/login" className="flex-1">
-                  <Button variant="outline" className="w-full">Sign In</Button>
+                  <Button variant="outline" className="w-full" suppressHydrationWarning>Sign In</Button>
                 </Link>
                 <Link href="/auth/signup" className="flex-1">
-                  <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600">Get Started</Button>
+                  <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600" suppressHydrationWarning>Get Started</Button>
                 </Link>
               </div>
             </div>

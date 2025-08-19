@@ -17,6 +17,7 @@ export const metadata: Metadata = {
   description:
     "Discover adoptable pets, rehome responsibly, and access trusted pet products in one platform.",
 };
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -24,8 +25,24 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                const theme = localStorage.getItem('theme') || 
+                  (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+                if (theme === 'dark') {
+                  document.documentElement.classList.add('dark')
+                }
+              } catch (e) {}
+            `,
+          }}
+        />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-background`}
+        suppressHydrationWarning
       >
         {children}
       </body>

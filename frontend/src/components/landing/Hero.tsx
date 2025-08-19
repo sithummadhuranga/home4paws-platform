@@ -53,18 +53,19 @@ export default function Hero() {
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
                                         className="pl-10 h-12 border-gray-200 dark:border-gray-600 focus:border-purple-500 focus:ring-purple-500 dark:bg-gray-700 dark:text-white"
+                                        suppressHydrationWarning
                                     />
                                 </div>
                                 <div className="flex gap-2">
-                                    <Button variant="outline" size="lg" className="px-4 dark:border-gray-600 dark:hover:bg-gray-700">
+                                    <Button variant="outline" size="lg" className="px-4 dark:border-gray-600 dark:hover:bg-gray-700" suppressHydrationWarning>
                                         <MapPin className="w-4 h-4 mr-2" />
                                         Location
                                     </Button>
-                                    <Button variant="outline" size="lg" className="px-4 dark:border-gray-600 dark:hover:bg-gray-700">
+                                    <Button variant="outline" size="lg" className="px-4 dark:border-gray-600 dark:hover:bg-gray-700" suppressHydrationWarning>
                                         <Filter className="w-4 h-4 mr-2" />
                                         Filters
                                     </Button>
-                                    <Button size="lg" className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 px-8">
+                                    <Button size="lg" className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 px-8" suppressHydrationWarning>
                                         Search
                                     </Button>
                                 </div>
@@ -74,12 +75,12 @@ export default function Hero() {
                         {/* Action Buttons */}
                         <div className="flex flex-col sm:flex-row gap-4">
                             <Link href="/pets">
-                                <Button size="lg" className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 px-8 py-4 text-lg font-medium shadow-lg hover:shadow-xl transition-all duration-200">
+                                <Button size="lg" className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 px-8 py-4 text-lg font-medium shadow-lg hover:shadow-xl transition-all duration-200" suppressHydrationWarning>
                                     Browse Pets
                                 </Button>
                             </Link>
                             <Link href="/rehome">
-                                <Button variant="outline" size="lg" className="w-full sm:w-auto px-8 py-4 text-lg font-medium border-2 hover:bg-purple-50 dark:hover:bg-purple-900/20 dark:border-gray-600">
+                                <Button variant="outline" size="lg" className="w-full sm:w-auto px-8 py-4 text-lg font-medium border-2 hover:bg-purple-50 dark:hover:bg-purple-900/20 dark:border-gray-600" suppressHydrationWarning>
                                     Rehome a Pet
                                 </Button>
                             </Link>
@@ -119,7 +120,7 @@ export default function Hero() {
                                             <h3 className="font-semibold text-gray-900 dark:text-white">Luna</h3>
                                             <p className="text-sm text-gray-600 dark:text-gray-400">Golden Retriever • 2 years</p>
                                         </div>
-                                        <Button size="sm" className="bg-gradient-to-r from-purple-600 to-pink-600">
+                                        <Button size="sm" className="bg-gradient-to-r from-purple-600 to-pink-600" suppressHydrationWarning>
                                             <Heart className="w-4 h-4 mr-1" />
                                             Adopt
                                         </Button>
