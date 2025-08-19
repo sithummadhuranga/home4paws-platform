@@ -2,19 +2,26 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Eye, EyeOff, Heart, ArrowLeft, Check } from "lucide-react"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Eye, EyeOff, Heart, ArrowLeft, Check, Loader2 } from "lucide-react"
+import { useAuth } from "@/contexts/AuthContext"
 
 export default function SignupPage() {
+  const router = useRouter()
+  const { signup, isLoading } = useAuth()
   const [showPassword, setShowPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [error, setError] = useState("")
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
     email: "",
     password: "",
+    confirmPassword: "",
     agreeToTerms: false
   })
 
@@ -25,13 +32,43 @@ export default function SignupPage() {
     { text: "One number", met: /\d/.test(formData.password) }
   ]
 
+  const isPasswordValid = passwordRequirements.every(req => req.met)
+  const passwordsMatch = formData.password === formData.confirmPassword
+  const isFormValid = isPasswordValid && passwordsMatch && formData.confirmPassword.length > 0
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    setIsLoading(false)
+    setError("")
+
+    if (!isPasswordValid) {
+      setError("Please ensure your password meets all requirements.")
+      return
+    }
+
+    if (!passwordsMatch) {
+      setError("Passwords do not match.")
+      return
+    }
+
+    try {
+      const result = await signup({
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        password: formData.password,
+        confirmPassword: formData.confirmPassword,
+        agreeToTerms: formData.agreeToTerms
+      })
+      
+      if (result.success) {
+        router.push("/")
+        router.refresh()
+      } else {
+        setError(result.message)
+      }
+    } catch (error) {
+      setError("An unexpected error occurred. Please try again.")
+    }
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -62,6 +99,15 @@ export default function SignupPage() {
             <p className="text-gray-600 dark:text-gray-400">Join thousands of pet lovers today</p>
           </div>
 
+          {/* Error Alert */}
+          {error && (
+            <Alert className="mb-6 border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20">
+              <AlertDescription className="text-red-800 dark:text-red-200">
+                {error}
+              </AlertDescription>
+            </Alert>
+          )}
+
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-2 gap-4">
@@ -75,6 +121,7 @@ export default function SignupPage() {
                   onChange={handleInputChange}
                   className="h-12 border-gray-200 dark:border-gray-600 focus:border-purple-500 focus:ring-purple-500 dark:bg-gray-700 dark:text-white"
                   required
+                  disabled={isLoading}
                 />
               </div>
               <div className="space-y-2">
@@ -87,6 +134,7 @@ export default function SignupPage() {
                   onChange={handleInputChange}
                   className="h-12 border-gray-200 dark:border-gray-600 focus:border-purple-500 focus:ring-purple-500 dark:bg-gray-700 dark:text-white"
                   required
+                  disabled={isLoading}
                 />
               </div>
             </div>
@@ -102,6 +150,7 @@ export default function SignupPage() {
                 onChange={handleInputChange}
                 className="h-12 border-gray-200 dark:border-gray-600 focus:border-purple-500 focus:ring-purple-500 dark:bg-gray-700 dark:text-white"
                 required
+                disabled={isLoading}
               />
             </div>
 
@@ -117,11 +166,13 @@ export default function SignupPage() {
                   onChange={handleInputChange}
                   className="h-12 border-gray-200 dark:border-gray-600 focus:border-purple-500 focus:ring-purple-500 pr-12 dark:bg-gray-700 dark:text-white"
                   required
+                  disabled={isLoading}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200"
+                  disabled={isLoading}
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -140,6 +191,50 @@ export default function SignupPage() {
               )}
             </div>
 
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword" className="text-gray-700 dark:text-gray-300 font-medium">Confirm Password</Label>
+              <div className="relative">
+                <Input
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type={showConfirmPassword ? "text" : "password"}
+                  placeholder="Confirm your password"
+                  value={formData.confirmPassword}
+                  onChange={handleInputChange}
+                  className={`h-12 border-gray-200 dark:border-gray-600 focus:border-purple-500 focus:ring-purple-500 pr-12 dark:bg-gray-700 dark:text-white ${
+                    formData.confirmPassword && !passwordsMatch ? 'border-red-300 dark:border-red-600' : ''
+                  }`}
+                  required
+                  disabled={isLoading}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200"
+                  disabled={isLoading}
+                >
+                  {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+              
+              {/* Password Match Indicator */}
+              {formData.confirmPassword && (
+                <div className="flex items-center text-sm mt-2">
+                  {passwordsMatch ? (
+                    <>
+                      <Check className="w-4 h-4 mr-2 text-green-500" />
+                      <span className="text-green-600 dark:text-green-400">Passwords match</span>
+                    </>
+                  ) : (
+                    <>
+                      <div className="w-4 h-4 mr-2 rounded-full border-2 border-red-500"></div>
+                      <span className="text-red-600 dark:text-red-400">Passwords do not match</span>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+
             <div className="space-y-4">
               <label className="flex items-start">
                 <input 
@@ -148,7 +243,8 @@ export default function SignupPage() {
                   checked={formData.agreeToTerms}
                   onChange={handleInputChange}
                   className="rounded border-gray-300 dark:border-gray-600 text-purple-600 focus:ring-purple-500 mt-1 dark:bg-gray-700" 
-                  required 
+                  required
+                  disabled={isLoading}
                 />
                 <span className="ml-3 text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
                   I agree to the{" "}
@@ -161,12 +257,12 @@ export default function SignupPage() {
 
             <Button 
               type="submit" 
-              disabled={isLoading || !formData.agreeToTerms}
+              disabled={isLoading || !formData.agreeToTerms || !isFormValid}
               className="w-full h-12 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 font-medium shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50"
             >
               {isLoading ? (
                 <div className="flex items-center justify-center">
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                  <Loader2 className="w-5 h-5 animate-spin mr-2" />
                   Creating account...
                 </div>
               ) : (
@@ -184,7 +280,7 @@ export default function SignupPage() {
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <Button variant="outline" className="h-12 border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700">
+              <Button variant="outline" className="h-12 border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700" disabled={isLoading}>
                 <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
                   <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                   <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -193,7 +289,7 @@ export default function SignupPage() {
                 </svg>
                 Google
               </Button>
-              <Button variant="outline" className="h-12 border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700">
+              <Button variant="outline" className="h-12 border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700" disabled={isLoading}>
                 <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
                 </svg>
