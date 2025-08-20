@@ -1,6 +1,6 @@
 "use client"
 
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
+import React, { createContext, useState, useEffect, useRef, useCallback, useContext } from "react"
 
 interface User {
   id: string
@@ -32,7 +32,7 @@ interface SignupData {
   agreeToTerms: boolean
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined)
+export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 const getApiUrl = () => process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5185'
 
@@ -282,7 +282,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 export const useAuth = () => {
   const context = useContext(AuthContext)
-  if context === undefined) {
+  if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider')
   }
   return context
