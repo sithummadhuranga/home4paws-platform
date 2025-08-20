@@ -37,7 +37,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 const getApiUrl = () => process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5185'
 
 // Simple request deduplication
-const pendingRequests = new Map<string, Promise<any>>()
+const pendingRequests = new Map<string, Promise<unknown>>()
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
@@ -282,7 +282,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 export const useAuth = () => {
   const context = useContext(AuthContext)
-  if (context === undefined) {
+  if context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider')
   }
   return context
