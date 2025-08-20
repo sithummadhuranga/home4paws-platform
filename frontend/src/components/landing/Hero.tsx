@@ -4,144 +4,203 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import Link from "next/link"
 import Image from "next/image"
-import { Search, MapPin, Filter, Heart } from "lucide-react"
-import { useState } from "react"
+import { Search, MapPin, Filter, Heart, ArrowRight, Users, Award, Clock, Sparkles } from "lucide-react"
+import { useState, memo } from "react"
 
 const stats = [
-    { number: "50K+", label: "Happy Adoptions" },
-    { number: "1,200+", label: "Verified Shelters" },
-    { number: "98%", label: "Success Rate" },
-    { number: "24/7", label: "Support" }
-]
+	{ number: "15K+", label: "Happy Adoptions", icon: Heart, color: "text-blue-600" },
+	{ number: "450+", label: "Partner Shelters", icon: Users, color: "text-green-600" },
+	{ number: "99%", label: "Success Rate", icon: Award, color: "text-orange-600" },
+	{ number: "24/7", label: "Support", icon: Clock, color: "text-purple-600" }
+] as const
+
+// Mobile-optimized stat card
+const StatCard = memo(({ stat, index }: { stat: (typeof stats)[number]; index: number }) => (
+	<div className="text-center animate-fadeIn" style={{ animationDelay: `${index * 0.1}s` }}>
+		<div className="flex items-center justify-center mb-2">
+			<div className="p-2 sm:p-3 rounded-xl bg-white dark:bg-gray-800 shadow-lg border border-gray-100 dark:border-gray-700">
+				<stat.icon className={`w-4 h-4 sm:w-5 sm:h-5 ${stat.color}`} />
+			</div>
+		</div>
+		<div className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white mb-1">
+			{stat.number}
+		</div>
+		<div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 font-medium">
+			{stat.label}
+		</div>
+	</div>
+))
+StatCard.displayName = "StatCard"
+
+// Mobile-first search bar
+const SearchBar = memo(({ searchQuery, setSearchQuery }: { 
+	searchQuery: string
+	setSearchQuery: (value: string) => void
+}) => (
+	<div className="relative group">
+		<div className="absolute -inset-1 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 rounded-xl opacity-20 blur group-hover:opacity-30 transition-opacity duration-300" />
+		
+		<div className="relative bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 shadow-xl border border-gray-100 dark:border-gray-700">
+			<div className="space-y-4">
+				{/* Search Input */}
+				<div className="relative">
+					<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+					<Input
+						placeholder="Search pets by breed, age, or location..."
+						value={searchQuery}
+						onChange={(e) => setSearchQuery(e.target.value)}
+						className="pl-10 h-12 border-2 border-gray-200 dark:border-gray-600 focus:border-blue-500 rounded-lg text-base bg-gray-50 dark:bg-gray-700"
+					/>
+				</div>
+				
+				{/* Mobile Buttons */}
+				<div className="grid grid-cols-2 sm:flex gap-2 sm:gap-3">
+					<Button 
+						variant="outline" 
+						size="sm"
+						className="h-10 text-sm border-2 hover:border-blue-500 hover:text-blue-600"
+					>
+						<MapPin className="w-4 h-4 mr-1 sm:mr-2" />
+						<span className="hidden xs:inline">Location</span>
+						<span className="xs:hidden">Loc</span>
+					</Button>
+					<Button 
+						variant="outline" 
+						size="sm"
+						className="h-10 text-sm border-2 hover:border-blue-500 hover:text-blue-600"
+					>
+						<Filter className="w-4 h-4 mr-1 sm:mr-2" />
+						<span className="hidden xs:inline">Filters</span>
+						<span className="xs:hidden">Filter</span>
+					</Button>
+					<Button 
+						className="col-span-2 sm:col-span-1 h-10 sm:h-12 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-lg"
+					>
+						<Search className="w-4 h-4 mr-2" />
+						Search Pets
+					</Button>
+				</div>
+			</div>
+		</div>
+	</div>
+))
+SearchBar.displayName = "SearchBar"
 
 export default function Hero() {
-    const [searchQuery, setSearchQuery] = useState("")
+	const [searchQuery, setSearchQuery] = useState("")
 
-    return (
-        <section className="pt-24 pb-16 lg:pt-32 lg:pb-24 bg-gradient-to-br from-purple-50 via-white to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900/20">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-                    
-                    {/* Left Content */}
-                    <div className="space-y-8">
-                        <div className="space-y-6">
-                            <div className="inline-flex items-center px-4 py-2 bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 rounded-full text-sm font-medium">
-                                <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
-                                Over 1,000 pets adopted this month
-                            </div>
-                            
-                            <h1 className="text-4xl lg:text-6xl font-bold text-gray-900 dark:text-white leading-tight">
-                                Find your perfect{" "}
-                                <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                                    companion
-                                </span>
-                            </h1>
-                            
-                            <p className="text-xl text-gray-600 dark:text-gray-300 leading-relaxed max-w-xl">
-                                Connect with loving pets in need of homes. Browse verified shelters, 
-                                find your perfect match, and join a community of pet lovers.
-                            </p>
-                        </div>
+	return (
+		<section className="relative pt-16 sm:pt-20 pb-8 sm:pb-12 overflow-hidden">
+			{/* Mobile-optimized background */}
+			<div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-white to-green-50 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900/10" />
+			
+			<div className="relative container mx-auto">
+				<div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center">
+					
+					{/* Left Content - Mobile First */}
+					<div className="space-y-6 sm:space-y-8 text-center lg:text-left animate-fadeIn">
+						{/* Badges */}
+						<div className="flex flex-wrap justify-center lg:justify-start gap-2">
+							<span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+								<Sparkles className="w-3 h-3 mr-1" />
+								#1 Pet Platform
+							</span>
+							<span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+								✅ Verified Shelters
+							</span>
+						</div>
 
-                        {/* Search Bar */}
-                        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-xl border border-gray-100 dark:border-gray-700">
-                            <div className="flex flex-col sm:flex-row gap-4">
-                                <div className="flex-1 relative">
-                                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                                    <Input
-                                        placeholder="Search by breed, age, or name..."
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="pl-10 h-12 border-gray-200 dark:border-gray-600 focus:border-purple-500 focus:ring-purple-500 dark:bg-gray-700 dark:text-white"
-                                        suppressHydrationWarning
-                                    />
-                                </div>
-                                <div className="flex gap-2">
-                                    <Button variant="outline" size="lg" className="px-4 dark:border-gray-600 dark:hover:bg-gray-700" suppressHydrationWarning>
-                                        <MapPin className="w-4 h-4 mr-2" />
-                                        Location
-                                    </Button>
-                                    <Button variant="outline" size="lg" className="px-4 dark:border-gray-600 dark:hover:bg-gray-700" suppressHydrationWarning>
-                                        <Filter className="w-4 h-4 mr-2" />
-                                        Filters
-                                    </Button>
-                                    <Button size="lg" className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 px-8" suppressHydrationWarning>
-                                        Search
-                                    </Button>
-                                </div>
-                            </div>
-                        </div>
+						{/* Headlines */}
+						<div className="space-y-4">
+							<h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold text-gray-900 dark:text-white leading-tight">
+								Find Your Perfect
+								<span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
+									Furry Friend
+								</span>
+							</h1>
+							
+							<p className="text-base sm:text-lg lg:text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto lg:mx-0">
+								Connect with loving pets from verified shelters. Fast, secure, and completely free. 
+								<span className="font-semibold text-blue-600 dark:text-blue-400">Over 15,000 successful adoptions!</span>
+							</p>
+						</div>
 
-                        {/* Action Buttons */}
-                        <div className="flex flex-col sm:flex-row gap-4">
-                            <Link href="/pets">
-                                <Button size="lg" className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 px-8 py-4 text-lg font-medium shadow-lg hover:shadow-xl transition-all duration-200" suppressHydrationWarning>
-                                    Browse Pets
-                                </Button>
-                            </Link>
-                            <Link href="/rehome">
-                                <Button variant="outline" size="lg" className="w-full sm:w-auto px-8 py-4 text-lg font-medium border-2 hover:bg-purple-50 dark:hover:bg-purple-900/20 dark:border-gray-600" suppressHydrationWarning>
-                                    Rehome a Pet
-                                </Button>
-                            </Link>
-                        </div>
+						{/* Mobile-first search */}
+						<SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
 
-                        {/* Stats */}
-                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 pt-8">
-                            {stats.map((stat, index) => (
-                                <div key={index} className="text-center">
-                                    <div className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                                        {stat.number}
-                                    </div>
-                                    <div className="text-gray-600 dark:text-gray-400 text-sm mt-1">{stat.label}</div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
+						{/* CTA Buttons */}
+						<div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start">
+							<Link href="/adopt">
+								<Button size="lg" className="w-full sm:w-auto h-12 sm:h-14 text-base sm:text-lg px-6 sm:px-8 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-lg hover:shadow-xl">
+									Start Adopting
+									<ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2" />
+								</Button>
+							</Link>
+							<Link href="/about">
+								<Button variant="outline" size="lg" className="w-full sm:w-auto h-12 sm:h-14 text-base sm:text-lg px-6 sm:px-8 border-2">
+									Learn More
+								</Button>
+							</Link>
+						</div>
 
-                    {/* Right Content - Hero Image */}
-                    <div className="relative">
-                        <div className="relative z-10">
-                            <div className="bg-white dark:bg-gray-800 rounded-3xl p-8 shadow-2xl border dark:border-gray-700">
-                                <div className="aspect-square relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30">
-                                    <Image
-                                        src="/next.svg"
-                                        alt="Happy pets waiting for adoption"
-                                        fill
-                                        className="object-contain p-8"
-                                        priority
-                                    />
-                                </div>
-                                
-                                {/* Pet Card Overlay */}
-                                <div className="absolute bottom-4 left-4 right-4 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-xl p-4 shadow-lg border dark:border-gray-700">
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <h3 className="font-semibold text-gray-900 dark:text-white">Luna</h3>
-                                            <p className="text-sm text-gray-600 dark:text-gray-400">Golden Retriever • 2 years</p>
-                                        </div>
-                                        <Button size="sm" className="bg-gradient-to-r from-purple-600 to-pink-600" suppressHydrationWarning>
-                                            <Heart className="w-4 h-4 mr-1" />
-                                            Adopt
-                                        </Button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+						{/* Stats Grid - Mobile Optimized */}
+						<div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 pt-6 sm:pt-8">
+							{stats.map((stat, index) => (
+								<StatCard key={stat.label} stat={stat} index={index} />
+							))}
+						</div>
+					</div>
 
-                        {/* Floating Elements */}
-                        <div className="absolute -top-4 -left-4 w-20 h-20 bg-purple-100 dark:bg-purple-900/50 rounded-full flex items-center justify-center animate-float">
-                            <span className="text-2xl">🐕</span>
-                        </div>
-                        <div className="absolute -bottom-4 -right-4 w-16 h-16 bg-pink-100 dark:bg-pink-900/50 rounded-full flex items-center justify-center animate-float" style={{ animationDelay: '-2s' }}>
-                            <span className="text-xl">🐱</span>
-                        </div>
-                        <div className="absolute top-1/2 -right-8 w-12 h-12 bg-yellow-100 dark:bg-yellow-900/50 rounded-full flex items-center justify-center animate-float" style={{ animationDelay: '-4s' }}>
-                            <span className="text-lg">🐰</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-    )
+					{/* Right Content - Mobile Hidden, Desktop Visible */}
+					<div className="hidden lg:block relative">
+						<div className="relative z-10 animate-scaleIn">
+							{/* Featured Pet Card */}
+							<div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden border border-gray-100 dark:border-gray-700">
+								<div className="aspect-[4/3] relative">
+									<Image
+										src="https://images.unsplash.com/photo-1552053831-71594a27632d?w=500&h=400&fit=crop"
+										alt="Adorable golden retriever"
+										fill
+										sizes="(max-width: 1024px) 100vw, 50vw"
+										className="object-cover"
+										priority
+									/>
+									<div className="absolute top-4 left-4">
+										<span className="bg-green-500 text-white px-3 py-1 rounded-full text-sm font-medium">
+											Available
+										</span>
+									</div>
+									<div className="absolute top-4 right-4">
+										<button
+											type="button"
+											className="w-10 h-10 bg-white/90 rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-colors duration-200"
+											aria-label="Add to favorites"
+											suppressHydrationWarning
+										>
+											<Heart className="w-5 h-5 text-red-500" />
+										</button>
+									</div>
+								</div>
+								
+								<div className="p-6">
+									<div className="flex items-center justify-between mb-3">
+										<h3 className="text-xl font-bold text-gray-900 dark:text-white">Luna</h3>
+										<span className="text-sm text-gray-500 dark:text-gray-400">2 years old</span>
+									</div>
+									<p className="text-gray-600 dark:text-gray-300 mb-4">Golden Retriever • Female • New York</p>
+									<Button className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700">
+										Meet Luna
+									</Button>
+								</div>
+							</div>
+							
+							{/* Floating elements */}
+							<div className="absolute -top-4 -right-4 w-20 h-20 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full opacity-20 blur-xl" />
+							<div className="absolute -bottom-4 -left-4 w-16 h-16 bg-gradient-to-br from-purple-400 to-pink-500 rounded-full opacity-20 blur-xl" />
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+	)
 }

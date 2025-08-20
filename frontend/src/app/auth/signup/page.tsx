@@ -1,14 +1,15 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useCallback } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Eye, EyeOff, Heart, ArrowLeft, Check, Loader2 } from "lucide-react"
+import { Eye, EyeOff, ArrowLeft, Check, Loader2, Mail, Lock, User, Sparkles, Shield, Zap, Crown, Rocket } from "lucide-react"
 import { useAuth } from "@/contexts/AuthContext"
+import Image from "next/image"
 
 export default function SignupPage() {
   const router = useRouter()
@@ -26,17 +27,17 @@ export default function SignupPage() {
   })
 
   const passwordRequirements = [
-    { text: "At least 8 characters", met: formData.password.length >= 8 },
-    { text: "One uppercase letter", met: /[A-Z]/.test(formData.password) },
-    { text: "One lowercase letter", met: /[a-z]/.test(formData.password) },
-    { text: "One number", met: /\d/.test(formData.password) }
+    { text: "8+ characters", met: formData.password.length >= 8 },
+    { text: "Uppercase", met: /[A-Z]/.test(formData.password) },
+    { text: "Lowercase", met: /[a-z]/.test(formData.password) },
+    { text: "Number", met: /\d/.test(formData.password) }
   ]
 
   const isPasswordValid = passwordRequirements.every(req => req.met)
-  const passwordsMatch = formData.password === formData.confirmPassword
-  const isFormValid = isPasswordValid && passwordsMatch && formData.confirmPassword.length > 0
+  const passwordsMatch = formData.password === formData.confirmPassword && formData.confirmPassword.length > 0
+  const isFormValid = isPasswordValid && passwordsMatch && formData.agreeToTerms
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
 
@@ -66,246 +67,293 @@ export default function SignupPage() {
       } else {
         setError(result.message)
       }
-    } catch (err) {
+    } catch {
       setError("An unexpected error occurred. Please try again.")
     }
-  }
+  }, [formData, signup, router, isPasswordValid, passwordsMatch])
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target
-    setFormData({
-      ...formData,
+    setFormData(prev => ({
+      ...prev,
       [name]: type === 'checkbox' ? checked : value
-    })
-  }
+    }))
+  }, [])
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900/20 flex items-center justify-center p-4">
-      <div className="max-w-md w-full">
-        {/* Back Button */}
-        <Link href="/" className="inline-flex items-center text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors duration-200 mb-8">
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to home
-        </Link>
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 dark:from-gray-900 dark:via-purple-900/10 dark:to-gray-800 flex">
+      {/* Left Side - Enhanced Form (Opposite of login) */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-4 animate-slideInFromLeft">
+        <div className="max-w-md w-full">
+          {/* Back Button */}
+          <Link href="/" className="inline-flex items-center text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 transition-all duration-200 mb-8 group">
+            <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform duration-200" />
+            Back to home
+          </Link>
 
-        {/* Signup Form */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 border border-gray-100 dark:border-gray-700">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl mb-4">
-              <Heart className="w-8 h-8 text-white" />
-            </div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Create your account</h1>
-            <p className="text-gray-600 dark:text-gray-400">Join thousands of pet lovers today</p>
-          </div>
-
-          {/* Error Alert */}
-          {error && (
-            <Alert className="mb-6 border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20">
-              <AlertDescription className="text-red-800 dark:text-red-200">
-                {error}
-              </AlertDescription>
-            </Alert>
-          )}
-
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="firstName" className="text-gray-700 dark:text-gray-300 font-medium">First name</Label>
-                <Input
-                  id="firstName"
-                  name="firstName"
-                  placeholder="John"
-                  value={formData.firstName}
-                  onChange={handleInputChange}
-                  className="h-12 border-gray-200 dark:border-gray-600 focus:border-purple-500 focus:ring-purple-500 dark:bg-gray-700 dark:text-white"
-                  required
-                  disabled={isLoading}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="lastName" className="text-gray-700 dark:text-gray-300 font-medium">Last name</Label>
-                <Input
-                  id="lastName"
-                  name="lastName"
-                  placeholder="Doe"
-                  value={formData.lastName}
-                  onChange={handleInputChange}
-                  className="h-12 border-gray-200 dark:border-gray-600 focus:border-purple-500 focus:ring-purple-500 dark:bg-gray-700 dark:text-white"
-                  required
-                  disabled={isLoading}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-gray-700 dark:text-gray-300 font-medium">Email</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="Enter your email"
-                value={formData.email}
-                onChange={handleInputChange}
-                className="h-12 border-gray-200 dark:border-gray-600 focus:border-purple-500 focus:ring-purple-500 dark:bg-gray-700 dark:text-white"
-                required
-                disabled={isLoading}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="password" className="text-gray-700 dark:text-gray-300 font-medium">Password</Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  name="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Create a strong password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  className="h-12 border-gray-200 dark:border-gray-600 focus:border-purple-500 focus:ring-purple-500 pr-12 dark:bg-gray-700 dark:text-white"
-                  required
-                  disabled={isLoading}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200"
-                  disabled={isLoading}
-                >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
-              </div>
-              
-              {/* Password Requirements */}
-              {formData.password && (
-                <div className="space-y-2 mt-3">
-                  {passwordRequirements.map((req, index) => (
-                    <div key={index} className="flex items-center text-sm">
-                      <Check className={`w-4 h-4 mr-2 ${req.met ? 'text-green-500' : 'text-gray-300 dark:text-gray-600'}`} />
-                      <span className={req.met ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}>{req.text}</span>
-                    </div>
-                  ))}
+          {/* Form Container */}
+          <div className="relative group">
+            {/* Magical glow */}
+            <div className="absolute -inset-1 bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 rounded-3xl blur opacity-20 group-hover:opacity-30 transition-opacity duration-500" />
+            
+            <div className="relative bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-8 border border-gray-100 dark:border-gray-700">
+              {/* Header */}
+              <div className="text-center mb-8 animate-slideUp">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl mb-4 shadow-lg animate-scaleIn">
+                  <Crown className="w-8 h-8 text-white" />
                 </div>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword" className="text-gray-700 dark:text-gray-300 font-medium">Confirm Password</Label>
-              <div className="relative">
-                <Input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type={showConfirmPassword ? "text" : "password"}
-                  placeholder="Confirm your password"
-                  value={formData.confirmPassword}
-                  onChange={handleInputChange}
-                  className={`h-12 border-gray-200 dark:border-gray-600 focus:border-purple-500 focus:ring-purple-500 pr-12 dark:bg-gray-700 dark:text-white ${
-                    formData.confirmPassword && !passwordsMatch ? 'border-red-300 dark:border-red-600' : ''
-                  }`}
-                  required
-                  disabled={isLoading}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200"
-                  disabled={isLoading}
-                >
-                  {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2 stagger-1">Join the PawsHome Family! ✨</h1>
+                <p className="text-gray-600 dark:text-gray-400 font-medium stagger-2">Start your magical pet adoption journey</p>
               </div>
-              
-              {/* Password Match Indicator */}
-              {formData.confirmPassword && (
-                <div className="flex items-center text-sm mt-2">
-                  {passwordsMatch ? (
-                    <>
-                      <Check className="w-4 h-4 mr-2 text-green-500" />
-                      <span className="text-green-600 dark:text-green-400">Passwords match</span>
-                    </>
-                  ) : (
-                    <>
-                      <div className="w-4 h-4 mr-2 rounded-full border-2 border-red-500"></div>
-                      <span className="text-red-600 dark:text-red-400">Passwords do not match</span>
-                    </>
+
+              {/* Error Alert */}
+              {error && (
+                <Alert className="mb-6 border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20 animate-fadeIn">
+                  <AlertDescription className="text-red-800 dark:text-red-200 font-medium">
+                    {error}
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {/* Form */}
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Name Fields */}
+                <div className="grid grid-cols-2 gap-4 animate-slideUp stagger-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="firstName" className="text-gray-700 dark:text-gray-300 font-semibold">First name</Label>
+                    <div className="relative group">
+                      <User className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 group-focus-within:text-purple-500 transition-colors duration-200" />
+                      <Input
+                        id="firstName"
+                        name="firstName"
+                        placeholder="John"
+                        value={formData.firstName}
+                        onChange={handleInputChange}
+                        className="pl-10 h-12 border-2 border-gray-200 dark:border-gray-600 focus:border-purple-500 focus:ring-4 focus:ring-purple-500/20 dark:bg-gray-700 dark:text-white transition-all duration-200 rounded-xl font-medium"
+                        required
+                        disabled={isLoading}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="lastName" className="text-gray-700 dark:text-gray-300 font-semibold">Last name</Label>
+                    <div className="relative group">
+                      <User className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 group-focus-within:text-purple-500 transition-colors duration-200" />
+                      <Input
+                        id="lastName"
+                        name="lastName"
+                        placeholder="Doe"
+                        value={formData.lastName}
+                        onChange={handleInputChange}
+                        className="pl-10 h-12 border-2 border-gray-200 dark:border-gray-600 focus:border-purple-500 focus:ring-4 focus:ring-purple-500/20 dark:bg-gray-700 dark:text-white transition-all duration-200 rounded-xl font-medium"
+                        required
+                        disabled={isLoading}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Email */}
+                <div className="space-y-2 animate-slideUp stagger-4">
+                  <Label htmlFor="email" className="text-gray-700 dark:text-gray-300 font-semibold">Email Address</Label>
+                  <div className="relative group">
+                    <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 group-focus-within:text-purple-500 transition-colors duration-200" />
+                    <Input
+                      id="email"
+                      name="email"
+                      type="email"
+                      placeholder="Enter your email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      className="pl-12 h-14 border-2 border-gray-200 dark:border-gray-600 focus:border-purple-500 focus:ring-4 focus:ring-purple-500/20 dark:bg-gray-700 dark:text-white transition-all duration-200 rounded-xl font-medium"
+                      required
+                      disabled={isLoading}
+                    />
+                  </div>
+                </div>
+
+                {/* Password */}
+                <div className="space-y-2 animate-slideUp stagger-5">
+                  <Label htmlFor="password" className="text-gray-700 dark:text-gray-300 font-semibold">Password</Label>
+                  <div className="relative group">
+                    <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 group-focus-within:text-purple-500 transition-colors duration-200" />
+                    <Input
+                      id="password"
+                      name="password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Create a strong password"
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      className="pl-12 pr-14 h-14 border-2 border-gray-200 dark:border-gray-600 focus:border-purple-500 focus:ring-4 focus:ring-purple-500/20 dark:bg-gray-700 dark:text-white transition-all duration-200 rounded-xl font-medium"
+                      required
+                      disabled={isLoading}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200"
+                      disabled={isLoading}
+                    >
+                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
+                  
+                  {/* Password Requirements */}
+                  {formData.password && (
+                    <div className="grid grid-cols-2 gap-2 mt-3 animate-fadeIn">
+                      {passwordRequirements.map((req, index) => (
+                        <div key={index} className="flex items-center text-sm">
+                          <Check className={`w-4 h-4 mr-2 ${req.met ? 'text-green-500' : 'text-gray-300 dark:text-gray-600'}`} />
+                          <span className={`text-xs ${req.met ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}`}>{req.text}</span>
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </div>
-              )}
-            </div>
 
-            <div className="space-y-4">
-              <label className="flex items-start">
-                <input 
-                  type="checkbox" 
-                  name="agreeToTerms"
-                  checked={formData.agreeToTerms}
-                  onChange={handleInputChange}
-                  className="rounded border-gray-300 dark:border-gray-600 text-purple-600 focus:ring-purple-500 mt-1 dark:bg-gray-700" 
-                  required
-                  disabled={isLoading}
-                />
-                <span className="ml-3 text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-                  I agree to the{" "}
-                  <Link href="/terms" className="text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 underline">Terms of Service</Link>
-                  {" "}and{" "}
-                  <Link href="/privacy" className="text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 underline">Privacy Policy</Link>
-                </span>
-              </label>
-            </div>
-
-            <Button 
-              type="submit" 
-              disabled={isLoading || !formData.agreeToTerms || !isFormValid}
-              className="w-full h-12 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 font-medium shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50"
-            >
-              {isLoading ? (
-                <div className="flex items-center justify-center">
-                  <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                  Creating account...
+                {/* Confirm Password */}
+                <div className="space-y-2 animate-slideUp stagger-5">
+                  <Label htmlFor="confirmPassword" className="text-gray-700 dark:text-gray-300 font-semibold">Confirm Password</Label>
+                  <div className="relative group">
+                    <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 group-focus-within:text-purple-500 transition-colors duration-200" />
+                    <Input
+                      id="confirmPassword"
+                      name="confirmPassword"
+                      type={showConfirmPassword ? "text" : "password"}
+                      placeholder="Confirm your password"
+                      value={formData.confirmPassword}
+                      onChange={handleInputChange}
+                      className={`pl-12 pr-14 h-14 border-2 ${
+                        formData.confirmPassword && !passwordsMatch ? 'border-red-300 dark:border-red-600' : 'border-gray-200 dark:border-gray-600'
+                      } focus:border-purple-500 focus:ring-4 focus:ring-purple-500/20 dark:bg-gray-700 dark:text-white transition-all duration-200 rounded-xl font-medium`}
+                      required
+                      disabled={isLoading}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200"
+                      disabled={isLoading}
+                    >
+                      {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
+                  
+                  {/* Password Match Indicator */}
+                  {formData.confirmPassword && (
+                    <div className="flex items-center text-sm mt-2 animate-fadeIn">
+                      {passwordsMatch ? (
+                        <>
+                          <Check className="w-4 h-4 mr-2 text-green-500" />
+                          <span className="text-green-600 dark:text-green-400 font-medium">Perfect match! ✨</span>
+                        </>
+                      ) : (
+                        <>
+                          <div className="w-4 h-4 mr-2 rounded-full border-2 border-red-500"></div>
+                          <span className="text-red-600 dark:text-red-400 font-medium">Passwords don&apos;t match</span>
+                        </>
+                      )}
+                    </div>
+                  )}
                 </div>
-              ) : (
-                "Create Account"
-              )}
-            </Button>
 
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200 dark:border-gray-600"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">Or sign up with</span>
+                {/* Terms Agreement */}
+                <div className="space-y-4 animate-slideUp stagger-5">
+                  <label className="flex items-start group cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      name="agreeToTerms"
+                      checked={formData.agreeToTerms}
+                      onChange={handleInputChange}
+                      className="rounded border-gray-300 dark:border-gray-600 text-purple-600 focus:ring-purple-500 mt-1 dark:bg-gray-700 w-5 h-5" 
+                      required
+                      disabled={isLoading}
+                    />
+                    <span className="ml-3 text-sm text-gray-600 dark:text-gray-400 leading-relaxed font-medium group-hover:text-gray-900 dark:group-hover:text-gray-200 transition-colors duration-200">
+                      I agree to the{" "}
+                      <Link href="/terms" className="text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 underline font-semibold">Terms of Service</Link>
+                      {" "}and{" "}
+                      <Link href="/privacy" className="text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 underline font-semibold">Privacy Policy</Link>
+                    </span>
+                  </label>
+                </div>
+
+                {/* Submit Button */}
+                <Button 
+                  type="submit" 
+                  disabled={isLoading || !isFormValid}
+                  className="w-full h-14 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold text-lg shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed animate-slideUp stagger-5"
+                >
+                  {isLoading ? (
+                    <div className="flex items-center justify-center">
+                      <Loader2 className="w-5 h-5 animate-spin mr-3" />
+                      Creating magic...
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center">
+                      <Rocket className="w-5 h-5 mr-2" />
+                      Create Account
+                      <Sparkles className="w-4 h-4 ml-2 animate-pulse" />
+                    </div>
+                  )}
+                </Button>
+              </form>
+
+              {/* Footer */}
+              <div className="text-center mt-8 pt-6 border-t border-gray-100 dark:border-gray-700 animate-fadeIn">
+                <p className="text-gray-600 dark:text-gray-400 font-medium">
+                  Already have an account?{" "}
+                  <Link href="/auth/login" className="text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 font-bold transition-colors duration-200">
+                    Sign in here →
+                  </Link>
+                </p>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <Button variant="outline" className="h-12 border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700" disabled={isLoading}>
-                <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
-                  <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                  <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                  <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                  <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                </svg>
-                Google
-              </Button>
-              <Button variant="outline" className="h-12 border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700" disabled={isLoading}>
-                <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                </svg>
-                Facebook
-              </Button>
+      {/* Right Side - Enhanced Image (Opposite of login) */}
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden animate-slideInFromRight">
+        <Image
+          src="https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=800&h=1200&fit=crop"
+          alt="Happy pets and families"
+          fill
+          sizes="50vw"
+          className="object-cover"
+          priority
+        />
+        <div className="absolute inset-0 bg-gradient-to-l from-purple-600/90 to-pink-400/70 flex items-center">
+          <div className="p-12 text-white">
+            <div className="mb-6">
+              <div className="flex items-center space-x-3 mb-4 animate-slideInFromRight stagger-1">
+                <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+                  <Crown className="w-6 h-6 text-white" />
+                </div>
+                <Zap className="w-6 h-6 text-yellow-400 animate-pulse" />
+              </div>
+              <h2 className="text-4xl font-bold mb-4 leading-tight animate-slideInFromRight stagger-2">Welcome to the PawsHome Family! 🏠</h2>
+              <p className="text-xl opacity-90 mb-6 animate-slideInFromRight stagger-3">Join 50,000+ families who found their perfect companion. Your journey to unconditional love starts here!</p>
+              
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20 animate-slideInFromRight stagger-4">
+                <div className="flex items-center space-x-3">
+                  <Shield className="w-5 h-5 text-green-400" />
+                  <span className="text-sm font-medium">✨ Free • Secure • Instant Access</span>
+                </div>
+              </div>
+
+              {/* Floating stats */}
+              <div className="mt-8 grid grid-cols-2 gap-4 animate-slideInFromRight stagger-5">
+                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                  <div className="text-2xl font-bold">15K+</div>
+                  <div className="text-sm opacity-90">Happy Families</div>
+                </div>
+                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                  <div className="text-2xl font-bold">99%</div>
+                  <div className="text-sm opacity-90">Success Rate</div>
+                </div>
+              </div>
             </div>
-          </form>
-
-          {/* Footer */}
-          <div className="text-center mt-8 pt-6 border-t border-gray-100 dark:border-gray-700">
-            <p className="text-gray-600 dark:text-gray-400">
-              Already have an account?{" "}
-              <Link href="/auth/login" className="text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 font-medium transition-colors duration-200">
-                Sign in
-              </Link>
-            </p>
           </div>
         </div>
       </div>

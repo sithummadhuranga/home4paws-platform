@@ -1,69 +1,153 @@
 "use client"
-import { cn } from "@/lib/utils"
-import { useEffect, useState } from "react"
 
-export function Container({ className, children }: { className?: string; children: React.ReactNode }) {
-  return (
-    <div className={cn("mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8", className)}>
-      {children}
-    </div>
-  )
-}
+import { useEffect, useState, useCallback } from "react"
+import { Sun, Moon } from "lucide-react"
 
 export function ThemeToggle() {
   const [mounted, setMounted] = useState(false)
-  const [dark, setDark] = useState(false)
+  const [isDark, setIsDark] = useState(false)
+
+  // Ultra-fast theme application with mobile optimization
+  const applyTheme = useCallback((dark: boolean) => {
+    const html = document.documentElement
+    const body = document.body
+    
+    // Batch DOM updates for performance
+    html.classList.toggle("dark", dark)
+    html.classList.toggle("light", !dark)
+    html.setAttribute("data-theme", dark ? "dark" : "light")
+    html.style.colorScheme = dark ? "dark" : "light"
+    
+    // Force immediate visual feedback for mobile
+    body.style.setProperty("--theme-bg", dark ? "3 7 18" : "255 255 255")
+    body.style.setProperty("--theme-fg", dark ? "248 250 252" : "15 23 42")
+  }, [])
 
   useEffect(() => {
     setMounted(true)
-    const savedTheme = localStorage.getItem("theme")
-    const systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches
-    const isDark = savedTheme === "dark" || (!savedTheme && systemDark)
     
-    setDark(isDark)
-    if (isDark) {
-      document.documentElement.classList.add("dark")
-    } else {
-      document.documentElement.classList.remove("dark")
-    }
-  }, [])
+    const initTheme = () => {
+      try {
+        const saved = localStorage.getItem("theme")
+        const systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches
+        const shouldBeDark = saved ? saved === "dark" : systemDark
 
-  const toggle = () => {
-    const root = document.documentElement
-    const next = !dark
-    setDark(next)
-    if (next) {
-      root.classList.add("dark")
-      localStorage.setItem("theme", "dark")
-    } else {
-      root.classList.remove("dark")
-      localStorage.setItem("theme", "light")
-    }
-  }
+        // Disable transitions during init for instant application
+        const style = document.createElement('style')
+        style.textContent = '*, *::before, *::after { transition: none !important; }'
+        document.head.appendChild(style)
+        
+        applyTheme(shouldBeDark)
+        setIsDark(shouldBeDark)
+        
+        // Re-enable transitions after next paint
+        requestAnimationFrame(() => {
+          document.head.removeChild(style)
+        })
 
+        // Listen for system changes
+        const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)")
+        const handleSystemChange = (e: MediaQueryListEvent) => {
+          if (!localStorage.getItem("theme")) {
+            applyTheme(e.matches)
+            setIsDark(e.matches)
+          }
+        }
+
+        mediaQuery.addEventListener("change", handleSystemChange)
+        return () => mediaQuery.removeEventListener("change", handleSystemChange)
+      } catch (error) {
+        console.warn("Theme init failed:", error)
+        // Fallback to light theme
+        applyTheme(false)
+        setIsDark(false)
+      }
+    }
+
+    return initTheme()
+  }, [applyTheme])
+
+  const toggleTheme = useCallback(() => {
+    const newIsDark = !isDark
+    
+    // Haptic feedback for mobile
+    if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+      navigator.vibrate(50)
+    }
+    
+    applyTheme(newIsDark)
+    setIsDark(newIsDark)
+
+    try {
+      localStorage.setItem("theme", newIsDark ? "dark" : "light")
+    } catch (error) {
+      console.warn("Theme save failed:", error)
+    }
+  }, [isDark, applyTheme])
+
+  // Don't render anything until mounted (prevents hydration mismatch)
   if (!mounted) {
     return (
-      <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white transition-all duration-200">
-        <div className="h-5 w-5" />
-      </div>
+      <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gray-100 dark:bg-gray-800 animate-pulse" />
     )
   }
-  
+
   return (
     <button
-      onClick={toggle}
-      aria-label="Toggle theme"
-      className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white hover:bg-gray-50 transition-all duration-200 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700"
+      type="button"
+      onClick={toggleTheme}
+      className={`
+        group relative w-10 h-10 sm:w-11 sm:h-11 rounded-xl border-2 
+        transition-all duration-200 ease-out
+        active:scale-95 active:duration-75
+        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background
+        touch-target overflow-hidden
+        ${isDark
+          ? "border-amber-400/30 bg-slate-800 text-amber-400 focus:ring-amber-400/50 hover:border-amber-400/50" 
+          : "border-blue-300/30 bg-white text-blue-600 focus:ring-blue-400/50 hover:border-blue-400/50"
+        }
+      `}
+      aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+      aria-pressed={isDark}
     >
-      {dark ? (
-        <svg className="h-5 w-5 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M12 3v2m0 14v2m9-9h-2M5 12H3m15.07 6.07-1.42-1.42M7.05 7.05 5.63 5.63m12.02 0-1.42 1.42M7.05 16.95l-1.42 1.42M12 8.25A3.75 3.75 0 1 0 12 15.75 3.75 3.75 0 0 0 12 8.25Z"/>
-        </svg>
-      ) : (
-        <svg className="h-5 w-5 text-slate-700" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/>
-        </svg>
-      )}
+      {/* Background glow effect */}
+      <div 
+        className={`
+          absolute inset-0 rounded-xl opacity-0 group-hover:opacity-20 
+          group-active:opacity-30 transition-opacity duration-200
+          ${isDark ? "bg-amber-400" : "bg-blue-500"}
+        `} 
+        aria-hidden="true"
+      />
+      
+      {/* Icon container with smooth transitions */}
+      <div className="relative z-10 flex items-center justify-center w-full h-full">
+        <div className={`transition-all duration-300 ${isDark ? "rotate-0 scale-100" : "rotate-180 scale-0"}`}>
+          {isDark && (
+            <Sun className="w-5 h-5 transition-transform duration-200 group-hover:rotate-12 group-hover:scale-110" />
+          )}
+        </div>
+        <div className={`absolute transition-all duration-300 ${isDark ? "rotate-180 scale-0" : "rotate-0 scale-100"}`}>
+          {!isDark && (
+            <Moon className="w-5 h-5 transition-transform duration-200 group-hover:-rotate-12 group-hover:scale-110" />
+          )}
+        </div>
+      </div>
+      
+      {/* Ripple effect for touch feedback */}
+      <div 
+        className={`
+          absolute inset-0 rounded-xl opacity-0 group-active:opacity-40 
+          transition-opacity duration-150 pointer-events-none
+          ${isDark ? "bg-amber-400" : "bg-blue-500"}
+        `}
+        aria-hidden="true"
+      />
+      
+      {/* Screen reader only text */}
+      <span className="sr-only">
+        {isDark ? "Switch to light mode" : "Switch to dark mode"}
+      </span>
     </button>
   )
 }
