@@ -67,7 +67,7 @@ export default function SignupPage() {
       } else {
         setError(result.message)
       }
-    } catch (err) {
+    } catch {
       setError("An unexpected error occurred. Please try again.")
     }
   }, [formData, signup, router, isPasswordValid, passwordsMatch])
@@ -250,7 +250,7 @@ export default function SignupPage() {
                       ) : (
                         <>
                           <div className="w-4 h-4 mr-2 rounded-full border-2 border-red-500"></div>
-                          <span className="text-red-600 dark:text-red-400 font-medium">Passwords don't match</span>
+                          <span className="text-red-600 dark:text-red-400 font-medium">Passwords don&apos;t match</span>
                         </>
                       )}
                     </div>

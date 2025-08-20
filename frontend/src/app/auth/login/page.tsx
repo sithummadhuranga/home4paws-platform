@@ -30,13 +30,12 @@ export default function LoginPage() {
       const result = await login(formData.email, formData.password, formData.rememberMe)
       
       if (result.success) {
-        // Instant redirect - no transition delay
         router.push("/")
         router.refresh()
       } else {
         setError(result.message)
       }
-    } catch (err) {
+    } catch {
       setError("Network error. Please try again.")
     }
   }, [formData, login, router])

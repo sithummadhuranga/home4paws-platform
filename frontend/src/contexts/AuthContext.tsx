@@ -49,12 +49,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const apiCall = useCallback(async (url: string, options: RequestInit = {}) => {
     const cacheKey = `${url}-${options.method || 'GET'}`
     
-    // Return existing request if pending
     if (pendingRequests.has(cacheKey)) {
       return pendingRequests.get(cacheKey)
     }
 
-    // Create abort controller for this request
     const controller = new AbortController()
     abortControllerRef.current = controller
 
@@ -145,12 +143,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Cleanup on unmount
   useEffect(() => {
+    const currentRefreshTimeout = refreshTimeoutRef.current
+    const currentAbortController = abortControllerRef.current
+    
     return () => {
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort()
+      if (currentAbortController) {
+        currentAbortController.abort()
       }
-      if (refreshTimeoutRef.current) {
-        clearTimeout(refreshTimeoutRef.current)
+      if (currentRefreshTimeout) {
+        clearTimeout(currentRefreshTimeout)
       }
     }
   }, [])
@@ -181,11 +182,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         return { success: false, message: data.message || 'Login failed' }
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Login error:', error)
+      const errorMessage = error instanceof Error && error.name === 'AbortError' 
+        ? 'Request cancelled' 
+        : 'Network error. Please try again.'
       return { 
         success: false, 
-        message: error.name === 'AbortError' ? 'Request cancelled' : 'Network error. Please try again.' 
+        message: errorMessage
       }
     } finally {
       setIsLoading(false)
@@ -217,11 +221,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         return { success: false, message: data.message || 'Signup failed' }
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Signup error:', error)
+      const errorMessage = error instanceof Error && error.name === 'AbortError' 
+        ? 'Request cancelled' 
+        : 'Network error. Please try again.'
       return { 
         success: false, 
-        message: error.name === 'AbortError' ? 'Request cancelled' : 'Network error. Please try again.' 
+        message: errorMessage
       }
     } finally {
       setIsLoading(false)
