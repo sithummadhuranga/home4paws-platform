@@ -1,4 +1,3 @@
-/* filepath: c:\Users\Sithum Madhuranga\Desktop\home4paws-platform\frontend\src\app\auth\signup\page.tsx */
 "use client"
 
 import { useState, useCallback } from "react"
@@ -8,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Eye, EyeOff, Heart, ArrowLeft, Check, Loader2, Mail, Lock, User, Sparkles, Shield, Star, Zap, Crown, Rocket } from "lucide-react"
+import { Eye, EyeOff, ArrowLeft, Check, Loader2, Mail, Lock, User, Sparkles, Shield, Zap, Crown, Rocket } from "lucide-react"
 import { useAuth } from "@/contexts/AuthContext"
 import Image from "next/image"
 
@@ -73,7 +72,7 @@ export default function SignupPage() {
     }
   }, [formData, signup, router, isPasswordValid, passwordsMatch])
 
-  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputEvent>) => {
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target
     setFormData(prev => ({
       ...prev,
@@ -320,6 +319,7 @@ export default function SignupPage() {
           src="https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=800&h=1200&fit=crop"
           alt="Happy pets and families"
           fill
+          sizes="50vw"
           className="object-cover"
           priority
         />

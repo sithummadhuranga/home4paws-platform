@@ -57,6 +57,7 @@ export default function LoginPage() {
           src="https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=800&h=1200&fit=crop"
           alt="Happy pets waiting for adoption"
           fill
+          sizes="50vw"
           className="object-cover"
           priority
         />

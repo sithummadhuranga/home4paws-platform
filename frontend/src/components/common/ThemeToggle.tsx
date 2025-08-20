@@ -7,114 +7,147 @@ export function ThemeToggle() {
   const [mounted, setMounted] = useState(false)
   const [isDark, setIsDark] = useState(false)
 
+  // Ultra-fast theme application with mobile optimization
+  const applyTheme = useCallback((dark: boolean) => {
+    const html = document.documentElement
+    const body = document.body
+    
+    // Batch DOM updates for performance
+    html.classList.toggle("dark", dark)
+    html.classList.toggle("light", !dark)
+    html.setAttribute("data-theme", dark ? "dark" : "light")
+    html.style.colorScheme = dark ? "dark" : "light"
+    
+    // Force immediate visual feedback for mobile
+    body.style.setProperty("--theme-bg", dark ? "3 7 18" : "255 255 255")
+    body.style.setProperty("--theme-fg", dark ? "248 250 252" : "15 23 42")
+  }, [])
+
   useEffect(() => {
     setMounted(true)
     
-    // Force check theme state
     const initTheme = () => {
       try {
-        // Remove any existing classes first
-        document.documentElement.classList.remove('dark', 'light')
+        const saved = localStorage.getItem("theme")
+        const systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches
+        const shouldBeDark = saved ? saved === "dark" : systemDark
+
+        // Disable transitions during init for instant application
+        const style = document.createElement('style')
+        style.textContent = '*, *::before, *::after { transition: none !important; }'
+        document.head.appendChild(style)
         
-        const savedTheme = localStorage.getItem('theme')
-        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-        
-        let shouldBeDark = false
-        
-        if (savedTheme === 'dark') {
-          shouldBeDark = true
-        } else if (savedTheme === 'light') {
-          shouldBeDark = false
-        } else {
-          shouldBeDark = systemPrefersDark
-        }
-        
-        // Apply theme immediately
-        if (shouldBeDark) {
-          document.documentElement.classList.add('dark')
-          document.documentElement.setAttribute('data-theme', 'dark')
-        } else {
-          document.documentElement.classList.add('light')
-          document.documentElement.setAttribute('data-theme', 'light')
-        }
-        
+        applyTheme(shouldBeDark)
         setIsDark(shouldBeDark)
         
-        console.log('Theme initialized:', shouldBeDark ? 'dark' : 'light')
+        // Re-enable transitions after next paint
+        requestAnimationFrame(() => {
+          document.head.removeChild(style)
+        })
+
+        // Listen for system changes
+        const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)")
+        const handleSystemChange = (e: MediaQueryListEvent) => {
+          if (!localStorage.getItem("theme")) {
+            applyTheme(e.matches)
+            setIsDark(e.matches)
+          }
+        }
+
+        mediaQuery.addEventListener("change", handleSystemChange)
+        return () => mediaQuery.removeEventListener("change", handleSystemChange)
       } catch (error) {
-        console.error('Theme initialization failed:', error)
+        console.warn("Theme init failed:", error)
+        // Fallback to light theme
+        applyTheme(false)
+        setIsDark(false)
       }
     }
 
-    initTheme()
-  }, [])
+    return initTheme()
+  }, [applyTheme])
 
   const toggleTheme = useCallback(() => {
-    try {
-      const newIsDark = !isDark
-      
-      // Remove existing classes
-      document.documentElement.classList.remove('dark', 'light')
-      
-      // Apply new theme
-      if (newIsDark) {
-        document.documentElement.classList.add('dark')
-        document.documentElement.setAttribute('data-theme', 'dark')
-        localStorage.setItem('theme', 'dark')
-      } else {
-        document.documentElement.classList.add('light')
-        document.documentElement.setAttribute('data-theme', 'light')
-        localStorage.setItem('theme', 'light')
-      }
-      
-      setIsDark(newIsDark)
-      
-      // Force DOM update
-      document.documentElement.style.colorScheme = newIsDark ? 'dark' : 'light'
-      
-      console.log('Theme changed to:', newIsDark ? 'dark' : 'light')
-      
-    } catch (error) {
-      console.error('Theme toggle failed:', error)
+    const newIsDark = !isDark
+    
+    // Haptic feedback for mobile
+    if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+      navigator.vibrate(50)
     }
-  }, [isDark])
+    
+    applyTheme(newIsDark)
+    setIsDark(newIsDark)
 
+    try {
+      localStorage.setItem("theme", newIsDark ? "dark" : "light")
+    } catch (error) {
+      console.warn("Theme save failed:", error)
+    }
+  }, [isDark, applyTheme])
+
+  // Don't render anything until mounted (prevents hydration mismatch)
   if (!mounted) {
     return (
-      <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white shadow-sm">
-        <div className="h-4 w-4 animate-pulse bg-gray-300 rounded" />
-      </div>
+      <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gray-100 dark:bg-gray-800 animate-pulse" />
     )
   }
 
   return (
     <button
+      type="button"
       onClick={toggleTheme}
+      className={`
+        group relative w-10 h-10 sm:w-11 sm:h-11 rounded-xl border-2 
+        transition-all duration-200 ease-out
+        active:scale-95 active:duration-75
+        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background
+        touch-target overflow-hidden
+        ${isDark
+          ? "border-amber-400/30 bg-slate-800 text-amber-400 focus:ring-amber-400/50 hover:border-amber-400/50" 
+          : "border-blue-300/30 bg-white text-blue-600 focus:ring-blue-400/50 hover:border-blue-400/50"
+        }
+      `}
       aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-      className={`group relative flex h-10 w-10 items-center justify-center rounded-xl border transition-all duration-200 shadow-sm hover:shadow-md active:scale-95 ${
-        isDark 
-          ? 'border-yellow-400/50 bg-gray-800 text-yellow-400 hover:bg-gray-700 hover:border-yellow-400' 
-          : 'border-blue-300/50 bg-white text-blue-600 hover:bg-blue-50 hover:border-blue-400'
-      }`}
+      aria-pressed={isDark}
     >
       {/* Background glow effect */}
-      <div className={`absolute inset-0 rounded-xl opacity-0 group-hover:opacity-20 transition-opacity duration-200 ${
-        isDark ? 'bg-yellow-400' : 'bg-blue-500'
-      }`} />
+      <div 
+        className={`
+          absolute inset-0 rounded-xl opacity-0 group-hover:opacity-20 
+          group-active:opacity-30 transition-opacity duration-200
+          ${isDark ? "bg-amber-400" : "bg-blue-500"}
+        `} 
+        aria-hidden="true"
+      />
       
-      {/* Icon with smooth transition */}
-      <div className="relative z-10">
-        {isDark ? (
-          <Sun className="h-5 w-5 transition-all duration-200 group-hover:rotate-12 group-hover:scale-110" />
-        ) : (
-          <Moon className="h-5 w-5 transition-all duration-200 group-hover:-rotate-12 group-hover:scale-110" />
-        )}
+      {/* Icon container with smooth transitions */}
+      <div className="relative z-10 flex items-center justify-center w-full h-full">
+        <div className={`transition-all duration-300 ${isDark ? "rotate-0 scale-100" : "rotate-180 scale-0"}`}>
+          {isDark && (
+            <Sun className="w-5 h-5 transition-transform duration-200 group-hover:rotate-12 group-hover:scale-110" />
+          )}
+        </div>
+        <div className={`absolute transition-all duration-300 ${isDark ? "rotate-180 scale-0" : "rotate-0 scale-100"}`}>
+          {!isDark && (
+            <Moon className="w-5 h-5 transition-transform duration-200 group-hover:-rotate-12 group-hover:scale-110" />
+          )}
+        </div>
       </div>
       
-      {/* Ripple effect */}
-      <div className={`absolute inset-0 rounded-xl opacity-0 group-active:opacity-30 transition-opacity duration-150 ${
-        isDark ? 'bg-yellow-400' : 'bg-blue-500'
-      }`} />
+      {/* Ripple effect for touch feedback */}
+      <div 
+        className={`
+          absolute inset-0 rounded-xl opacity-0 group-active:opacity-40 
+          transition-opacity duration-150 pointer-events-none
+          ${isDark ? "bg-amber-400" : "bg-blue-500"}
+        `}
+        aria-hidden="true"
+      />
+      
+      {/* Screen reader only text */}
+      <span className="sr-only">
+        {isDark ? "Switch to light mode" : "Switch to dark mode"}
+      </span>
     </button>
   )
 }
