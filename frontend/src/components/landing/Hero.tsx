@@ -15,7 +15,7 @@ const stats = [
 ] as const
 
 // Mobile-optimized stat card
-const StatCard = memo(({ stat, index }: { stat: typeof stats[0]; index: number }) => (
+const StatCard = memo(({ stat, index }: { stat: (typeof stats)[number]; index: number }) => (
 	<div className="text-center animate-fadeIn" style={{ animationDelay: `${index * 0.1}s` }}>
 		<div className="flex items-center justify-center mb-2">
 			<div className="p-2 sm:p-3 rounded-xl bg-white dark:bg-gray-800 shadow-lg border border-gray-100 dark:border-gray-700">
