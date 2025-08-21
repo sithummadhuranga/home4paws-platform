@@ -73,10 +73,9 @@ const nextConfig: NextConfig = {
     ];
   },
   
-  // Production optimizations
+  // Production optimizations - Remove deprecated swcMinify
   ...(process.env.NODE_ENV === 'production' && {
     output: 'standalone',
-    swcMinify: true,
     compiler: {
       removeConsole: true,
     },

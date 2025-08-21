@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import Image from "next/image"
 import { Container } from "@/components/common/Container"
 import { Button } from "@/components/ui/button"
@@ -59,6 +59,11 @@ const shelters = [
 
 export default function FeaturedShelters() {
   const [currentIndex, setCurrentIndex] = useState(0)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const nextSlide = () => {
     setCurrentIndex((prev) => (prev + 1) % Math.ceil(shelters.length / 2))
@@ -68,55 +73,74 @@ export default function FeaturedShelters() {
     setCurrentIndex((prev) => (prev - 1 + Math.ceil(shelters.length / 2)) % Math.ceil(shelters.length / 2))
   }
 
+  if (!mounted) {
+    return (
+      <section className="py-12 sm:py-16 lg:py-20 bg-white dark:bg-gray-900">
+        <Container>
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-64 mb-4"></div>
+            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-96 mb-8"></div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {[1, 2].map((i) => (
+                <div key={i} className="bg-gray-200 dark:bg-gray-700 rounded-2xl h-80"></div>
+              ))}
+            </div>
+          </div>
+        </Container>
+      </section>
+    )
+  }
+
   return (
-    <section className="py-16 sm:py-20 bg-white dark:bg-gray-900">
+    <section className="py-12 sm:py-16 lg:py-20 bg-white dark:bg-gray-900">
       <Container>
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-12 animate-fadeInUp">
+        {/* Header - Mobile Optimized */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 sm:mb-12 animate-fadeInUp">
           <div>
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-3 sm:mb-4">
               Featured
-              <span className="text-gradient ml-3">Shelters</span>
+              <span className="text-gradient ml-2 sm:ml-3">Shelters</span>
             </h2>
-            <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl">
+            <p className="text-sm sm:text-base lg:text-lg text-gray-600 dark:text-gray-300 max-w-2xl">
               Trusted partners committed to animal welfare and finding perfect matches.
             </p>
           </div>
           
-          {/* Navigation Controls */}
-          <div className="flex items-center gap-3 mt-6 sm:mt-0">
+          {/* Navigation Controls - Mobile Optimized */}
+          <div className="flex items-center gap-2 sm:gap-3 mt-6 sm:mt-0">
             <Button 
               variant="outline" 
               size="sm" 
               onClick={prevSlide}
-              className="w-10 h-10 p-0 rounded-full border-2 hover:border-blue-500 hover:text-blue-600"
+              className="w-8 h-8 sm:w-10 sm:h-10 p-0 rounded-full border-2 hover:border-blue-500 hover:text-blue-600"
+              suppressHydrationWarning
             >
-              <ChevronLeft className="w-5 h-5" />
+              <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
             </Button>
             <Button 
               variant="outline" 
               size="sm" 
               onClick={nextSlide}
-              className="w-10 h-10 p-0 rounded-full border-2 hover:border-blue-500 hover:text-blue-600"
+              className="w-8 h-8 sm:w-10 sm:h-10 p-0 rounded-full border-2 hover:border-blue-500 hover:text-blue-600"
+              suppressHydrationWarning
             >
-              <ChevronRight className="w-5 h-5" />
+              <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
             </Button>
-            <Button variant="outline" size="sm" className="ml-3">
-              View All Shelters
+            <Button variant="outline" size="sm" className="ml-2 sm:ml-3 text-xs sm:text-sm px-3 sm:px-4">
+              View All
             </Button>
           </div>
         </div>
 
-        {/* Shelters Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8 mb-8">
+        {/* Shelters Grid - Mobile Optimized */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 mb-6 sm:mb-8">
           {shelters.slice(currentIndex * 2, currentIndex * 2 + 2).map((shelter, index) => (
             <article 
               key={shelter.id} 
-              className="group bg-white dark:bg-gray-800 rounded-3xl shadow-lg hover:shadow-xl transition-all duration-500 border border-gray-100 dark:border-gray-700 overflow-hidden animate-fadeInUp"
-              style={{ animationDelay: `${index * 0.1}s` }}
+              className="group bg-white dark:bg-gray-800 rounded-2xl sm:rounded-3xl shadow-lg hover:shadow-xl transition-all duration-500 border border-gray-100 dark:border-gray-700 overflow-hidden animate-fadeInUp"
             >
-              {/* Image Container */}
-              <div className="relative aspect-[16/10] overflow-hidden">
+              {/* Image Container - Mobile Optimized */}
+              <div className="relative aspect-[16/9] sm:aspect-[16/10] overflow-hidden">
                 <Image 
                   src={shelter.image} 
                   alt={shelter.name}
@@ -125,74 +149,76 @@ export default function FeaturedShelters() {
                   className="object-cover group-hover:scale-105 transition-transform duration-700"
                 />
                 
-                {/* Overlay Elements */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
                 
-                {/* Verified Badge */}
+                {/* Verified Badge - Mobile Optimized */}
                 {shelter.verified && (
-                  <div className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-full border border-white/20">
-                    <Award className="w-4 h-4 text-blue-600" />
-                    <span className="text-sm font-medium text-gray-900 dark:text-white">Verified</span>
+                  <div className="absolute top-2 left-2 sm:top-4 sm:left-4 flex items-center gap-1 sm:gap-2 px-2 py-1 sm:px-3 sm:py-1.5 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-full border border-white/20">
+                    <Award className="w-2.5 h-2.5 sm:w-4 sm:h-4 text-blue-600" />
+                    <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white">Verified</span>
                   </div>
                 )}
 
-                {/* Favorite Button */}
-                <button className="absolute top-4 right-4 w-10 h-10 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white dark:hover:bg-gray-800 transition-colors duration-200">
-                  <Heart className="w-5 h-5 text-gray-600 dark:text-gray-300 hover:text-red-500" />
+                {/* Favorite Button - Mobile Optimized */}
+                <button 
+                  className="absolute top-2 right-2 sm:top-4 sm:right-4 w-7 h-7 sm:w-10 sm:h-10 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white dark:hover:bg-gray-800 transition-colors duration-200"
+                  suppressHydrationWarning
+                >
+                  <Heart className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-gray-600 dark:text-gray-300 hover:text-red-500" />
                 </button>
 
-                {/* Stats Overlay */}
-                <div className="absolute bottom-4 left-4 flex items-center gap-4">
+                {/* Stats Overlay - Mobile Optimized */}
+                <div className="absolute bottom-2 left-2 sm:bottom-4 sm:left-4 flex items-center gap-2 sm:gap-4">
                   <div className="flex items-center gap-1 px-2 py-1 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-lg">
-                    <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                    <span className="text-sm font-semibold text-gray-900 dark:text-white">{shelter.rating}</span>
-                    <span className="text-xs text-gray-600 dark:text-gray-400">({shelter.reviews})</span>
+                    <Star className="w-2.5 h-2.5 sm:w-4 sm:h-4 text-yellow-500 fill-current" />
+                    <span className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-white">{shelter.rating}</span>
+                    <span className="text-xs text-gray-600 dark:text-gray-400 hidden sm:inline">({shelter.reviews})</span>
                   </div>
                   
                   <div className="flex items-center gap-1 px-2 py-1 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-lg">
-                    <Users className="w-4 h-4 text-blue-600" />
-                    <span className="text-sm font-semibold text-gray-900 dark:text-white">{shelter.pets}</span>
-                    <span className="text-xs text-gray-600 dark:text-gray-400">pets</span>
+                    <Users className="w-2.5 h-2.5 sm:w-4 sm:h-4 text-blue-600" />
+                    <span className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-white">{shelter.pets}</span>
+                    <span className="text-xs text-gray-600 dark:text-gray-400 hidden sm:inline">pets</span>
                   </div>
                 </div>
               </div>
 
-              {/* Content */}
-              <div className="p-6 space-y-4">
+              {/* Content - Mobile Optimized */}
+              <div className="p-4 sm:p-6 space-y-3 sm:space-y-4">
                 {/* Header */}
                 <div>
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">
+                  <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300 line-clamp-1">
                     {shelter.name}
                   </h3>
                   <div className="flex items-center gap-1 mt-1">
-                    <MapPin className="w-4 h-4 text-gray-400" />
-                    <span className="text-sm text-gray-600 dark:text-gray-400">{shelter.city}</span>
+                    <MapPin className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400 flex-shrink-0" />
+                    <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">{shelter.city}</span>
                   </div>
                 </div>
 
                 {/* Description */}
-                <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
+                <p className="text-gray-600 dark:text-gray-300 text-xs sm:text-sm leading-relaxed line-clamp-2">
                   {shelter.description}
                 </p>
 
-                {/* Specialties */}
-                <div className="flex flex-wrap gap-2">
-                  {shelter.specialties.map((specialty, idx) => (
+                {/* Specialties - Mobile Optimized */}
+                <div className="flex flex-wrap gap-1 sm:gap-2">
+                  {shelter.specialties.slice(0, 3).map((specialty, idx) => (
                     <span 
                       key={idx}
-                      className="px-3 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 text-xs font-medium rounded-full border border-blue-200 dark:border-blue-800"
+                      className="px-2 py-0.5 sm:px-3 sm:py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 text-xs font-medium rounded-full border border-blue-200 dark:border-blue-800"
                     >
                       {specialty}
                     </span>
                   ))}
                 </div>
 
-                {/* Action Buttons */}
-                <div className="flex gap-3 pt-2">
-                  <Button size="sm" className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700">
+                {/* Action Buttons - Mobile Optimized */}
+                <div className="flex gap-2 sm:gap-3 pt-2">
+                  <Button size="sm" className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-xs sm:text-sm h-8 sm:h-9">
                     View Profile
                   </Button>
-                  <Button variant="outline" size="sm" className="border-2 hover:border-blue-500 hover:text-blue-600">
+                  <Button variant="outline" size="sm" className="border-2 hover:border-blue-500 hover:text-blue-600 text-xs sm:text-sm h-8 sm:h-9 px-3">
                     Contact
                   </Button>
                 </div>
@@ -201,17 +227,18 @@ export default function FeaturedShelters() {
           ))}
         </div>
 
-        {/* Pagination Dots */}
-        <div className="flex justify-center gap-2 animate-fadeInUp stagger-2">
+        {/* Pagination Dots - Mobile Optimized */}
+        <div className="flex justify-center gap-1.5 sm:gap-2 animate-fadeInUp stagger-2">
           {Array.from({ length: Math.ceil(shelters.length / 2) }).map((_, index) => (
             <button
               key={index}
               onClick={() => setCurrentIndex(index)}
-              className={`w-3 h-3 rounded-full transition-all duration-300 ${
+              className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full transition-all duration-300 ${
                 currentIndex === index 
                   ? "bg-blue-600 scale-125" 
                   : "bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500"
               }`}
+              suppressHydrationWarning
             />
           ))}
         </div>
