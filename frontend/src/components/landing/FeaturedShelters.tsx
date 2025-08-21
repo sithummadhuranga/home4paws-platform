@@ -134,7 +134,7 @@ export default function FeaturedShelters() {
 
         {/* Shelters Grid - Mobile Optimized */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 mb-6 sm:mb-8">
-          {shelters.slice(currentIndex * 2, currentIndex * 2 + 2).map((shelter, index) => (
+          {shelters.slice(currentIndex * 2, currentIndex * 2 + 2).map((shelter) => (
             <article 
               key={shelter.id} 
               className="group bg-white dark:bg-gray-800 rounded-2xl sm:rounded-3xl shadow-lg hover:shadow-xl transition-all duration-500 border border-gray-100 dark:border-gray-700 overflow-hidden animate-fadeInUp"

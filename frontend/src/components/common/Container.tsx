@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils"
 interface ContainerProps {
   className?: string
   children: React.ReactNode
-  maxWidth?: "sm" | "md" | "lg" | "xl" | "2xl" | "full"
+  maxWidth?: "sm" | "md" | "lg" | "xl" | "2xl" | "7xl" | "full"
 }
 
 export function Container({ className, children, maxWidth = "7xl" }: ContainerProps) {
@@ -15,14 +15,14 @@ export function Container({ className, children, maxWidth = "7xl" }: ContainerPr
     lg: "max-w-lg",
     xl: "max-w-xl",
     "2xl": "max-w-2xl",
-    full: "max-w-full",
-    "7xl": "max-w-7xl"
+    "7xl": "max-w-7xl",
+    full: "max-w-full"
   }
 
   return (
     <div className={cn(
       "mx-auto w-full px-4 sm:px-6 lg:px-8",
-      maxWidthClasses[maxWidth as keyof typeof maxWidthClasses] || maxWidthClasses["7xl"],
+      maxWidthClasses[maxWidth],
       className
     )}>
       {children}
