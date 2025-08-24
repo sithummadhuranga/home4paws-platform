@@ -1,27 +1,28 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Sora, Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+// Modern fonts - Sora for headings, Inter for body
+const sora = Sora({
+  variable: "--font-sora",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
   display: "swap",
-  preload: true,
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
   display: "swap",
-  preload: false,
 });
 
 export const metadata: Metadata = {
-  title: "PawsHome – Find Your Perfect Pet",
+  title: "Home4Paws – Find Your Perfect Pet Companion",
   description:
-    "Fast, secure pet adoption platform. Connect with loving pets from verified shelters.",
-  keywords: "pet adoption, dogs, cats, animal shelter, fast adoption",
+    "Connect with loving pets from verified shelters. Fast, secure, and simple pet adoption platform.",
+  keywords: "pet adoption, dogs, cats, animal shelter, pet care, pet supplies",
 };
 
 export default function RootLayout({
@@ -32,64 +33,38 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/* Super powerful theme script */}
+        {/* Improved theme script for smooth transitions */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
               (function() {
                 try {
-                  // Clear any existing theme classes
-                  document.documentElement.className = document.documentElement.className
-                    .replace(/\\s*(dark|light)\\s*/g, ' ')
-                    .trim();
+                  const getTheme = () => {
+                    const storedTheme = localStorage.getItem('theme');
+                    return storedTheme || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                  };
                   
-                  const theme = localStorage.getItem('theme');
-                  const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                  const theme = getTheme();
                   
-                  let isDark = false;
+                  // Apply theme immediately to prevent flash
+                  document.documentElement.classList.toggle('dark', theme === 'dark');
                   
-                  if (theme === 'dark') {
-                    isDark = true;
-                  } else if (theme === 'light') {
-                    isDark = false;
-                  } else {
-                    isDark = systemDark;
-                  }
-                  
-                  if (isDark) {
-                    document.documentElement.classList.add('dark');
-                    document.documentElement.setAttribute('data-theme', 'dark');
-                    document.documentElement.style.colorScheme = 'dark';
-                  } else {
-                    document.documentElement.classList.add('light');
-                    document.documentElement.setAttribute('data-theme', 'light');
-                    document.documentElement.style.colorScheme = 'light';
-                  }
-                  
-                  // Prevent flash
-                  document.documentElement.style.visibility = 'visible';
-                  
+                  // Monitor system preference changes
+                  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+                    if (!localStorage.getItem('theme')) {
+                      document.documentElement.classList.toggle('dark', e.matches);
+                    }
+                  });
                 } catch (e) {
-                  console.warn('Theme script failed:', e);
-                  // Fallback to light theme
-                  document.documentElement.classList.add('light');
-                  document.documentElement.setAttribute('data-theme', 'light');
+                  console.error('Theme initialization failed:', e);
                 }
               })();
             `,
           }}
         />
-        <style
-          dangerouslySetInnerHTML={{
-            __html: `
-              html { visibility: hidden; }
-              html.dark, html.light { visibility: visible; }
-            `,
-          }}
-        />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground transition-colors duration-200`}
+        className={`${sora.variable} ${inter.variable} antialiased bg-background text-foreground`}
         suppressHydrationWarning
       >
         <AuthProvider>{children}</AuthProvider>

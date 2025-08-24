@@ -1,214 +1,268 @@
 "use client"
 
-import React, { useState } from "react"
 import Link from "next/link"
-import { Container } from "@/components/common/Container"
+import Image from "next/image"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Heart, Mail, Facebook, Twitter, Instagram, Youtube, Send, Award, Shield, Clock } from "lucide-react"
-import { toast } from "sonner"
+import { motion } from "framer-motion"
+import { 
+  Instagram, 
+  Facebook, 
+  Twitter, 
+  Youtube, 
+  ArrowRight, 
+  Mail, 
+  PhoneCall, 
+  MapPin,
+  PawPrint,
+  Heart
+} from "lucide-react"
+
+// Pet gallery images for Instagram-like strip
+const galleryImages = [
+  "/images/gallery/pet-1.jpg",
+  "/images/gallery/pet-2.jpg",
+  "/images/gallery/pet-3.jpg",
+  "/images/gallery/pet-4.jpg",
+  "/images/gallery/pet-5.jpg",
+  "/images/gallery/pet-6.jpg",
+]
+
+// Social media links
+const socialLinks = [
+  { icon: Instagram, href: "https://instagram.com", label: "Instagram" },
+  { icon: Facebook, href: "https://facebook.com", label: "Facebook" },
+  { icon: Twitter, href: "https://twitter.com", label: "Twitter" },
+  { icon: Youtube, href: "https://youtube.com", label: "YouTube" },
+]
+
+// Main footer links
+const footerLinks = [
+  {
+    title: "Adopt",
+    links: [
+      { label: "Browse Pets", href: "/adopt" },
+      { label: "How It Works", href: "/how-it-works" },
+      { label: "Adoption FAQs", href: "/faqs" },
+      { label: "Success Stories", href: "/stories" },
+    ],
+  },
+  {
+    title: "Resources",
+    links: [
+      { label: "Pet Care Tips", href: "/blog" },
+      { label: "Training Guides", href: "/training" },
+      { label: "Health & Nutrition", href: "/health" },
+      { label: "Pet-Friendly Living", href: "/living" },
+    ],
+  },
+  {
+    title: "About",
+    links: [
+      { label: "Our Mission", href: "/about" },
+      { label: "Partner Shelters", href: "/shelters" },
+      { label: "Testimonials", href: "/testimonials" },
+      { label: "Contact Us", href: "/contact" },
+    ],
+  },
+  {
+    title: "Legal",
+    links: [
+      { label: "Privacy Policy", href: "/privacy" },
+      { label: "Terms of Service", href: "/terms" },
+      { label: "Cookie Policy", href: "/cookies" },
+      { label: "Accessibility", href: "/accessibility" },
+    ],
+  },
+]
+
+// Gallery image with hover animation
+const GalleryImage = ({ src, index }: { src: string; index: number }) => (
+  <motion.div 
+    className="relative overflow-hidden rounded-xl aspect-square group"
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.5, delay: index * 0.1 }}
+  >
+    <Image
+      src={src}
+      alt="Pet Gallery Photo"
+      fill
+      className="object-cover transition-transform duration-500 group-hover:scale-110"
+    />
+    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
+      <Heart className="text-white w-5 h-5" />
+    </div>
+  </motion.div>
+)
 
 export default function Footer() {
-  const [email, setEmail] = useState("")
-  const [isSubscribing, setIsSubscribing] = useState(false)
-
-  const handleSubscribe = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!email) return
-
-    setIsSubscribing(true)
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    toast.success("Successfully subscribed! Welcome to the PawsHome family 🐾")
-    setEmail("")
-    setIsSubscribing(false)
-  }
-
-  const footerLinks = {
-    Adopt: [
-      { label: "Browse Pets", href: "/adopt" },
-      { label: "Adoption Process", href: "/adopt/process" },
-      { label: "Success Stories", href: "/stories" },
-      { label: "Requirements", href: "/adopt/requirements" }
-    ],
-    Services: [
-      { label: "Pet Supplies", href: "/marketplace/supplies" },
-      { label: "Grooming", href: "/marketplace/grooming" },
-      { label: "Training", href: "/marketplace/training" },
-      { label: "Veterinary Care", href: "/marketplace/vet" }
-    ],
-    Support: [
-      { label: "Help Center", href: "/help" },
-      { label: "Contact Us", href: "/contact" },
-      { label: "Pet Care Tips", href: "/resources" },
-      { label: "Emergency Help", href: "/emergency" }
-    ],
-    Company: [
-      { label: "About Us", href: "/about" },
-      { label: "Careers", href: "/careers" },
-      { label: "Press", href: "/press" },
-      { label: "Partners", href: "/shelters" }
-    ]
-  }
-
   return (
-    <footer className="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white">
-      <div className="relative">
-        {/* Newsletter Section - Mobile Optimized */}
-        <div className="border-b border-gray-200 dark:border-gray-700/50">
-          <Container>
-            <div className="py-8 sm:py-12">
-              <div className="text-center space-y-4 sm:space-y-6">
-                <div className="inline-flex items-center px-3 py-1.5 rounded-full bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 mb-4">
-                  <Mail className="w-3 h-3 sm:w-4 sm:h-4 text-blue-600 dark:text-blue-400 mr-2" />
-                  <span className="text-xs sm:text-sm font-medium text-blue-700 dark:text-blue-400">Stay Updated</span>
-                </div>
-                
-                <div>
-                  <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-2 sm:mb-3 text-gray-900 dark:text-white">
-                    Get Pet Care Tips &
-                    <span className="text-gradient block sm:inline sm:ml-2">Updates</span>
-                  </h3>
-                  <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
-                    Join 25,000+ pet lovers receiving weekly tips and adoption opportunities.
-                  </p>
-                </div>
-
-                <form onSubmit={handleSubscribe} className="max-w-md mx-auto">
-                  <div className="flex flex-col sm:flex-row gap-3 p-2 bg-gray-50 dark:bg-white/10 backdrop-blur-sm rounded-xl border border-gray-200 dark:border-white/20">
+    <footer className="bg-surface dark:bg-surface relative overflow-hidden pt-16 pb-8">
+      {/* Decorative background elements */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-bl from-primary/5 via-secondary/5 to-tertiary/5 rounded-full filter blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-tertiary/5 via-secondary/5 to-primary/5 rounded-full filter blur-3xl" />
+      </div>
+      
+      {/* Newsletter section */}
+      <div className="container mx-auto px-4 mb-16">
+        <div className="relative rounded-2xl overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/90 to-tertiary/90" />
+          <div className="absolute inset-0 mix-blend-soft-light opacity-10">
+            <div className="w-full h-full" style={{ 
+              backgroundImage: `url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='1' fill-rule='evenodd'%3E%3Ccircle cx='3' cy='3' r='3'/%3E%3Ccircle cx='13' cy='13' r='3'/%3E%3C/g%3E%3C/svg%3E")`,
+              backgroundSize: '15px 15px'
+            }} />
+          </div>
+          
+          <div className="relative z-10 p-8 sm:p-10 md:p-12 text-white">
+            <div className="grid md:grid-cols-2 gap-8 items-center">
+              <div>
+                <motion.h2 
+                  className="text-2xl sm:text-3xl font-bold mb-4"
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                  viewport={{ once: true }}
+                >
+                  Get Pet Care Tips & Updates
+                </motion.h2>
+                <motion.p 
+                  className="text-white/80 mb-6 max-w-md"
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.1 }}
+                  viewport={{ once: true }}
+                >
+                  Join our community of pet lovers. Get weekly advice, adoption updates, and special offers.
+                </motion.p>
+              </div>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                viewport={{ once: true }}
+              >
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <div className="relative flex-grow">
+                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-primary/80 w-5 h-5" />
                     <Input
-                      type="email"
-                      placeholder="Enter your email..."
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="flex-1 bg-transparent border-0 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:ring-0 h-10"
-                      required
+                      placeholder="Enter your email"
+                      className="pl-10 h-12 border-2 border-white/30 bg-white/10 backdrop-blur-sm focus:border-white text-white placeholder:text-white/60 rounded-lg"
                     />
-                    <Button 
-                      type="submit" 
-                      disabled={isSubscribing}
-                      className="w-full sm:w-auto h-10 text-sm"
-                    >
-                      {isSubscribing ? (
-                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      ) : (
-                        <>
-                          <Send className="w-3 h-3 mr-2" />
-                          Subscribe
-                        </>
-                      )}
-                    </Button>
                   </div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                    No spam, unsubscribe anytime. We respect your privacy.
-                  </p>
-                </form>
-              </div>
-            </div>
-          </Container>
-        </div>
-
-        {/* Main Footer Content - Mobile Optimized */}
-        <div className="py-8 sm:py-12">
-          <Container>
-            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-6 sm:gap-8">
-              {/* Brand Section - Mobile Optimized */}
-              <div className="col-span-2 sm:col-span-4 lg:col-span-2 text-center sm:text-left">
-                <Link href="/" className="inline-flex items-center space-x-3 mb-4 group">
-                  <div className="relative">
-                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-                      <Heart className="w-5 h-5 text-white" />
-                    </div>
-                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-gray-900"></div>
-                  </div>
-                  <div>
-                    <h4 className="text-xl font-bold text-gray-900 dark:text-white">PawsHome</h4>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Find • Adopt • Love</p>
-                  </div>
-                </Link>
-                
-                <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed mb-4">
-                  Connecting loving families with rescue pets since 2020. Over 15,000 successful adoptions.
+                  <Button className="h-12 bg-white text-primary hover:bg-white/90 transition-all duration-300 rounded-lg">
+                    Subscribe
+                    <ArrowRight className="ml-2 w-4 h-4" />
+                  </Button>
+                </div>
+                <p className="text-white/60 text-xs mt-3">
+                  By subscribing, you agree to our <Link href="/privacy" className="underline hover:text-white">Privacy Policy</Link>.
                 </p>
-
-                {/* Trust Badges - Mobile Optimized */}
-                <div className="grid grid-cols-3 gap-2 mb-4">
-                  <div className="text-center p-2 bg-gray-50 dark:bg-white/5 rounded-lg border border-gray-200 dark:border-white/10">
-                    <Award className="w-4 h-4 text-yellow-500 mx-auto mb-1" />
-                    <p className="text-xs text-gray-600 dark:text-gray-400 font-medium">Verified</p>
-                  </div>
-                  <div className="text-center p-2 bg-gray-50 dark:bg-white/5 rounded-lg border border-gray-200 dark:border-white/10">
-                    <Shield className="w-4 h-4 text-green-500 mx-auto mb-1" />
-                    <p className="text-xs text-gray-600 dark:text-gray-400 font-medium">Secure</p>
-                  </div>
-                  <div className="text-center p-2 bg-gray-50 dark:bg-white/5 rounded-lg border border-gray-200 dark:border-white/10">
-                    <Clock className="w-4 h-4 text-blue-500 mx-auto mb-1" />
-                    <p className="text-xs text-gray-600 dark:text-gray-400 font-medium">24/7</p>
-                  </div>
-                </div>
-
-                {/* Social Media - Mobile Optimized */}
-                <div className="flex justify-center sm:justify-start space-x-3">
-                  {[
-                    { icon: Facebook, href: "#", label: "Facebook" },
-                    { icon: Twitter, href: "#", label: "Twitter" },
-                    { icon: Instagram, href: "#", label: "Instagram" },
-                    { icon: Youtube, href: "#", label: "YouTube" }
-                  ].map(({ icon: Icon, href, label }) => (
-                    <a
-                      key={label}
-                      href={href}
-                      aria-label={label}
-                      className="w-8 h-8 bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 rounded-lg flex items-center justify-center transition-all duration-300"
-                    >
-                      <Icon className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-                    </a>
-                  ))}
-                </div>
+              </motion.div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      {/* Instagram-like gallery strip */}
+      <div className="container mx-auto px-4 mb-16">
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center gap-2 mb-2">
+            <PawPrint className="text-primary w-5 h-5" />
+            <h3 className="text-lg font-semibold text-foreground">Pet Gallery</h3>
+          </div>
+          <div className="grid grid-cols-3 md:grid-cols-6 gap-3 sm:gap-4">
+            {galleryImages.map((src, index) => (
+              <GalleryImage key={index} src={src} index={index} />
+            ))}
+          </div>
+        </div>
+      </div>
+      
+      {/* Main footer content */}
+      <div className="container mx-auto px-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-8 mb-12">
+          {/* Logo and contact info */}
+          <div className="md:col-span-1">
+            <Link href="/" className="flex items-center gap-2 mb-6">
+              <div className="relative w-10 h-10 overflow-hidden rounded-lg">
+                <Image 
+                  src="/images/logo.svg" 
+                  alt="Home4Paws" 
+                  width={40} 
+                  height={40}
+                  priority
+                />
               </div>
-
-              {/* Footer Links - Mobile Optimized */}
-              {Object.entries(footerLinks).map(([title, links]) => (
-                <div key={title} className="text-center sm:text-left">
-                  <h5 className="text-gray-900 dark:text-white font-bold mb-3 text-sm uppercase tracking-wider">{title}</h5>
-                  <ul className="space-y-2">
-                    {links.map((link) => (
-                      <li key={link.href}>
-                        <Link 
-                          href={link.href}
-                          className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-300 text-sm block py-1"
-                        >
-                          {link.label}
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+              <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-tertiary">
+                Home4Paws
+              </span>
+            </Link>
+            
+            <div className="space-y-4 text-muted-foreground">
+              <p className="flex items-start gap-3">
+                <MapPin className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                <span>123 Pet Street, San Francisco, CA 94158</span>
+              </p>
+              <p className="flex items-center gap-3">
+                <PhoneCall className="w-5 h-5 text-primary" />
+                <span>(123) 456-7890</span>
+              </p>
+              <p className="flex items-center gap-3">
+                <Mail className="w-5 h-5 text-primary" />
+                <span>hello@home4paws.com</span>
+              </p>
+            </div>
+            
+            {/* Social links */}
+            <div className="flex gap-3 mt-6">
+              {socialLinks.map((social) => (
+                <Link 
+                  key={social.label}
+                  href={social.href}
+                  className="w-9 h-9 rounded-full flex items-center justify-center bg-muted hover:bg-primary/10 text-foreground hover:text-primary transition-colors duration-200"
+                  aria-label={social.label}
+                >
+                  <social.icon className="w-4 h-4" />
+                </Link>
               ))}
             </div>
-          </Container>
+          </div>
+          
+          {/* Footer links */}
+          <div className="md:col-span-4 grid grid-cols-2 md:grid-cols-4 gap-8">
+            {footerLinks.map((column) => (
+              <div key={column.title}>
+                <h3 className="font-semibold text-foreground mb-4">{column.title}</h3>
+                <ul className="space-y-3">
+                  {column.links.map((link) => (
+                    <li key={link.label}>
+                      <Link 
+                        href={link.href}
+                        className="text-muted-foreground hover:text-primary transition-colors duration-200"
+                      >
+                        {link.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
         </div>
-
-        {/* Bottom Bar - Mobile Optimized */}
-        <div className="border-t border-gray-200 dark:border-gray-700/50">
-          <Container>
-            <div className="py-4 flex flex-col sm:flex-row justify-between items-center gap-3">
-              <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-                <p>© {new Date().getFullYear()} PawsHome. All rights reserved.</p>
-                <div className="flex items-center gap-3">
-                  <Link href="/privacy" className="hover:text-gray-900 dark:hover:text-white transition-colors duration-300">Privacy</Link>
-                  <span className="text-gray-300 dark:text-gray-600">•</span>
-                  <Link href="/terms" className="hover:text-gray-900 dark:hover:text-white transition-colors duration-300">Terms</Link>
-                  <span className="text-gray-300 dark:text-gray-600">•</span>
-                  <Link href="/cookies" className="hover:text-gray-900 dark:hover:text-white transition-colors duration-300">Cookies</Link>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-                <Heart className="w-3 h-3 sm:w-4 sm:h-4 text-red-500 animate-pulse" />
-                <span>Made with love for pets</span>
-              </div>
-            </div>
-          </Container>
+        
+        {/* Bottom bar */}
+        <div className="border-t border-border pt-6 flex flex-col md:flex-row justify-between items-center">
+          <p className="text-sm text-muted-foreground text-center md:text-left">
+            © {new Date().getFullYear()} Home4Paws. All rights reserved.
+          </p>
+          <div className="flex gap-6 mt-4 md:mt-0 text-sm text-muted-foreground">
+            <Link href="/privacy" className="hover:text-primary transition-colors duration-200">Privacy</Link>
+            <Link href="/terms" className="hover:text-primary transition-colors duration-200">Terms</Link>
+            <Link href="/cookies" className="hover:text-primary transition-colors duration-200">Cookies</Link>
+          </div>
         </div>
       </div>
     </footer>
