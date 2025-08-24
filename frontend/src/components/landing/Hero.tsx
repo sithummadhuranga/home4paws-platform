@@ -33,7 +33,7 @@ const FullWidthCarousel = () => {
   }, [])
 
   return (
-    <div className="relative w-full h-[50vh] sm:h-[60vh] md:h-[80vh] lg:h-[90vh] overflow-hidden">
+    <div className="relative w-full h-[50vh] sm:h-[60vh] md:h-[70vh] lg:h-[80vh] overflow-hidden">
       {/* Only minimal gradient overlay at bottom for nav dots */}
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/40 z-10" />
       

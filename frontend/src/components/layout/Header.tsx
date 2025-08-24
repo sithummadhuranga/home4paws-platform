@@ -5,7 +5,7 @@ import Image from "next/image"
 import { useState, useEffect, memo } from "react"
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/common/ThemeToggle"
-import { Menu, X, Heart, Search, User, LogOut, ShoppingBag, BellRing, Phone } from "lucide-react"
+import { Menu, X, Heart, Search, User, LogOut, ShoppingBag, BellRing, Phone, PawPrint } from "lucide-react"
 import { useAuth } from "@/contexts/AuthContext"
 import {
   DropdownMenu,
@@ -53,12 +53,12 @@ NavItem.displayName = "NavItem"
 const UserAvatar = memo(({ user }: { user: UserData }) => (
   <Avatar className="w-10 h-10 ring-2 ring-[rgba(var(--color-primary),0.2)] transition-all duration-300 hover:ring-[rgba(var(--color-primary),0.4)] effect-3d">
     <AvatarImage 
-      src={user.avatarUrl || `https://ui-avatars.com/api/?name=${user.firstName}+${user.lastName}&background=random`}
-      alt={`${user.firstName} ${user.lastName}`}
+      src={user?.avatarUrl || `https://ui-avatars.com/api/?name=${user?.firstName || 'U'}+${user?.lastName || 'N'}&background=random`}
+      alt={`${user?.firstName || 'User'} ${user?.lastName || ''}`}
       className="object-cover"
     />
     <AvatarFallback className="bg-gradient-to-br from-[rgb(var(--color-primary))] to-[rgb(var(--color-secondary))] text-white text-sm font-semibold">
-      {user.firstName[0]}{user.lastName[0]}
+      {(user?.firstName?.[0] || 'U')}{(user?.lastName?.[0] || '')}
     </AvatarFallback>
   </Avatar>
 ))
@@ -67,7 +67,9 @@ UserAvatar.displayName = "UserAvatar"
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const { user, isAuthenticated, logout } = useAuth()
+  
+  // Safer auth context usage with defaults
+  const { user = null, isAuthenticated = false, logout = () => {}, isLoading = false } = useAuth() || {}
 
   // Track scroll position for header styling
   useEffect(() => {
@@ -85,9 +87,9 @@ export default function Header() {
   }
 
   return (
-    <header className="fixed w-full z-50 top-0 left-0">
-      {/* Top mini-bar with contact */}
-      <div className="hidden md:block bg-[rgb(var(--color-primary))] text-white py-1.5">
+    <header className="relative w-full z-50">
+      {/* Top mini-bar with contact - now with enhanced gradient */}
+      <div className="hidden md:block bg-gradient-to-r from-[rgb(var(--color-primary))] to-[rgb(var(--color-secondary))] text-white py-1.5">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center text-xs">
             <div className="flex items-center space-x-4">
@@ -106,27 +108,23 @@ export default function Header() {
         </div>
       </div>
       
-      {/* Main header */}
+      {/* Main header - Enhanced with better glassmorphism */}
       <div 
-        className={`transition-all duration-300 py-2 md:py-3 ${
+        className={`transition-all duration-500 py-3 ${
           isScrolled 
-            ? 'backdrop-blur-lg bg-white/90 dark:bg-gray-900/90 shadow-md' 
-            : 'bg-transparent'
+            ? 'border-b border-white/10 backdrop-blur-xl bg-white/90 dark:bg-gray-900/90 shadow-lg' 
+            : 'bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-white/10 dark:border-gray-800/50 shadow-md'
         }`}
       >
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between">
-            {/* Logo */}
-            <Link href="/" className="flex items-center space-x-2">
-              <div className="relative w-12 h-12 overflow-hidden rounded-full shadow-md">
-                <Image 
-                  src="/images/logo.svg" 
-                  alt="Home4Paws" 
-                  width={48} 
-                  height={48}
-                  priority
-                  className="object-contain p-1"
-                />
+            {/* Logo with glow effect */}
+            <Link href="/" className="flex items-center space-x-2 group">
+              <div className="relative w-12 h-12 overflow-hidden rounded-full shadow-md group-hover:shadow-[0_0_15px_rgba(var(--color-primary),0.3)] transition-all duration-300">
+                <div className="absolute inset-0 bg-gradient-to-br from-[rgb(var(--color-primary))] to-[rgb(var(--color-secondary))] opacity-10 group-hover:opacity-20 transition-opacity duration-300" />
+                <div className="relative w-full h-full flex items-center justify-center">
+                  <PawPrint className="w-7 h-7 text-[rgb(var(--color-primary))]" />
+                </div>
               </div>
               <div className="flex flex-col">
                 <span className="text-xl font-bold font-heading bg-clip-text text-transparent bg-gradient-to-r from-[rgb(var(--color-primary))] to-[rgb(var(--color-secondary))]">
@@ -136,7 +134,7 @@ export default function Header() {
               </div>
             </Link>
 
-            {/* Desktop Navigation */}
+            {/* Desktop Navigation - Enhanced with better hover effect */}
             <nav className="hidden md:flex items-center space-x-1">
               <NavItem href="/">Home</NavItem>
               <NavItem href="/adopt">Adopt</NavItem>
@@ -150,7 +148,7 @@ export default function Header() {
             <div className="flex items-center space-x-1 md:space-x-3">
               {/* Search Button */}
               <button 
-                className="p-2 rounded-full hover:bg-primary/10 hover:text-[rgb(var(--color-primary))] transition-colors duration-200"
+                className="p-2 rounded-full hover:bg-white/50 dark:hover:bg-gray-800/50 hover:text-[rgb(var(--color-primary))] transition-colors duration-200"
                 aria-label="Search"
               >
                 <Search size={20} />
@@ -160,7 +158,7 @@ export default function Header() {
               <ThemeToggle />
 
               {/* Cart/Favorites */}
-              <Link href="/favorites" className="relative p-2 rounded-full hover:bg-primary/10 hover:text-[rgb(var(--color-primary))] transition-colors duration-200">
+              <Link href="/favorites" className="relative p-2 rounded-full hover:bg-white/50 dark:hover:bg-gray-800/50 hover:text-[rgb(var(--color-primary))] transition-colors duration-200">
                 <Heart size={20} />
                 <span className="absolute -top-1 -right-1 flex items-center justify-center w-4 h-4 text-[10px] font-bold text-white bg-[rgb(var(--color-primary))] rounded-full">
                   3
@@ -168,7 +166,7 @@ export default function Header() {
               </Link>
 
               {/* Shopping Cart */}
-              <Link href="/cart" className="relative p-2 rounded-full hover:bg-primary/10 hover:text-[rgb(var(--color-primary))] transition-colors duration-200">
+              <Link href="/cart" className="relative p-2 rounded-full hover:bg-white/50 dark:hover:bg-gray-800/50 hover:text-[rgb(var(--color-primary))] transition-colors duration-200">
                 <ShoppingBag size={20} />
                 <span className="absolute -top-1 -right-1 flex items-center justify-center w-4 h-4 text-[10px] font-bold text-white bg-[rgb(var(--color-primary))] rounded-full">
                   2
@@ -176,18 +174,18 @@ export default function Header() {
               </Link>
 
               {/* User Menu - Authenticated */}
-              {isAuthenticated ? (
+              {!isLoading && isAuthenticated && user ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button className="focus:outline-none" aria-label="User menu">
-                      <UserAvatar user={user!} />
+                      <UserAvatar user={user} />
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56 overflow-hidden animate-slide-up rounded-xl border border-[rgba(var(--color-primary),0.1)]">
+                  <DropdownMenuContent align="end" className="w-56 overflow-hidden rounded-xl border border-[rgba(var(--color-primary),0.1)] backdrop-blur-md bg-white/95 dark:bg-gray-900/95">
                     <DropdownMenuLabel className="font-normal">
                       <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium">{user?.firstName} {user?.lastName}</p>
-                        <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+                        <p className="text-sm font-medium">{user.firstName || 'User'} {user.lastName || ''}</p>
+                        <p className="text-xs text-muted-foreground truncate">{user.email || ''}</p>
                       </div>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
@@ -213,12 +211,12 @@ export default function Header() {
               ) : (
                 <div className="flex space-x-2">
                   <Link href="/auth/login">
-                    <Button variant="outline" size="sm" className="h-9 rounded-xl text-sm font-medium transition-all duration-200">
+                    <Button variant="outline" size="sm" className="h-9 rounded-xl text-sm font-medium transition-all duration-200 border-2 hover:border-[rgb(var(--color-primary))]">
                       Sign in
                     </Button>
                   </Link>
                   <Link href="/auth/register" className="hidden sm:block">
-                    <Button className="h-9 rounded-xl text-sm font-medium bg-[rgb(var(--color-primary))] hover:opacity-90 transition-all duration-200">
+                    <Button className="h-9 rounded-xl text-sm font-medium bg-gradient-to-r from-[rgb(var(--color-primary))] to-[rgb(var(--color-secondary))] hover:opacity-90 transition-all duration-200">
                       Sign up
                     </Button>
                   </Link>
@@ -227,7 +225,7 @@ export default function Header() {
 
               {/* Mobile Menu Toggle */}
               <button
-                className="p-2 rounded-full md:hidden hover:bg-primary/10 transition-colors duration-200"
+                className="p-2 rounded-full md:hidden hover:bg-white/50 dark:hover:bg-gray-800/50 transition-colors duration-200"
                 onClick={toggleMobileMenu}
                 aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
               >
@@ -242,7 +240,7 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Mobile Navigation Menu */}
+      {/* Mobile Navigation Menu - Enhanced with glassmorphism */}
       <AnimatePresence>
         {isMobileMenuOpen && (
           <motion.div 
@@ -252,7 +250,7 @@ export default function Header() {
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <div className="backdrop-blur-lg bg-white/90 dark:bg-gray-900/90 shadow-lg mx-4 mt-2 rounded-xl overflow-hidden">
+            <div className="backdrop-blur-xl bg-white/95 dark:bg-gray-900/95 shadow-lg mx-4 mt-2 rounded-xl overflow-hidden border border-white/20 dark:border-gray-800/30">
               <nav className="flex flex-col py-3">
                 <NavItem href="/" onClick={() => setIsMobileMenuOpen(false)}>Home</NavItem>
                 <NavItem href="/adopt" onClick={() => setIsMobileMenuOpen(false)}>Adopt</NavItem>
@@ -263,7 +261,7 @@ export default function Header() {
                 
                 {!isAuthenticated && (
                   <Link href="/auth/register" 
-                    className="mx-4 mt-3 bg-[rgb(var(--color-primary))] text-white text-center py-2.5 rounded-xl font-medium transition-all duration-200 hover:opacity-90"
+                    className="mx-4 mt-3 bg-gradient-to-r from-[rgb(var(--color-primary))] to-[rgb(var(--color-secondary))] text-white text-center py-2.5 rounded-xl font-medium transition-all duration-200 hover:opacity-90"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     Sign up
