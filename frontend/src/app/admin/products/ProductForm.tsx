@@ -3,7 +3,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useForm, Controller } from "react-hook-form"; // Removed SubmitHandler
+import { useForm, Controller, SubmitHandler } from "react-hook-form"; // Add SubmitHandler back
 import { zodResolver } from "@hookform/resolvers/zod";
 
 // --- Import from your single source of truth (src/types/index.ts) ---
@@ -50,11 +50,21 @@ export function ProductForm({ categories, existingProduct }: ProductFormProps) {
                 isFeatured: existingProduct.isFeatured,
                 isActive: existingProduct.isActive,
             }
-            : productFormSchema.parse({}), // Zod provides defaults
+            : {
+                name: '',
+                sku: '',
+                description: '',
+                price: 0,
+                stockQuantity: 0,
+                imageUrl: '',
+                categoryId: 0,
+                isFeatured: false,
+                isActive: true,
+              }, // Specify explicit defaults instead of using zod
     });
 
-    // Removed explicit generic from SubmitHandler, just use ProductFormData
-    const onSubmit = async (data: ProductFormData) => {
+    // Add SubmitHandler typing
+    const onSubmit: SubmitHandler<ProductFormData> = async (data) => {
         if (!token) {
             toast({ title: "Authentication Error", description: "You are not logged in.", variant: "destructive" });
             return;
