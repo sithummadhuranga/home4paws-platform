@@ -215,7 +215,7 @@ export default function Header() {
                       Sign in
                     </Button>
                   </Link>
-                  <Link href="/auth/register" className="hidden sm:block">
+                  <Link href="/auth/signup" className="hidden sm:block">
                     <Button className="h-9 rounded-xl text-sm font-medium bg-gradient-to-r from-[rgb(var(--color-primary))] to-[rgb(var(--color-secondary))] hover:opacity-90 transition-all duration-200">
                       Sign up
                     </Button>
