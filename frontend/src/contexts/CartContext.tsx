@@ -1,78 +1,109 @@
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { Product } from "@/types";
+import { useToast } from "@/hooks/use-toast";
 
-interface CartItem extends Product {
+export interface CartItem extends Product {
   quantity: number;
 }
 
 interface CartContextType {
-  cart: CartItem[];
-  addToCart: (product: Product) => void;
+  cartItems: CartItem[];
+  addToCart: (product: Product, quantity?: number) => void;
   removeFromCart: (productId: number) => void;
-  updateQuantity: (productId: number, quantity: number) => void;
+  updateQuantity: (productId: number, newQuantity: number) => void;
   clearCart: () => void;
-  totalItems: number;
-  totalPrice: number;
-  cartCount: number; // Add this property
+  cartCount: number;
+  cartTotal: number;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-export function CartProvider({ children }: { children: ReactNode }) {
-  const [cart, setCart] = useState<CartItem[]>([]);
+// --- NEW: Helper function to get cart from localStorage ---
+// This safely gets the cart data when the app loads on the client.
+const getInitialCart = (): CartItem[] => {
+  // localStorage is only available in the browser, not on the server.
+  // This check prevents errors during Server-Side Rendering (SSR).
+  if (typeof window === 'undefined') {
+    return [];
+  }
+  
+  try {
+    const item = window.localStorage.getItem('cart');
+    // If an item exists in storage, parse it. Otherwise, return an empty array.
+    return item ? JSON.parse(item) : [];
+  } catch (error) {
+    console.warn("Error reading cart from localStorage", error);
+    return [];
+  }
+};
 
-  const addToCart = (product: Product) => {
-    setCart(prevCart => {
-      // Check if product already exists in cart
-      const existingItem = prevCart.find(item => item.id === product.id);
-      
+export function CartProvider({ children }: { children: ReactNode }) {
+  // --- MODIFIED: Initialize state from localStorage ---
+  const [cartItems, setCartItems] = useState<CartItem[]>(getInitialCart);
+  const { toast } = useToast();
+
+  // --- NEW: useEffect hook to save cart to localStorage ---
+  // This hook runs every time the `cartItems` state changes.
+  useEffect(() => {
+    // We only want to run this in the browser.
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('cart', JSON.stringify(cartItems));
+    }
+  }, [cartItems]);
+
+  const addToCart = (product: Product, quantity: number = 1) => {
+    setCartItems(prevItems => {
+      const existingItem = prevItems.find(item => item.id === product.id);
       if (existingItem) {
-        // If it exists, increase quantity
-        return prevCart.map(item => 
-          item.id === product.id 
-            ? { ...item, quantity: item.quantity + 1 } 
-            : item
+        return prevItems.map(item =>
+          item.id === product.id ? { ...item, quantity: item.quantity + quantity } : item
         );
-      } else {
-        // If not, add new item with quantity 1
-        return [...prevCart, { ...product, quantity: 1 }];
       }
+      return [...prevItems, { ...product, quantity }];
+    });
+
+    toast({
+      title: "Added to Cart!",
+      description: `"${product.name}" has been added.`,
     });
   };
 
+  // --- NEW: Functions to manage the cart ---
   const removeFromCart = (productId: number) => {
-    setCart(prevCart => prevCart.filter(item => item.id !== productId));
+    setCartItems(prev => prev.filter(item => item.id !== productId));
+    toast({
+      title: "Item Removed",
+      variant: "destructive",
+    });
   };
 
-  const updateQuantity = (productId: number, quantity: number) => {
-    if (quantity < 1) return;
-    
-    setCart(prevCart => 
-      prevCart.map(item => 
-        item.id === productId ? { ...item, quantity } : item
-      )
-    );
+  const updateQuantity = (productId: number, newQuantity: number) => {
+    if (newQuantity <= 0) {
+      removeFromCart(productId);
+    } else {
+      setCartItems(prev => prev.map(item => 
+        item.id === productId ? { ...item, quantity: newQuantity } : item
+      ));
+    }
   };
 
-  const clearCart = () => setCart([]);
+  const clearCart = () => {
+    setCartItems([]);
+    toast({
+      title: "Cart Cleared",
+    });
+  };
   
-  const totalItems = cart.reduce((total, item) => total + item.quantity, 0);
-  const totalPrice = cart.reduce((total, item) => total + (item.price * item.quantity), 0);
-  const cartCount = totalItems; // Set cartCount to be the same as totalItems
+  // Calculate total items and total price
+  const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
+  const cartTotal = cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
 
   return (
-    <CartContext.Provider value={{ 
-      cart, 
-      addToCart, 
-      removeFromCart,
-      updateQuantity,
-      clearCart,
-      totalItems,
-      totalPrice,
-      cartCount // Include the new property
-    }}>
+    <CartContext.Provider 
+      value={{ cartItems, addToCart, removeFromCart, updateQuantity, clearCart, cartCount, cartTotal }}
+    >
       {children}
     </CartContext.Provider>
   );

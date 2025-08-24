@@ -16,9 +16,10 @@ namespace Home4Paws.API.Data
         // DbSets for your entities
         public DbSet<User> Users { get; set; } = null!;
         public DbSet<UserSession> UserSessions { get; set; } = null!;
-        // Add Product and Category DbSets
         public DbSet<Product> Products { get; set; } = null!;
         public DbSet<Category> Categories { get; set; } = null!;
+        public DbSet<Order> Orders { get; set; } = null!;
+        public DbSet<OrderItem> OrderItems { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -126,6 +127,61 @@ namespace Home4Paws.API.Data
                 .HasMany(c => c.Products)
                 .WithOne(p => p.Category)
                 .HasForeignKey(p => p.CategoryId);
+
+            // Configure Order entity
+            modelBuilder.Entity<Order>(entity =>
+            {
+                entity.ToTable("orders");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).HasColumnName("id");
+                entity.Property(e => e.UserId).HasColumnName("user_id").IsRequired();
+                entity.Property(e => e.OrderDate).HasColumnName("order_date").HasDefaultValueSql("NOW()");
+                entity.Property(e => e.Status).HasColumnName("status").HasMaxLength(50).IsRequired();
+                entity.Property(e => e.TotalAmount).HasColumnName("total_amount").HasColumnType("decimal(18,2)").IsRequired();
+                entity.Property(e => e.ShippingAddress).HasColumnName("shipping_address").HasMaxLength(255).IsRequired();
+                entity.Property(e => e.BillingAddress).HasColumnName("billing_address").HasMaxLength(255).IsRequired();
+                entity.Property(e => e.PaymentMethod).HasColumnName("payment_method").HasMaxLength(50).IsRequired();
+                entity.Property(e => e.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("NOW()");
+                entity.Property(e => e.UpdatedAt).HasColumnName("updated_at").HasDefaultValueSql("NOW()");
+
+                entity.HasIndex(e => e.UserId);
+                entity.HasIndex(e => e.OrderDate);
+
+                // Foreign key relationship
+                entity.HasOne(e => e.User)
+                    .WithMany()
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Configure OrderItem entity
+            modelBuilder.Entity<OrderItem>(entity =>
+            {
+                entity.ToTable("order_items");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).HasColumnName("id");
+                entity.Property(e => e.OrderId).HasColumnName("order_id").IsRequired();
+                entity.Property(e => e.ProductId).HasColumnName("product_id").IsRequired();
+                entity.Property(e => e.Quantity).HasColumnName("quantity").IsRequired();
+                entity.Property(e => e.UnitPrice).HasColumnName("unit_price").HasColumnType("decimal(18,2)").IsRequired();
+                entity.Property(e => e.TotalPrice).HasColumnName("total_price").HasColumnType("decimal(18,2)").IsRequired();
+                entity.Property(e => e.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("NOW()");
+                entity.Property(e => e.UpdatedAt).HasColumnName("updated_at").HasDefaultValueSql("NOW()");
+
+                entity.HasIndex(e => e.OrderId);
+                entity.HasIndex(e => e.ProductId);
+
+                // Foreign key relationship
+                entity.HasOne(e => e.Order)
+                    .WithMany(o => o.OrderItems)
+                    .HasForeignKey(e => e.OrderId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.Product)
+                    .WithMany()
+                    .HasForeignKey(e => e.ProductId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
         }
     }
 }
