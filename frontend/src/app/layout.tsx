@@ -1,7 +1,15 @@
+// src/app/layout.tsx
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+
+// Your Providers
 import { AuthProvider } from "@/contexts/AuthContext";
+import { CartProvider } from "@/contexts/CartContext"; // Make sure this is imported
+import { ThemeProvider } from "@/components/ThemeProvider";
+
+// Your UI Components
+import { Toaster } from "@/components/ui/sonner"; // Updated import for notifications
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,69 +38,30 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <head>
-        {/* Super powerful theme script */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                try {
-                  // Clear any existing theme classes
-                  document.documentElement.className = document.documentElement.className
-                    .replace(/\\s*(dark|light)\\s*/g, ' ')
-                    .trim();
-                  
-                  const theme = localStorage.getItem('theme');
-                  const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                  
-                  let isDark = false;
-                  
-                  if (theme === 'dark') {
-                    isDark = true;
-                  } else if (theme === 'light') {
-                    isDark = false;
-                  } else {
-                    isDark = systemDark;
-                  }
-                  
-                  if (isDark) {
-                    document.documentElement.classList.add('dark');
-                    document.documentElement.setAttribute('data-theme', 'dark');
-                    document.documentElement.style.colorScheme = 'dark';
-                  } else {
-                    document.documentElement.classList.add('light');
-                    document.documentElement.setAttribute('data-theme', 'light');
-                    document.documentElement.style.colorScheme = 'light';
-                  }
-                  
-                  // Prevent flash
-                  document.documentElement.style.visibility = 'visible';
-                  
-                } catch (e) {
-                  console.warn('Theme script failed:', e);
-                  // Fallback to light theme
-                  document.documentElement.classList.add('light');
-                  document.documentElement.setAttribute('data-theme', 'light');
-                }
-              })();
-            `,
-          }}
-        />
-        <style
-          dangerouslySetInnerHTML={{
-            __html: `
-              html { visibility: hidden; }
-              html.dark, html.light { visibility: visible; }
-            `,
-          }}
-        />
-      </head>
+    <html 
+      lang="en" 
+      suppressHydrationWarning 
+      data-scroll-behavior="smooth"
+    >
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground transition-colors duration-200`}
-        suppressHydrationWarning
       >
-        <AuthProvider>{children}</AuthProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <AuthProvider>
+            <CartProvider> {/* This MUST wrap your children */}
+              {/* You would typically place your Header and Footer components here */}
+              <main>
+                {children}
+              </main>
+              <Toaster /> {/* This component displays the notifications */}
+            </CartProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

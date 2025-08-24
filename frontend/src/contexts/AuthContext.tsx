@@ -13,8 +13,9 @@ interface User {
   lastLoginAt?: string
 }
 
-interface AuthContextType {
-  user: User | null
+export interface AuthContextType {
+  user: User | null;
+  token: string | null; // Add token property
   isLoading: boolean
   isAuthenticated: boolean
   login: (email: string, password: string, rememberMe?: boolean) => Promise<{ success: boolean; message: string }>
@@ -41,6 +42,7 @@ const pendingRequests = new Map<string, Promise<unknown>>()
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
+  const [token, setToken] = useState<string | null>(null) // Add token state
   const [isLoading, setIsLoading] = useState(true)
   const refreshTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const abortControllerRef = useRef<AbortController | null>(null)
@@ -100,11 +102,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.setItem('accessToken', data.tokens.accessToken)
         localStorage.setItem('refreshToken', data.tokens.refreshToken)
         setUser(data.user)
+        setToken(data.tokens.accessToken) // Set token state
         return true
       } else {
         localStorage.removeItem('accessToken')
         localStorage.removeItem('refreshToken')
         setUser(null)
+        setToken(null) // Clear token state
         return false
       }
     } catch (error) {
@@ -112,6 +116,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.removeItem('accessToken')
       localStorage.removeItem('refreshToken')
       setUser(null)
+      setToken(null) // Clear token state
       return false
     }
   }, [apiCall])
@@ -130,6 +135,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (data.success) {
         setUser(data.user)
+        setToken(token) // Set token state
       } else {
         await refreshToken()
       }
@@ -178,6 +184,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.setItem('accessToken', data.tokens.accessToken)
         localStorage.setItem('refreshToken', data.tokens.refreshToken)
         setUser(data.user)
+        setToken(data.tokens.accessToken) // Set token state
         return { success: true, message: 'Login successful!' }
       } else {
         return { success: false, message: data.message || 'Login failed' }
@@ -217,6 +224,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.setItem('accessToken', data.tokens.accessToken)
         localStorage.setItem('refreshToken', data.tokens.refreshToken)
         setUser(data.user)
+        setToken(data.tokens.accessToken) // Set token state
         return { success: true, message: 'Account created successfully!' }
       } else {
         return { success: false, message: data.message || 'Signup failed' }
@@ -258,6 +266,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.removeItem('accessToken')
       localStorage.removeItem('refreshToken')
       setUser(null)
+      setToken(null) // Clear token state
       
       if (refreshTimeoutRef.current) {
         clearTimeout(refreshTimeoutRef.current)
@@ -268,6 +277,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   return (
     <AuthContext.Provider value={{
       user,
+      token, // Provide token
       isLoading,
       isAuthenticated: !!user,
       login,

@@ -7,6 +7,7 @@ using Home4Paws.API.Middleware;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Home4Paws.API.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -101,6 +102,9 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 // Register Services
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<JwtHelper>();
+
+// Register AutoMapper
+builder.Services.AddAutoMapper(typeof(MappingProfiles));
 
 // Add health checks
 builder.Services.AddHealthChecks()
@@ -253,26 +257,3 @@ logger.LogInformation("   POST /api/auth/logout");
 logger.LogInformation("   GET  /api/auth/health");
 
 app.Run();
-
-namespace Home4Paws.API
-{
-    // Basic DbContext for now - you'll expand this with your actual entities
-    public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, IWebHostEnvironment environment) : DbContext(options)
-    {
-        private readonly IWebHostEnvironment _environment = environment;
-
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            base.OnModelCreating(modelBuilder);
-            
-            // Configure schema based on environment
-            var schema = _environment.IsDevelopment() ? "development" : "production";
-            modelBuilder.HasDefaultSchema(schema);
-        }
-
-        // TODO: Add your DbSets here as you create entities
-        // public DbSet<User> Users { get; set; }
-        // public DbSet<Pet> Pets { get; set; }
-        // public DbSet<Adoption> Adoptions { get; set; }
-    }
-}

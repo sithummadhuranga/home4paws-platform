@@ -4,8 +4,9 @@ import Link from "next/link"
 import { useState, useEffect, memo, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/common/ThemeToggle"
-import { Menu, X, Heart, Search, User, LogOut, Bell } from "lucide-react"
+import { Menu, X, Heart, Search, User, LogOut, Bell, ShoppingCart } from "lucide-react"
 import { useAuth } from "@/contexts/AuthContext"
+import { useCart } from "@/contexts/CartContext"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -70,6 +71,8 @@ export default function Header() {
   const [isOpen, setIsOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const { user, logout, isAuthenticated, isLoading } = useAuth()
+  
+  const { cartCount } = useCart();
 
   // Performance-optimized scroll handler
   useEffect(() => {
@@ -147,6 +150,7 @@ export default function Header() {
             <nav className="hidden lg:flex items-center space-x-2">
               <NavItem href="/adopt">🐕 Adopt Pets</NavItem>
               <NavItem href="/shelters">🏠 Shelters</NavItem>
+              <NavItem href="/store">🛍️ Store</NavItem>
               <NavItem href="/resources">📚 Resources</NavItem>
               <NavItem href="/about">ℹ️ About</NavItem>
             </nav>
@@ -164,24 +168,24 @@ export default function Header() {
                         <span className="sr-only">Search</span>
                       </Button>
                       
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm" className="w-10 h-10 p-0 rounded-xl hover:bg-gray-100 dark:hover:bg-slate-800">
-                            <Bell className="w-4 h-4" />
-                            <span className="sr-only">Notifications</span>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-80 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 shadow-xl">
-                          <DropdownMenuLabel>Notifications</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem className="p-4">
-                            <div className="text-center text-gray-500 dark:text-gray-400">
-                              No new notifications
-                            </div>
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-
+                      {/* Add Cart Button */}
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="w-10 h-10 p-0 rounded-xl hover:bg-gray-100 dark:hover:bg-slate-800 relative"
+                        asChild
+                      >
+                        <Link href="/cart">
+                          <ShoppingCart className="w-4 h-4" />
+                          {cartCount > 0 && (
+                            <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-xs text-white">
+                              {cartCount}
+                            </span>
+                          )}
+                          <span className="sr-only">Shopping Cart</span>
+                        </Link>
+                      </Button>
+                      
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <button className="flex items-center space-x-2 p-1 rounded-xl hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors duration-200 touch-target">
@@ -216,6 +220,23 @@ export default function Header() {
                     </div>
                   ) : (
                     <div className="flex items-center space-x-3">
+                      {/* Add Cart Button for non-authenticated users */}
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="w-10 h-10 p-0 rounded-xl hover:bg-gray-100 dark:hover:bg-slate-800 relative"
+                        asChild
+                      >
+                        <Link href="/cart">
+                          <ShoppingCart className="w-4 h-4" />
+                          {cartCount > 0 && (
+                            <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-xs text-white">
+                              {cartCount}
+                            </span>
+                          )}
+                          <span className="sr-only">Shopping Cart</span>
+                        </Link>
+                      </Button>
                       <Link href="/auth/login">
                         <Button variant="ghost" size="sm" className="h-10 px-4 font-medium">
                           Sign In
@@ -272,6 +293,9 @@ export default function Header() {
                   </NavItem>
                   <NavItem href="/shelters" onClick={closeMenu}>
                     🏠 Shelters
+                  </NavItem>
+                  <NavItem href="/store" onClick={closeMenu}>
+                    🛍️ Store
                   </NavItem>
                   <NavItem href="/resources" onClick={closeMenu}>
                     📚 Resources

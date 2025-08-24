@@ -16,6 +16,9 @@ namespace Home4Paws.API.Data
         // DbSets for your entities
         public DbSet<User> Users { get; set; } = null!;
         public DbSet<UserSession> UserSessions { get; set; } = null!;
+        // Add Product and Category DbSets
+        public DbSet<Product> Products { get; set; } = null!;
+        public DbSet<Category> Categories { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -73,6 +76,56 @@ namespace Home4Paws.API.Data
                     .HasForeignKey(e => e.UserId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
+
+            // Configure Product entity
+            modelBuilder.Entity<Product>(entity =>
+            {
+                entity.ToTable("products");
+                
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).HasColumnName("id");
+                entity.Property(e => e.Name).HasColumnName("name").HasMaxLength(100).IsRequired();
+                entity.Property(e => e.Description).HasColumnName("description");
+                entity.Property(e => e.Sku).HasColumnName("sku").HasMaxLength(100).IsRequired();
+                entity.Property(e => e.Price).HasColumnName("price").HasColumnType("decimal(18,2)").IsRequired();
+                entity.Property(e => e.StockQuantity).HasColumnName("stock_quantity").IsRequired();
+                entity.Property(e => e.ImageUrl).HasColumnName("image_url").HasMaxLength(255).IsRequired();
+                entity.Property(e => e.CategoryId).HasColumnName("category_id");
+                entity.Property(e => e.IsFeatured).HasColumnName("is_featured").HasDefaultValue(false);
+                entity.Property(e => e.IsActive).HasColumnName("is_active").HasDefaultValue(true);
+                // Changed from CreatedAt to DateCreated
+                entity.Property(e => e.DateCreated).HasColumnName("created_at").HasDefaultValueSql("NOW()");
+                // Changed from UpdatedAt to DateUpdated
+                entity.Property(e => e.DateUpdated).HasColumnName("updated_at").HasDefaultValueSql("NOW()");
+
+                entity.HasIndex(e => e.Name);
+                entity.HasIndex(e => e.CategoryId);
+
+                // Foreign key relationship
+                entity.HasOne(e => e.Category)
+                    .WithMany(c => c.Products)
+                    .HasForeignKey(e => e.CategoryId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // Configure Category entity
+            modelBuilder.Entity<Category>(entity =>
+            {
+                entity.ToTable("categories");
+                
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).HasColumnName("id");
+                entity.Property(e => e.Name).HasColumnName("name").HasMaxLength(100).IsRequired();
+                entity.Property(e => e.Description).HasColumnName("description");
+
+                entity.HasIndex(e => e.Name);
+            });
+
+            // Configure Category-Product relationship
+            modelBuilder.Entity<Category>()
+                .HasMany(c => c.Products)
+                .WithOne(p => p.Category)
+                .HasForeignKey(p => p.CategoryId);
         }
     }
 }
