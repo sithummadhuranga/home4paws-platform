@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { useState, useEffect, memo, useCallback } from "react"
+import { usePathname } from "next/navigation" // Add this import
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/common/ThemeToggle"
 import { Menu, X, Heart, Search, User, LogOut, Bell, ShoppingCart } from "lucide-react"
@@ -71,9 +72,12 @@ export default function Header() {
   const [isOpen, setIsOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const { user, logout, isAuthenticated, isLoading } = useAuth()
-  
   const { cartCount } = useCart();
-
+  const pathname = usePathname(); // Get current route path
+  
+  // Check if current path is store related
+  const isStorePage = pathname?.includes('/store') || pathname?.includes('/product') || pathname?.includes('/cart');
+  
   // Performance-optimized scroll handler
   useEffect(() => {
     let ticking = false
@@ -168,23 +172,25 @@ export default function Header() {
                         <span className="sr-only">Search</span>
                       </Button>
                       
-                      {/* Add Cart Button */}
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="w-10 h-10 p-0 rounded-xl hover:bg-gray-100 dark:hover:bg-slate-800 relative"
-                        asChild
-                      >
-                        <Link href="/cart">
-                          <ShoppingCart className="w-4 h-4" />
-                          {cartCount > 0 && (
-                            <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-xs text-white">
-                              {cartCount}
-                            </span>
-                          )}
-                          <span className="sr-only">Shopping Cart</span>
-                        </Link>
-                      </Button>
+                      {/* Show Cart Button only on store pages */}
+                      {isStorePage && (
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="w-10 h-10 p-0 rounded-xl hover:bg-gray-100 dark:hover:bg-slate-800 relative"
+                          asChild
+                        >
+                          <Link href="/cart">
+                            <ShoppingCart className="w-4 h-4" />
+                            {cartCount > 0 && (
+                              <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-xs text-white">
+                                {cartCount}
+                              </span>
+                            )}
+                            <span className="sr-only">Shopping Cart</span>
+                          </Link>
+                        </Button>
+                      )}
                       
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -220,23 +226,25 @@ export default function Header() {
                     </div>
                   ) : (
                     <div className="flex items-center space-x-3">
-                      {/* Add Cart Button for non-authenticated users */}
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="w-10 h-10 p-0 rounded-xl hover:bg-gray-100 dark:hover:bg-slate-800 relative"
-                        asChild
-                      >
-                        <Link href="/cart">
-                          <ShoppingCart className="w-4 h-4" />
-                          {cartCount > 0 && (
-                            <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-xs text-white">
-                              {cartCount}
-                            </span>
-                          )}
-                          <span className="sr-only">Shopping Cart</span>
-                        </Link>
-                      </Button>
+                      {/* Only show Cart Button for non-authenticated users on store pages */}
+                      {isStorePage && (
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="w-10 h-10 p-0 rounded-xl hover:bg-gray-100 dark:hover:bg-slate-800 relative"
+                          asChild
+                        >
+                          <Link href="/cart">
+                            <ShoppingCart className="w-4 h-4" />
+                            {cartCount > 0 && (
+                              <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-xs text-white">
+                                {cartCount}
+                              </span>
+                            )}
+                            <span className="sr-only">Shopping Cart</span>
+                          </Link>
+                        </Button>
+                      )}
                       <Link href="/auth/login">
                         <Button variant="ghost" size="sm" className="h-10 px-4 font-medium">
                           Sign In
