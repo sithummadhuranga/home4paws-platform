@@ -146,6 +146,7 @@ export default function Header() {
             {/* Desktop Navigation */}
             <nav className="hidden lg:flex items-center space-x-2">
               <NavItem href="/adopt">🐕 Adopt Pets</NavItem>
+              <NavItem href="/pet-finder">🔍 Pet Finder</NavItem>
               <NavItem href="/shelters">🏠 Shelters</NavItem>
               <NavItem href="/resources">📚 Resources</NavItem>
               <NavItem href="/about">ℹ️ About</NavItem>
@@ -269,6 +270,9 @@ export default function Header() {
                 <div className="space-y-1">
                   <NavItem href="/adopt" onClick={closeMenu}>
                     🐕 Adopt Pets
+                  </NavItem>
+                  <NavItem href="/pet-finder" onClick={closeMenu}>
+                    🔍 Pet Finder
                   </NavItem>
                   <NavItem href="/shelters" onClick={closeMenu}>
                     🏠 Shelters
