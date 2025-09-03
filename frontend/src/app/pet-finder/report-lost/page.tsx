@@ -479,7 +479,7 @@ export default function ReportLostPetPage() {
 
   return (
     <main className="fixed inset-0 w-full h-full bg-cover bg-center" style={{ 
-      backgroundImage: 'url("https://images.unsplash.com/photo-1548199973-03cce0bbc87b?auto=format&fit=crop&q=80")',
+      backgroundImage: 'url("https://images.unsplash.com/photo-1450778869180-41d0601e046e?auto=format&fit=crop&q=80")',
       backgroundAttachment: "fixed",
       zIndex: -1
     }}>
