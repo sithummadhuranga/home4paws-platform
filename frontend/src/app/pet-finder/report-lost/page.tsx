@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import dynamic from "next/dynamic"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -57,6 +58,49 @@ export default function ReportLostPetPage() {
     phoneNumber: "",
     email: "",
   })
+  
+  // Add state for showing confirmation
+  const [showConfirmation, setShowConfirmation] = useState(false)
+
+  // Check if the form is valid and complete
+  const isFormValid = () => {
+    // List of all required fields
+    const requiredFields = {
+      petName: 'Pet Name',
+      petType: 'Pet Type',
+      age: 'Age',
+      gender: 'Gender',
+      colorMarkings: 'Color/Markings',
+      dateLost: 'Date Lost',
+      locationLost: 'Location Lost',
+      lastSeenNotes: 'Last Seen Notes',
+      ownerName: 'Owner Name',
+      phoneNumber: 'Phone Number',
+      email: 'Email'
+    }
+
+    // Validate each required field
+    for (const [key, _] of Object.entries(requiredFields)) {
+      const value = formData[key as keyof LostPetFormData]
+      
+      // Check if field is empty
+      if (!value || (typeof value === 'string' && !value.trim())) {
+        return false
+      }
+
+      // Check if field has validation errors
+      if (errors[key]) {
+        return false
+      }
+    }
+
+    // Check if exactly 3 photos are uploaded
+    if (!formData.photos || formData.photos.length !== 3) {
+      return false
+    }
+
+    return true
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -70,29 +114,68 @@ export default function ReportLostPetPage() {
 
     // Validate all fields
     const newErrors: FormErrors = {}
+    const emptyFields: string[] = []
     
-    // Validate all fields using the same validation function
+    // Required fields list (excluding breed which is optional)
+    const requiredFields = {
+      petName: 'Pet Name',
+      petType: 'Pet Type',
+      age: 'Age',
+      gender: 'Gender',
+      colorMarkings: 'Color/Markings',
+      dateLost: 'Date Lost',
+      locationLost: 'Location Lost',
+      lastSeenNotes: 'Last Seen Notes',
+      ownerName: 'Owner Name',
+      phoneNumber: 'Phone Number',
+      email: 'Email'
+    }
+    
+    // Check for empty required fields
+    Object.entries(requiredFields).forEach(([key, label]) => {
+      const value = formData[key as keyof LostPetFormData]
+      if (!value || (typeof value === 'string' && !value.trim())) {
+        newErrors[key] = `${label} is required`
+        emptyFields.push(label)
+      }
+    })
+    
+    // Validate non-empty fields
     Object.keys(formData).forEach(key => {
       if (key === 'photos') return // Handle photos separately
-      const error = validateFormField(key, formData[key as keyof LostPetFormData])
-      if (error) {
-        newErrors[key] = error
+      const value = formData[key as keyof LostPetFormData]
+      if (value && typeof value === 'string' && value.trim()) {
+        const error = validateFormField(key, value)
+        if (error) {
+          newErrors[key] = error
+        }
       }
     })
     
     // Validate photo upload
     if (!formData.photos || formData.photos.length === 0) {
       newErrors.photos = 'Please upload at least one photo of your pet'
+      emptyFields.push('Photos')
     }
 
-    setErrors(newErrors)    // If there are any errors, handle them appropriately
+    setErrors(newErrors)
+
+    // If there are any errors, handle them appropriately
     if (Object.keys(newErrors).length > 0) {
-      // Show toast with number of errors
-      const errorCount = Object.keys(newErrors).length
-      toast.error(
-        `Please fill out all required fields (${errorCount} ${errorCount === 1 ? 'error' : 'errors'} found)`,
-        { duration: 4000 }
-      )
+      // Show specific empty fields in toast message
+      if (emptyFields.length > 0) {
+        toast.error(
+          `Please fill in the following required fields: ${emptyFields.join(', ')}`,
+          { duration: 6000 }
+        )
+      } else {
+        // Show validation errors for filled fields
+        const errorCount = Object.keys(newErrors).length
+        toast.error(
+          `Please fix the ${errorCount} ${errorCount === 1 ? 'error' : 'errors'} in your form`,
+          { duration: 4000 }
+        )
+      }
       
       // Scroll to the first error
       const firstErrorField = document.querySelector('.border-red-500')
@@ -102,37 +185,8 @@ export default function ReportLostPetPage() {
       return
     }
 
-    // Show loading toast while submitting
-    const loadingToast = toast.loading('Submitting your report...')
-
-    try {
-      // TODO: Submit form data to API
-      await new Promise(resolve => setTimeout(resolve, 2000)) // Simulated API call
-      toast.dismiss(loadingToast)
-      toast.success('Your report has been submitted successfully!')
-
-      // Reset form
-      setFormData({
-        petName: "",
-        petType: "",
-        breed: "",
-        age: "",
-        gender: "",
-        colorMarkings: "",
-        dateLost: "",
-        locationLost: "",
-        lastSeenNotes: "",
-        photos: null,
-        ownerName: "",
-        phoneNumber: "",
-        email: "",
-      })
-      setTouched({})
-      setErrors({})
-    } catch (error) {
-      toast.dismiss(loadingToast)
-      toast.error('Failed to submit report. Please try again.')
-    }
+    // Show confirmation page instead of submitting
+    setShowConfirmation(true)
   }
 
   const validateField = (name: string, value: string): string => {
@@ -230,12 +284,54 @@ export default function ReportLostPetPage() {
 
     // Content validation for non-empty fields
     switch (name) {
+      case 'petName':
+      case 'breed':
+      case 'ownerName':
+        // Allow only letters, spaces, and hyphens for names
+        if (!/^[A-Za-z\s-]+$/.test(value)) {
+          return `${name === 'ownerName' ? 'Full name' : name} should contain only letters, spaces, and hyphens`
+        }
+        if (value.length < 2) {
+          return `${name === 'ownerName' ? 'Full name' : name} should be at least 2 characters long`
+        }
+        return ''
+
       case 'age':
-        return /^\d+$/.test(value) ? '' : 'Please enter a valid age (numbers only)'
+        // Allow only numbers for age, and must be reasonable
+        if (!/^\d+$/.test(value)) {
+          return 'Age must contain only numbers'
+        }
+        const age = parseInt(value)
+        if (age <= 0 || age > 30) {
+          return 'Please enter a reasonable age (1-30 years)'
+        }
+        return ''
+
       case 'phoneNumber':
-        return /^\d{10,}$/.test(value) ? '' : 'Please enter a valid phone number (at least 10 digits)'
+        // Phone number validation: must be exactly 10 digits
+        if (!/^\d+$/.test(value)) {
+          return 'Phone number must contain only numbers'
+        }
+        if (value.length !== 10) {
+          return 'Phone number must be exactly 10 digits'
+        }
+        return ''
+
       case 'email':
-        return value.includes('@') ? '' : 'Please enter a valid email address'
+        // More comprehensive email validation
+        const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/
+        if (!emailRegex.test(value)) {
+          return 'Please enter a valid email address'
+        }
+        return ''
+
+      case 'locationLost':
+        // Allow letters, numbers, spaces, and common punctuation
+        if (!/^[A-Za-z0-9\s,.-]+$/.test(value)) {
+          return 'Location should contain only letters, numbers, and basic punctuation'
+        }
+        return ''
+
       default:
         return ''
     }
@@ -270,36 +366,136 @@ export default function ReportLostPetPage() {
     setTouched(prev => ({ ...prev, photos: true }))
     
     if (e.target.files && e.target.files.length > 0) {
-      if (e.target.files.length > 3) {
-        toast.error("Maximum 3 photos allowed")
-        setErrors(prev => ({
-          ...prev,
-          photos: 'Maximum 3 photos allowed'
-        }))
+      const file = e.target.files[0] // Handle one file at a time
+
+      // Validate file size (5MB)
+      const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+      if (file.size > maxSize) {
+        toast.error(`File '${file.name}' exceeds 5MB limit`)
         return
       }
-      setFormData((prev) => ({ ...prev, photos: e.target.files }))
+
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
+        toast.error(`File '${file.name}' must be JPG, PNG, or WEBP`)
+        return
+      }
+
+      // Check if we already have 3 photos
+      if (formData.photos && formData.photos.length >= 3) {
+        toast.error("Maximum 3 photos allowed. Remove a photo to add a new one.")
+        return
+      }
+
+      // Create a new FileList with existing photos plus the new one
+      const dt = new DataTransfer()
+      if (formData.photos) {
+        Array.from(formData.photos).forEach(existingFile => dt.items.add(existingFile))
+      }
+      dt.items.add(file)
+
+      // Update form data with the new FileList
+      setFormData(prev => ({ ...prev, photos: dt.files }))
       setErrors(prev => ({
         ...prev,
-        photos: ''
+        photos: dt.files.length === 3 ? '' : 'Please upload 3 photos of your pet'
       }))
-    } else {
-      setErrors(prev => ({
-        ...prev,
-        photos: 'Please upload at least one photo of your pet'
-      }))
+
+      // Show success message
+      toast.success(`Photo ${dt.files.length}/3 uploaded successfully`)
     }
   }
 
+  // Handler for confirmation actions
+  const handleConfirm = async () => {
+    const loadingToast = toast.loading('Submitting your report...')
+
+    try {
+      // TODO: Submit form data to API
+      await new Promise(resolve => setTimeout(resolve, 2000)) // Simulated API call
+      toast.dismiss(loadingToast)
+      toast.success('Your report has been submitted successfully!')
+
+      // Reset form and go back to form view
+      setFormData({
+        petName: "",
+        petType: "",
+        breed: "",
+        age: "",
+        gender: "",
+        colorMarkings: "",
+        dateLost: "",
+        locationLost: "",
+        lastSeenNotes: "",
+        photos: null,
+        ownerName: "",
+        phoneNumber: "",
+        email: "",
+      })
+      setTouched({})
+      setErrors({})
+      setShowConfirmation(false)
+    } catch (error) {
+      toast.dismiss(loadingToast)
+      toast.error('Failed to submit report. Please try again.')
+    }
+  }
+
+  const handleUpdate = () => {
+    setShowConfirmation(false) // Go back to form view
+  }
+
+  const handleDelete = () => {
+    if (confirm('Are you sure you want to delete this report? This action cannot be undone.')) {
+      // Reset form and go back to form view
+      setFormData({
+        petName: "",
+        petType: "",
+        breed: "",
+        age: "",
+        gender: "",
+        colorMarkings: "",
+        dateLost: "",
+        locationLost: "",
+        lastSeenNotes: "",
+        photos: null,
+        ownerName: "",
+        phoneNumber: "",
+        email: "",
+      })
+      setTouched({})
+      setErrors({})
+      setShowConfirmation(false)
+      toast.success('Report deleted')
+    }
+  }
+
+  // Import the confirmation component
+  const LostPetConfirmation = dynamic(
+    () => import('@/components/pet-finder/LostPetConfirmation'),
+    { ssr: false }
+  )
+
   return (
-    <main className="min-h-screen bg-cover bg-center bg-no-repeat" style={{ 
+    <main className="fixed inset-0 w-full h-full bg-cover bg-center" style={{ 
       backgroundImage: 'url("https://images.unsplash.com/photo-1548199973-03cce0bbc87b?auto=format&fit=crop&q=80")',
+      backgroundAttachment: "fixed",
+      zIndex: -1
     }}>
-      <div className="min-h-screen backdrop-blur-sm bg-white/80 dark:bg-gray-900/80 py-8">
-        <div className="container mx-auto px-4">
-          <div className="max-w-2xl mx-auto bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden">
-            <div className="p-6 sm:p-8 md:p-10">
-              <h1 className="text-3xl font-bold mb-8 text-center">Report a Lost Pet</h1>
+      <div className="absolute inset-0 overflow-auto">
+        {showConfirmation ? (
+          <LostPetConfirmation
+            formData={formData}
+            onUpdate={handleUpdate}
+            onDelete={handleDelete}
+            onConfirm={handleConfirm}
+          />
+        ) : (
+          <div className="container mx-auto px-4 py-16 md:py-24">
+            <div className="max-w-2xl mx-auto bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden">
+              <div className="p-6 sm:p-8 md:p-10">
+                <h1 className="text-3xl font-bold mb-8 text-center">Report a Lost Pet</h1>
               
               <form onSubmit={handleSubmit} className="space-y-8">
           {/* Pet Details Section */}
@@ -487,8 +683,10 @@ export default function ReportLostPetPage() {
             
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <Label htmlFor="photos" className="text-base">Upload Photos</Label>
-                <span className="text-sm text-gray-500">Maximum 3 photos</span>
+                <Label htmlFor="photos" className="text-base">Upload Photos (Required)</Label>
+                <span className="text-sm text-gray-500 font-medium">
+                  {formData.photos ? `${formData.photos.length}/3 photos uploaded` : '0/3 photos'}
+                </span>
               </div>
               
               <div className="border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl p-8">
@@ -516,9 +714,7 @@ export default function ReportLostPetPage() {
                       name="photos"
                       type="file"
                       onChange={handleFileChange}
-                      accept="image/*"
-                      multiple
-                      required
+                      accept="image/jpeg,image/png,image/webp"
                       className="hidden"
                     />
                     <Button
@@ -526,15 +722,24 @@ export default function ReportLostPetPage() {
                       variant="outline"
                       className="mb-2"
                       onClick={() => document.getElementById('photos')?.click()}
+                      disabled={formData.photos?.length === 3}
                     >
-                      Choose Photos
+                      {formData.photos?.length === 3 ? 'Max Photos Added' : 'Add Photo'}
                     </Button>
-                    <p className="text-sm text-gray-500">
-                      Drop your images here, or click to select
+                    <p className="text-sm text-gray-500 font-medium">
+                      Add up to 3 photos of your pet
                     </p>
-                    <p className="text-xs text-gray-400 mt-1">
-                      Supports: JPG, PNG, WEBP • Max 5MB each
-                    </p>
+                    <div className="flex flex-col gap-1 mt-2">
+                      <p className="text-xs text-gray-400">
+                        • Required: 3 photos of your pet
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        • Supported formats: JPG, PNG, WEBP
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        • Maximum size: 5MB per photo
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -645,13 +850,18 @@ export default function ReportLostPetPage() {
           </div>
 
           {/* Submit Button */}
-          <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">
-            Submit
+          <Button 
+            type="submit" 
+            className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={!isFormValid()}
+          >
+            Submit Report
           </Button>
         </form>
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </main>
   )
