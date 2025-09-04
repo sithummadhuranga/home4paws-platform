@@ -245,7 +245,7 @@ export default function PetFinderPage() {
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Pet Finder</h1>
         <div className="space-x-4">
-          <Link href="/pet-finder/found">
+          <Link href="/pet-finder/report-found">
             <Button variant="outline" className="font-medium">
               🐶 Report a Found Pet
             </Button>

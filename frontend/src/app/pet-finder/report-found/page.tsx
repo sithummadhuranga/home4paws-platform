@@ -1,0 +1,753 @@
+"use client"
+
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { toast } from "sonner"
+
+// Define the form data type
+type FormErrors = {
+  [key: string]: string;
+}
+
+type FoundPetFormData = {
+  // Pet Details
+  petType: string
+  breed: string
+  color: string
+  size: string
+  gender: string
+  uniqueFeatures: string
+  // Found Details
+  dateFound: string
+  timeFound: string
+  locationFound: string
+  // Photos
+  photos: FileList | null
+  // Finder Details
+  finderName: string
+  contactNumber: string
+  email: string
+  preferredContact: string
+}
+
+export default function ReportFoundPetPage() {
+  const router = useRouter()
+  const [errors, setErrors] = useState<FormErrors>({})
+  const [touched, setTouched] = useState<{ [key: string]: boolean }>({})
+  const [showConfirmation, setShowConfirmation] = useState(false)
+
+  // Initialize form data
+  const [formData, setFormData] = useState<FoundPetFormData>({
+    petType: "",
+    breed: "",
+    color: "",
+    size: "",
+    gender: "",
+    uniqueFeatures: "",
+    dateFound: "",
+    timeFound: "",
+    locationFound: "",
+    photos: null,
+    finderName: "",
+    contactNumber: "",
+    email: "",
+    preferredContact: "",
+  })
+
+  // Validate individual form fields
+  const validateFormField = (name: string, value: any): string => {
+    // Empty field validation
+    if (!value || (typeof value === 'string' && !value.trim())) {
+      switch (name) {
+        case 'petType':
+          return 'Please select pet type'
+        case 'color':
+          return 'Please describe color and markings'
+        case 'size':
+          return 'Please select size'
+        case 'dateFound':
+          return 'Please select when you found the pet'
+        case 'timeFound':
+          return 'Please select what time you found the pet'
+        case 'locationFound':
+          return 'Please enter where you found the pet'
+        case 'finderName':
+          return 'Your name is required'
+        case 'preferredContact':
+          return 'Please select how you want to be contacted'
+        default:
+          return 'This field is required'
+      }
+    }
+
+    // Content validation for non-empty fields
+    switch (name) {
+      case 'finderName':
+        // Only letters, spaces, and hyphens for names
+        if (!/^[A-Za-z\s-]+$/.test(value)) {
+          return 'Name should contain only letters, spaces, and hyphens'
+        }
+        if (value.length < 2) {
+          return 'Name should be at least 2 characters long'
+        }
+        return ''
+
+      case 'color':
+        if (value.length < 3) {
+          return 'Please provide more detail about color/markings'
+        }
+        return ''
+
+      case 'contactNumber':
+        // Phone number validation: must be exactly 10 digits
+        if (!/^\d+$/.test(value)) {
+          return 'Phone number must contain only numbers'
+        }
+        if (value.length !== 10) {
+          return 'Phone number must be exactly 10 digits'
+        }
+        return ''
+
+      case 'email':
+        // Comprehensive email validation
+        const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/
+        if (!emailRegex.test(value)) {
+          return 'Please enter a valid email address'
+        }
+        return ''
+
+      case 'locationFound':
+        // Allow letters, numbers, spaces, and common punctuation
+        if (!/^[A-Za-z0-9\s,.-]+$/.test(value)) {
+          return 'Location should contain only letters, numbers, and basic punctuation'
+        }
+        if (value.length < 5) {
+          return 'Please provide a more detailed location'
+        }
+        return ''
+
+      case 'dateFound':
+        // Validate date is not in the future
+        const selectedDate = new Date(value)
+        const today = new Date()
+        today.setHours(0, 0, 0, 0) // Reset time part for date comparison
+        if (selectedDate > today) {
+          return 'Date cannot be in the future'
+        }
+        // Check if date is not too old (within last 30 days)
+        const thirtyDaysAgo = new Date()
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+        if (selectedDate < thirtyDaysAgo) {
+          return 'Date cannot be more than 30 days old'
+        }
+        return ''
+
+      default:
+        return ''
+    }
+  }
+
+  // Check if the form is valid and complete
+  const isFormValid = () => {
+    const requiredFields = {
+      petType: 'Pet Type',
+      color: 'Color & Markings',
+      size: 'Size',
+      dateFound: 'Date Found',
+      timeFound: 'Time Found',
+      locationFound: 'Location Found',
+      finderName: 'Name',
+      preferredContact: 'Preferred Contact Method'
+    }
+
+    // Validate each required field
+    for (const [key, _] of Object.entries(requiredFields)) {
+      const value = formData[key as keyof FoundPetFormData]
+      // Check if field is empty
+      if (!value || (typeof value === 'string' && !value.trim())) {
+        return false
+      }
+      // Check if field has validation errors
+      if (errors[key]) {
+        return false
+      }
+    }
+
+    // Check if at least one photo is uploaded
+    if (!formData.photos || formData.photos.length === 0) {
+      return false
+    }
+
+    // Validate contact information based on preferred method
+    if (formData.preferredContact === 'phone') {
+      if (!formData.contactNumber || formData.contactNumber.length !== 10) {
+        return false
+      }
+    }
+    if (formData.preferredContact === 'email') {
+      if (!formData.email || !formData.email.includes('@')) {
+        return false
+      }
+    }
+
+    return true
+  }
+
+  // What happens when Submit button is clicked:
+  // 1. Prevents form submission
+  // 2. Marks all fields as touched to show validation errors
+  // 3. Validates all required fields
+  // 4. If there are errors, shows error message and scrolls to first error
+  // 5. If no errors, shows confirmation page
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    const allFields = Object.keys(formData).reduce((acc, key) => ({
+      ...acc,
+      [key]: true
+    }), {})
+    setTouched(allFields)
+
+    const newErrors: FormErrors = {}
+    const emptyFields: string[] = []
+    
+    // Required fields validation
+    const requiredFields = {
+      petType: 'Pet Type',
+      color: 'Color & Markings',
+      size: 'Size',
+      dateFound: 'Date Found',
+      timeFound: 'Time Found',
+      locationFound: 'Location Found',
+      finderName: 'Name',
+      preferredContact: 'Preferred Contact Method'
+    }
+    
+    Object.entries(requiredFields).forEach(([key, label]) => {
+      const value = formData[key as keyof FoundPetFormData]
+      if (!value || (typeof value === 'string' && !value.trim())) {
+        newErrors[key] = `${label} is required`
+        emptyFields.push(label)
+      }
+    })
+
+    // Contact info validation based on preferred method
+    if (formData.preferredContact === 'phone' && !formData.contactNumber) {
+      newErrors.contactNumber = 'Phone number is required for phone contact method'
+      emptyFields.push('Phone Number')
+    }
+    if (formData.preferredContact === 'email' && !formData.email) {
+      newErrors.email = 'Email is required for email contact method'
+      emptyFields.push('Email')
+    }
+
+    // Photo validation
+    if (!formData.photos || formData.photos.length === 0) {
+      newErrors.photos = 'Please upload at least one photo'
+      emptyFields.push('Photos')
+    }
+
+    setErrors(newErrors)
+
+    if (Object.keys(newErrors).length > 0) {
+      if (emptyFields.length > 0) {
+        toast.error(
+          `Please fill in the following required fields: ${emptyFields.join(', ')}`,
+          { duration: 6000 }
+        )
+      }
+      
+      const firstErrorField = document.querySelector('.border-red-500')
+      if (firstErrorField) {
+        firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }
+      return
+    }
+
+    setShowConfirmation(true)
+  }
+
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({ ...prev, [name]: value }))
+    setTouched(prev => ({ ...prev, [name]: true }))
+    
+    // Validate and show error immediately
+    const error = validateFormField(name, value)
+    setErrors(prev => ({
+      ...prev,
+      [name]: error
+    }))
+  }
+
+  const handleSelectChange = (value: string, name: keyof FoundPetFormData) => {
+    setFormData((prev) => ({ ...prev, [name]: value }))
+    setTouched(prev => ({ ...prev, [name]: true }))
+    
+    // Validate and show error immediately
+    const error = validateFormField(name, value)
+    setErrors(prev => ({
+      ...prev,
+      [name]: error
+    }))
+  }
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setTouched(prev => ({ ...prev, photos: true }))
+    
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0]
+
+      // Validate file size (5MB)
+      const maxSize = 5 * 1024 * 1024
+      if (file.size > maxSize) {
+        toast.error(`File '${file.name}' exceeds 5MB limit`)
+        return
+      }
+
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp']
+      if (!allowedTypes.includes(file.type)) {
+        toast.error(`File '${file.name}' must be JPG, PNG, or WEBP`)
+        return
+      }
+
+      // Create a new FileList with existing photos plus the new one
+      const dt = new DataTransfer()
+      if (formData.photos) {
+        Array.from(formData.photos).forEach(existingFile => dt.items.add(existingFile))
+      }
+      dt.items.add(file)
+
+      setFormData(prev => ({ ...prev, photos: dt.files }))
+      toast.success(`Photo ${dt.files.length} uploaded successfully`)
+    }
+  }
+
+  // What happens when Confirm button is clicked:
+  // 1. Simulates an API call to save the found pet report (2 seconds)
+  // 2. Shows a success toast message in the bottom right corner (3 seconds duration)
+  // 3. After 1 second delay, navigates to the pet-finder page
+  // 4. Resets the form data in the background
+  // 5. If any error occurs, shows error message in bottom right
+  const handleConfirm = async () => {
+    try {
+      // Step 1: Simulated API call (would actually save data to backend)
+      await new Promise(resolve => setTimeout(resolve, 2000))
+
+      // Step 2: Show success message in bottom right corner
+      toast.success('Information added successfully!', {
+        position: 'bottom-right',
+        duration: 3000
+      })
+
+      // Step 3: Wait for 1 second, then navigate to pet-finder page
+      setTimeout(() => {
+        router.push('/pet-finder')
+      }, 1000)
+
+      // Step 4: Reset form and state
+      setFormData({
+        petType: "",
+        breed: "",
+        color: "",
+        size: "",
+        gender: "",
+        uniqueFeatures: "",
+        dateFound: "",
+        timeFound: "",
+        locationFound: "",
+        photos: null,
+        finderName: "",
+        contactNumber: "",
+        email: "",
+        preferredContact: "",
+      })
+      setTouched({})
+      setErrors({})
+      setShowConfirmation(false)
+    } catch (error) {
+      // Step 5: Show error in bottom right if something fails
+      toast.error('Failed to submit report. Please try again.', {
+        position: 'bottom-right'
+      })
+    }
+  }
+
+  return (
+    <main className="relative min-h-screen">
+      <div className="fixed inset-0 w-full h-full bg-cover bg-center" style={{ 
+        backgroundImage: 'url("https://images.unsplash.com/photo-1444212477490-ca407925329e?auto=format&fit=crop&q=80")',
+        backgroundAttachment: "fixed",
+        filter: "blur(4px)",
+        zIndex: -1
+      }} />
+      <div className="relative h-full overflow-auto">
+        <div className="container mx-auto px-4 py-16 md:py-24">
+          <div className="max-w-3xl mx-auto bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden">
+            <div className="p-6 sm:p-8 md:p-10">
+              <h1 className="text-3xl font-bold mb-8 text-center">Report a Found Pet</h1>
+              
+              <form onSubmit={handleSubmit} className="space-y-8">
+                {/* Pet Details Section */}
+                <div className="space-y-6 bg-gray-50 dark:bg-gray-800/50 p-6 rounded-xl border border-gray-100 dark:border-gray-700">
+                  <h2 className="text-xl font-semibold flex items-center gap-2">
+                    <span className="w-8 h-8 bg-blue-100 dark:bg-blue-900/50 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-400">1</span>
+                    Pet Details
+                  </h2>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <Label htmlFor="petType">Pet Type</Label>
+                      <Select
+                        name="petType"
+                        onValueChange={(value: string) => handleSelectChange(value, "petType")}
+                        value={formData.petType}
+                      >
+                        <SelectTrigger className={errors.petType && touched.petType ? 'border-red-500' : ''}>
+                          <SelectValue placeholder="Select pet type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Dog">Dog</SelectItem>
+                          <SelectItem value="Cat">Cat</SelectItem>
+                          <SelectItem value="Bird">Bird</SelectItem>
+                          <SelectItem value="Rabbit">Rabbit</SelectItem>
+                          <SelectItem value="Other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {errors.petType && touched.petType && (
+                        <p className="text-sm text-red-500 mt-1">{errors.petType}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <Label htmlFor="breed">Breed (if known)</Label>
+                      <Input
+                        id="breed"
+                        name="breed"
+                        value={formData.breed}
+                        onChange={handleInputChange}
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="color">Color & Markings</Label>
+                      <Input
+                        id="color"
+                        name="color"
+                        value={formData.color}
+                        onChange={handleInputChange}
+                        placeholder="e.g., black with white patch"
+                        className={errors.color && touched.color ? 'border-red-500' : ''}
+                        required
+                      />
+                      {errors.color && touched.color && (
+                        <p className="text-sm text-red-500 mt-1">{errors.color}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <Label htmlFor="size">Size</Label>
+                      <Select
+                        name="size"
+                        onValueChange={(value: string) => handleSelectChange(value, "size")}
+                        value={formData.size}
+                      >
+                        <SelectTrigger className={errors.size && touched.size ? 'border-red-500' : ''}>
+                          <SelectValue placeholder="Select size" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Small">Small</SelectItem>
+                          <SelectItem value="Medium">Medium</SelectItem>
+                          <SelectItem value="Large">Large</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {errors.size && touched.size && (
+                        <p className="text-sm text-red-500 mt-1">{errors.size}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <Label htmlFor="gender">Gender (if known)</Label>
+                      <Select
+                        name="gender"
+                        onValueChange={(value: string) => handleSelectChange(value, "gender")}
+                        value={formData.gender}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select gender" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="male">Male</SelectItem>
+                          <SelectItem value="female">Female</SelectItem>
+                          <SelectItem value="unknown">Unknown</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <Label htmlFor="uniqueFeatures">Unique Identifiers</Label>
+                      <Textarea
+                        id="uniqueFeatures"
+                        name="uniqueFeatures"
+                        value={formData.uniqueFeatures}
+                        onChange={handleInputChange}
+                        placeholder="Describe any collar, tag, microchip, scars, or special features"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Location & Time Section */}
+                <div className="space-y-6 bg-gray-50 dark:bg-gray-800/50 p-6 rounded-xl border border-gray-100 dark:border-gray-700">
+                  <h2 className="text-xl font-semibold flex items-center gap-2">
+                    <span className="w-8 h-8 bg-blue-100 dark:bg-blue-900/50 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-400">2</span>
+                    Location & Time
+                  </h2>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <Label htmlFor="dateFound">Date Found</Label>
+                      <Input
+                        id="dateFound"
+                        name="dateFound"
+                        type="date"
+                        value={formData.dateFound}
+                        onChange={handleInputChange}
+                        className={errors.dateFound && touched.dateFound ? 'border-red-500' : ''}
+                        required
+                      />
+                      {errors.dateFound && touched.dateFound && (
+                        <p className="text-sm text-red-500 mt-1">{errors.dateFound}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <Label htmlFor="timeFound">Time Found</Label>
+                      <Input
+                        id="timeFound"
+                        name="timeFound"
+                        type="time"
+                        value={formData.timeFound}
+                        onChange={handleInputChange}
+                        className={errors.timeFound && touched.timeFound ? 'border-red-500' : ''}
+                        required
+                      />
+                      {errors.timeFound && touched.timeFound && (
+                        <p className="text-sm text-red-500 mt-1">{errors.timeFound}</p>
+                      )}
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <Label htmlFor="locationFound">Location Found</Label>
+                      <Input
+                        id="locationFound"
+                        name="locationFound"
+                        value={formData.locationFound}
+                        onChange={handleInputChange}
+                        placeholder="Address, street, or landmark"
+                        className={errors.locationFound && touched.locationFound ? 'border-red-500' : ''}
+                        required
+                      />
+                      {errors.locationFound && touched.locationFound && (
+                        <p className="text-sm text-red-500 mt-1">{errors.locationFound}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Photo Upload Section */}
+                <div className="space-y-6 bg-gray-50 dark:bg-gray-800/50 p-6 rounded-xl border border-gray-100 dark:border-gray-700">
+                  <h2 className="text-xl font-semibold flex items-center gap-2">
+                    <span className="w-8 h-8 bg-blue-100 dark:bg-blue-900/50 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-400">3</span>
+                    Photos
+                  </h2>
+                  
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="photos" className="text-base">Upload Photos</Label>
+                      <span className="text-sm text-gray-500 font-medium">
+                        {formData.photos ? `${formData.photos.length} photos uploaded` : 'No photos'}
+                      </span>
+                    </div>
+                    
+                    <div className="border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl p-8">
+                      <div className="flex flex-col items-center justify-center gap-4">
+                        <Input
+                          id="photos"
+                          name="photos"
+                          type="file"
+                          onChange={handleFileChange}
+                          accept="image/jpeg,image/png,image/webp"
+                          className="hidden"
+                          multiple
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => document.getElementById('photos')?.click()}
+                        >
+                          Add Photos
+                        </Button>
+                        <p className="text-sm text-gray-500">
+                          Add clear photos of the found pet
+                        </p>
+                      </div>
+                    </div>
+
+                    {formData.photos && formData.photos.length > 0 && (
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
+                        {Array.from(formData.photos).map((file, index) => (
+                          <div
+                            key={index}
+                            className="relative aspect-square rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800"
+                          >
+                            <img
+                              src={URL.createObjectURL(file)}
+                              alt={`Preview ${index + 1}`}
+                              className="w-full h-full object-cover"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const dt = new DataTransfer()
+                                const files = Array.from(formData.photos || [])
+                                files.splice(index, 1)
+                                files.forEach(file => dt.items.add(file))
+                                setFormData(prev => ({ ...prev, photos: dt.files }))
+                              }}
+                              className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+                            >
+                              <svg
+                                className="w-4 h-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M6 18L18 6M6 6l12 12"
+                                />
+                              </svg>
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Finder Details Section */}
+                <div className="space-y-6 bg-gray-50 dark:bg-gray-800/50 p-6 rounded-xl border border-gray-100 dark:border-gray-700">
+                  <h2 className="text-xl font-semibold flex items-center gap-2">
+                    <span className="w-8 h-8 bg-blue-100 dark:bg-blue-900/50 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-400">4</span>
+                    Your Contact Details
+                  </h2>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <Label htmlFor="finderName">Your Name</Label>
+                      <Input
+                        id="finderName"
+                        name="finderName"
+                        value={formData.finderName}
+                        onChange={handleInputChange}
+                        className={errors.finderName && touched.finderName ? 'border-red-500' : ''}
+                        required
+                      />
+                      {errors.finderName && touched.finderName && (
+                        <p className="text-sm text-red-500 mt-1">{errors.finderName}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <Label htmlFor="preferredContact">Preferred Contact Method</Label>
+                      <Select
+                        name="preferredContact"
+                        onValueChange={(value: string) => handleSelectChange(value, "preferredContact")}
+                        value={formData.preferredContact}
+                      >
+                        <SelectTrigger className={errors.preferredContact && touched.preferredContact ? 'border-red-500' : ''}>
+                          <SelectValue placeholder="Select contact method" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="phone">Phone</SelectItem>
+                          <SelectItem value="email">Email</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {errors.preferredContact && touched.preferredContact && (
+                        <p className="text-sm text-red-500 mt-1">{errors.preferredContact}</p>
+                      )}
+                    </div>
+
+                    {formData.preferredContact === 'phone' && (
+                      <div>
+                        <Label htmlFor="contactNumber">Phone Number</Label>
+                        <Input
+                          id="contactNumber"
+                          name="contactNumber"
+                          type="tel"
+                          value={formData.contactNumber}
+                          onChange={handleInputChange}
+                          placeholder="Enter your phone number"
+                          className={errors.contactNumber && touched.contactNumber ? 'border-red-500' : ''}
+                          required
+                        />
+                        {errors.contactNumber && touched.contactNumber && (
+                          <p className="text-sm text-red-500 mt-1">{errors.contactNumber}</p>
+                        )}
+                      </div>
+                    )}
+
+                    {formData.preferredContact === 'email' && (
+                      <div>
+                        <Label htmlFor="email">Email Address</Label>
+                        <Input
+                          id="email"
+                          name="email"
+                          type="email"
+                          value={formData.email}
+                          onChange={handleInputChange}
+                          placeholder="Enter your email address"
+                          className={errors.email && touched.email ? 'border-red-500' : ''}
+                          required
+                        />
+                        {errors.email && touched.email && (
+                          <p className="text-sm text-red-500 mt-1">{errors.email}</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Submit Button */}
+                <Button 
+                  type="submit" 
+                  className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={!isFormValid()}
+                >
+                  Submit Report
+                </Button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  )
+}

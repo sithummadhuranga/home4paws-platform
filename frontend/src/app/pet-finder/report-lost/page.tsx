@@ -478,16 +478,29 @@ export default function ReportLostPetPage() {
   }
 
   // Handler for confirmation actions
+  // When clicking confirm button:
+  // 1. Shows loading state (removed)
+  // 2. Simulates API call (2 seconds)
+  // 3. Shows success message in bottom right corner
+  // 4. After 1 second delay, navigates to pet-finder page
+  // 5. Resets form data and state
   const handleConfirm = async () => {
-    const loadingToast = toast.loading(isEditing ? 'Updating your report...' : 'Submitting your report...')
-
     try {
-      // TODO: Submit form data to API
-      await new Promise(resolve => setTimeout(resolve, 2000)) // Simulated API call
-      toast.dismiss(loadingToast)
-      toast.success(isEditing ? 'Your report has been updated successfully!' : 'Your report has been submitted successfully!')
+      // Simulated API call - would actually save data to backend
+      await new Promise(resolve => setTimeout(resolve, 2000))
 
-      // Reset form and go back to form view
+      // Show success message in bottom right corner
+      toast.success('Information added successfully!', {
+        position: 'bottom-right',
+        duration: 3000
+      })
+
+      // Wait for 1 second, then navigate to pet-finder page
+      setTimeout(() => {
+        router.push('/pet-finder')
+      }, 1000)
+
+      // Reset form and state
       setFormData({
         petName: "",
         petType: "",
@@ -507,8 +520,10 @@ export default function ReportLostPetPage() {
       setErrors({})
       setShowConfirmation(false)
     } catch (error) {
-      toast.dismiss(loadingToast)
-      toast.error('Failed to submit report. Please try again.')
+      // Show error in bottom right if something fails
+      toast.error('Failed to submit report. Please try again.', {
+        position: 'bottom-right'
+      })
     }
   }
 
