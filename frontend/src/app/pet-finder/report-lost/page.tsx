@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import dynamic from "next/dynamic"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -41,26 +42,80 @@ type LostPetFormData = {
 }
 
 export default function ReportLostPetPage() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const [errors, setErrors] = useState<FormErrors>({})
   const [touched, setTouched] = useState<{ [key: string]: boolean }>({})
-  const [formData, setFormData] = useState<LostPetFormData>({
-    petName: "",
-    petType: "",
-    breed: "",
-    age: "",
-    gender: "",
-    colorMarkings: "",
-    dateLost: "",
-    locationLost: "",
-    lastSeenNotes: "",
-    photos: null,
-    ownerName: "",
-    phoneNumber: "",
-    email: "",
-  })
-  
-  // Add state for showing confirmation
+  const [isEditing] = useState(() => searchParams.get('isEditing') === 'true')
+  const [hasEdited, setHasEdited] = useState(false)
   const [showConfirmation, setShowConfirmation] = useState(false)
+  const [originalFormData, setOriginalFormData] = useState<LostPetFormData>(() => {
+    const formDataParam = searchParams.get('formData')
+    if (formDataParam) {
+      try {
+        return JSON.parse(decodeURIComponent(formDataParam))
+      } catch (error) {
+        console.error('Error parsing original form data:', error)
+      }
+    }
+    return {
+      petName: "",
+      petType: "",
+      breed: "",
+      age: "",
+      gender: "",
+      colorMarkings: "",
+      dateLost: "",
+      locationLost: "",
+      lastSeenNotes: "",
+      photos: null,
+      ownerName: "",
+      phoneNumber: "",
+      email: "",
+    }
+  })
+
+  // Initialize form data
+  const [formData, setFormData] = useState<LostPetFormData>(() => {
+    const formDataParam = searchParams.get('formData')
+    if (formDataParam) {
+      try {
+        const parsedData = JSON.parse(decodeURIComponent(formDataParam))
+        return {
+          petName: parsedData.petName || "",
+          petType: parsedData.petType || "",
+          breed: parsedData.breed || "",
+          age: parsedData.age || "",
+          gender: parsedData.gender || "",
+          colorMarkings: parsedData.colorMarkings || "",
+          dateLost: parsedData.dateLost || "",
+          locationLost: parsedData.locationLost || "",
+          lastSeenNotes: parsedData.lastSeenNotes || "",
+          photos: parsedData.photos || null,
+          ownerName: parsedData.ownerName || "",
+          phoneNumber: parsedData.phoneNumber || "",
+          email: parsedData.email || "",
+        }
+      } catch (error) {
+        console.error('Error parsing form data:', error)
+      }
+    }
+    return {
+      petName: "",
+      petType: "",
+      breed: "",
+      age: "",
+      gender: "",
+      colorMarkings: "",
+      dateLost: "",
+      locationLost: "",
+      lastSeenNotes: "",
+      photos: null,
+      ownerName: "",
+      phoneNumber: "",
+      email: "",
+    }
+  })
 
   // Check if the form is valid and complete
   const isFormValid = () => {
@@ -77,6 +132,11 @@ export default function ReportLostPetPage() {
       ownerName: 'Owner Name',
       phoneNumber: 'Phone Number',
       email: 'Email'
+    }
+
+    // When editing, we need at least one change and all fields to be valid
+    if (isEditing && !hasEdited) {
+      return false
     }
 
     // Validate each required field
@@ -344,6 +404,11 @@ export default function ReportLostPetPage() {
     setFormData((prev) => ({ ...prev, [name]: value }))
     setTouched(prev => ({ ...prev, [name]: true }))
     
+    // Check if the value is different from the original
+    if (isEditing && originalFormData[name as keyof LostPetFormData] !== value) {
+      setHasEdited(true)
+    }
+    
     const error = validateFormField(name, value)
     setErrors(prev => ({
       ...prev,
@@ -354,6 +419,11 @@ export default function ReportLostPetPage() {
   const handleSelectChange = (value: string, name: keyof LostPetFormData) => {
     setFormData((prev) => ({ ...prev, [name]: value }))
     setTouched(prev => ({ ...prev, [name]: true }))
+    
+    // Check if the value is different from the original
+    if (isEditing && originalFormData[name] !== value) {
+      setHasEdited(true)
+    }
     
     const error = validateFormField(name, value)
     setErrors(prev => ({
@@ -409,13 +479,13 @@ export default function ReportLostPetPage() {
 
   // Handler for confirmation actions
   const handleConfirm = async () => {
-    const loadingToast = toast.loading('Submitting your report...')
+    const loadingToast = toast.loading(isEditing ? 'Updating your report...' : 'Submitting your report...')
 
     try {
       // TODO: Submit form data to API
       await new Promise(resolve => setTimeout(resolve, 2000)) // Simulated API call
       toast.dismiss(loadingToast)
-      toast.success('Your report has been submitted successfully!')
+      toast.success(isEditing ? 'Your report has been updated successfully!' : 'Your report has been submitted successfully!')
 
       // Reset form and go back to form view
       setFormData({
@@ -444,6 +514,7 @@ export default function ReportLostPetPage() {
 
   const handleUpdate = () => {
     setShowConfirmation(false) // Go back to form view
+    setHasEdited(false) // Reset edit tracking
   }
 
   const handleDelete = () => {
@@ -478,12 +549,14 @@ export default function ReportLostPetPage() {
   )
 
   return (
-    <main className="fixed inset-0 w-full h-full bg-cover bg-center" style={{ 
-      backgroundImage: 'url("https://images.unsplash.com/photo-1450778869180-41d0601e046e?auto=format&fit=crop&q=80")',
-      backgroundAttachment: "fixed",
-      zIndex: -1
-    }}>
-      <div className="absolute inset-0 overflow-auto">
+    <main className="relative min-h-screen">
+      <div className="fixed inset-0 w-full h-full bg-cover bg-center" style={{ 
+        backgroundImage: 'url("https://images.unsplash.com/photo-1450778869180-41d0601e046e?auto=format&fit=crop&q=80")',
+        backgroundAttachment: "fixed",
+        filter: "blur(2px)",
+        zIndex: -1
+      }} />
+      <div className="relative h-full overflow-auto">
         {showConfirmation ? (
           <LostPetConfirmation
             formData={formData}
@@ -526,6 +599,8 @@ export default function ReportLostPetPage() {
                 <Select
                   name="petType"
                   onValueChange={(value: string) => handleSelectChange(value, "petType")}
+                  defaultValue={formData.petType}
+                  value={formData.petType}
                   required
                 >
                   <SelectTrigger className={errors.petType && touched.petType ? 'border-red-500' : ''}>
@@ -582,6 +657,8 @@ export default function ReportLostPetPage() {
                 <Select
                   name="gender"
                   onValueChange={(value: string) => handleSelectChange(value, "gender")}
+                  defaultValue={formData.gender}
+                  value={formData.gender}
                   required
                 >
                   <SelectTrigger className={errors.gender && touched.gender ? 'border-red-500' : ''}>

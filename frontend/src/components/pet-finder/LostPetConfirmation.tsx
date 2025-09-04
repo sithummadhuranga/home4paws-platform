@@ -1,5 +1,15 @@
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogClose
+} from "@/components/ui/dialog"
+import { X } from "lucide-react"
 
 interface LostPetFormData {
   petName: string
@@ -30,6 +40,14 @@ export default function LostPetConfirmation({
   onDelete, 
   onConfirm 
 }: LostPetConfirmationProps) {
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+
+  // Handle delete confirmation
+  const handleDelete = () => {
+    setShowDeleteDialog(false)
+    onDelete()
+  }
+
   // Format date to be more readable
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -46,6 +64,7 @@ export default function LostPetConfirmation({
         style={{
           backgroundImage: "url(\"https://images.unsplash.com/photo-1450778869180-41d0601e046e?auto=format&fit=crop&q=80\")",
           backgroundAttachment: "fixed",
+          filter: "blur(2px)",
           zIndex: -1
         }}
       />
@@ -170,11 +189,11 @@ export default function LostPetConfirmation({
                     </Button>
 
                     <Button
-                      onClick={onDelete}
+                      onClick={() => setShowDeleteDialog(true)}
                       variant="destructive"
                       className="w-full mb-4"
                     >
-                      Delete Report
+                      Delete Information
                     </Button>
 
                     <Button
@@ -190,6 +209,26 @@ export default function LostPetConfirmation({
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent className="sm:max-w-md bg-white dark:bg-gray-800">
+          <DialogHeader>
+            <DialogTitle>Delete Information</DialogTitle>
+            <DialogDescription className="pt-4">
+              Are you sure you want to delete this information? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end mt-4">
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+            >
+              Delete
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </main>
   )
 }
