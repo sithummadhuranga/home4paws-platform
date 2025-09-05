@@ -14,6 +14,13 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { toast } from "sonner"
+import dynamic from "next/dynamic"
+
+// Import the confirmation component
+const FoundPetConfirmation = dynamic(
+  () => import('@/components/pet-finder/FoundPetConfirmation'),
+  { ssr: false }
+)
 
 // Define the form data type
 type FormErrors = {
@@ -65,7 +72,64 @@ export default function ReportFoundPetPage() {
     preferredContact: "",
   })
 
-  // Validate individual form fields
+  // Validate field on input change (immediate feedback)
+  const validateField = (name: string, value: string): string => {
+    // First check if the field is empty
+    if (!value || (typeof value === 'string' && value.trim() === '')) {
+      switch (name) {
+        case 'petType':
+          return 'Please select pet type'
+        case 'color':
+          return 'Please describe color and markings'
+        case 'size':
+          return 'Please select size'
+        case 'dateFound':
+          return 'Please select when you found the pet'
+        case 'timeFound':
+          return 'Please select what time you found the pet'
+        case 'locationFound':
+          return 'Please enter where you found the pet'
+        case 'finderName':
+          return 'Your name is required'
+        case 'preferredContact':
+          return 'Please select how you want to be contacted'
+        default:
+          return 'This field is required'
+      }
+    }
+
+    // Then validate the content (basic validation during typing)
+    switch (name) {
+      case 'finderName':
+        if (/\d/.test(value)) return 'Name should not contain numbers'
+        return ''
+
+      case 'breed':
+        if (/\d/.test(value)) return 'Breed should not contain numbers'
+        return ''
+
+      case 'color':
+        if (value.length < 3) return 'Please provide more detail'
+        return ''
+
+      case 'contactNumber':
+        if (!/^\d+$/.test(value)) return 'Please enter only numbers'
+        return ''
+
+      case 'email':
+        if (!value.includes('@')) return 'Please enter a valid email'
+        return ''
+
+      case 'locationFound':
+        if (value.length < 5) return 'Please provide more details'
+        return ''
+
+      default:
+        return ''
+    }
+  }
+
+  // Comprehensive validation for form submission and final validation
   const validateFormField = (name: string, value: any): string => {
     // Empty field validation
     if (!value || (typeof value === 'string' && !value.trim())) {
@@ -91,7 +155,7 @@ export default function ReportFoundPetPage() {
       }
     }
 
-    // Content validation for non-empty fields
+    // Content validation for non-empty fields (comprehensive validation)
     switch (name) {
       case 'finderName':
         // Only letters, spaces, and hyphens for names
@@ -100,6 +164,17 @@ export default function ReportFoundPetPage() {
         }
         if (value.length < 2) {
           return 'Name should be at least 2 characters long'
+        }
+        return ''
+
+      case 'breed':
+        if (value) { // Only validate if a value is provided since it's optional
+          if (!/^[A-Za-z\s-]+$/.test(value)) {
+            return 'Breed should contain only letters, spaces, and hyphens'
+          }
+          if (value.length < 2) {
+            return 'Breed name should be at least 2 characters long'
+          }
         }
         return ''
 
@@ -184,8 +259,8 @@ export default function ReportFoundPetPage() {
       }
     }
 
-    // Check if at least one photo is uploaded
-    if (!formData.photos || formData.photos.length === 0) {
+    // Check if exactly 3 photos are uploaded
+    if (!formData.photos || formData.photos.length !== 3) {
       return false
     }
 
@@ -204,70 +279,67 @@ export default function ReportFoundPetPage() {
     return true
   }
 
-  // What happens when Submit button is clicked:
-  // 1. Prevents form submission
-  // 2. Marks all fields as touched to show validation errors
-  // 3. Validates all required fields
-  // 4. If there are errors, shows error message and scrolls to first error
-  // 5. If no errors, shows confirmation page
+  // What happens when Submit button is clicked
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
+    // Mark all fields as touched to show all validation states
     const allFields = Object.keys(formData).reduce((acc, key) => ({
       ...acc,
       [key]: true
     }), {})
     setTouched(allFields)
 
-    const newErrors: FormErrors = {}
-    const emptyFields: string[] = []
-    
-    // Required fields validation
-    const requiredFields = {
-      petType: 'Pet Type',
-      color: 'Color & Markings',
-      size: 'Size',
-      dateFound: 'Date Found',
-      timeFound: 'Time Found',
-      locationFound: 'Location Found',
-      finderName: 'Name',
-      preferredContact: 'Preferred Contact Method'
-    }
-    
-    Object.entries(requiredFields).forEach(([key, label]) => {
-      const value = formData[key as keyof FoundPetFormData]
-      if (!value || (typeof value === 'string' && !value.trim())) {
-        newErrors[key] = `${label} is required`
-        emptyFields.push(label)
+    // Check if form is valid before proceeding
+    if (!isFormValid()) {
+      // Get list of empty required fields
+      const emptyFields: string[] = []
+      const requiredFields = {
+        petType: 'Pet Type',
+        color: 'Color & Markings',
+        size: 'Size',
+        dateFound: 'Date Found',
+        timeFound: 'Time Found',
+        locationFound: 'Location Found',
+        finderName: 'Name',
+        preferredContact: 'Preferred Contact Method'
       }
-    })
+      
+      Object.entries(requiredFields).forEach(([key, label]) => {
+        const value = formData[key as keyof FoundPetFormData]
+        if (!value || (typeof value === 'string' && !value.trim())) {
+          emptyFields.push(label)
+        }
+      })
 
-    // Contact info validation based on preferred method
-    if (formData.preferredContact === 'phone' && !formData.contactNumber) {
-      newErrors.contactNumber = 'Phone number is required for phone contact method'
-      emptyFields.push('Phone Number')
-    }
-    if (formData.preferredContact === 'email' && !formData.email) {
-      newErrors.email = 'Email is required for email contact method'
-      emptyFields.push('Email')
-    }
+      // Add contact info to empty fields if needed
+      if (formData.preferredContact === 'phone' && !formData.contactNumber) {
+        emptyFields.push('Phone Number')
+      }
+      if (formData.preferredContact === 'email' && !formData.email) {
+        emptyFields.push('Email')
+      }
 
-    // Photo validation
-    if (!formData.photos || formData.photos.length === 0) {
-      newErrors.photos = 'Please upload at least one photo'
-      emptyFields.push('Photos')
-    }
+      // Check photo requirement
+      if (!formData.photos || formData.photos.length !== 3) {
+        emptyFields.push('3 Photos Required')
+      }
 
-    setErrors(newErrors)
-
-    if (Object.keys(newErrors).length > 0) {
+      // Show error message with missing fields
       if (emptyFields.length > 0) {
         toast.error(
-          `Please fill in the following required fields: ${emptyFields.join(', ')}`,
+          `Please complete the following: ${emptyFields.join(', ')}`,
           { duration: 6000 }
+        )
+      } else {
+        // If no empty fields but form is invalid, there are validation errors
+        toast.error(
+          'Please fix the validation errors before submitting',
+          { duration: 4000 }
         )
       }
       
+      // Scroll to first error
       const firstErrorField = document.querySelector('.border-red-500')
       if (firstErrorField) {
         firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' })
@@ -275,6 +347,7 @@ export default function ReportFoundPetPage() {
       return
     }
 
+    // If form is valid, proceed to confirmation
     setShowConfirmation(true)
   }
 
@@ -285,8 +358,8 @@ export default function ReportFoundPetPage() {
     setFormData((prev) => ({ ...prev, [name]: value }))
     setTouched(prev => ({ ...prev, [name]: true }))
     
-    // Validate and show error immediately
-    const error = validateFormField(name, value)
+    // Use immediate validation during typing
+    const error = validateField(name, value)
     setErrors(prev => ({
       ...prev,
       [name]: error
@@ -295,9 +368,33 @@ export default function ReportFoundPetPage() {
 
   const handleSelectChange = (value: string, name: keyof FoundPetFormData) => {
     setFormData((prev) => ({ ...prev, [name]: value }))
-    setTouched(prev => ({ ...prev, [name]: true }))
-    
-    // Validate and show error immediately
+    // Only mark as touched and validate if a value is actually selected
+    if (value) {
+      setTouched(prev => ({ ...prev, [name]: true }))
+      const error = validateField(name, value)
+      setErrors(prev => ({
+        ...prev,
+        [name]: error
+      }))
+    }
+  }
+
+  // Add blur handlers for comprehensive validation
+  const handleInputBlur = (
+    e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target
+    // Use comprehensive validation when field loses focus
+    const error = validateFormField(name, value)
+    setErrors(prev => ({
+      ...prev,
+      [name]: error
+    }))
+  }
+
+  const handleSelectBlur = (name: keyof FoundPetFormData) => {
+    const value = formData[name]
+    // Use comprehensive validation when select loses focus
     const error = validateFormField(name, value)
     setErrors(prev => ({
       ...prev,
@@ -309,19 +406,25 @@ export default function ReportFoundPetPage() {
     setTouched(prev => ({ ...prev, photos: true }))
     
     if (e.target.files && e.target.files.length > 0) {
-      const file = e.target.files[0]
+      const file = e.target.files[0] // Handle one file at a time
 
       // Validate file size (5MB)
-      const maxSize = 5 * 1024 * 1024
+      const maxSize = 5 * 1024 * 1024; // 5MB in bytes
       if (file.size > maxSize) {
         toast.error(`File '${file.name}' exceeds 5MB limit`)
         return
       }
 
       // Validate file type
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp']
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
       if (!allowedTypes.includes(file.type)) {
         toast.error(`File '${file.name}' must be JPG, PNG, or WEBP`)
+        return
+      }
+
+      // Check if we already have 3 photos
+      if (formData.photos && formData.photos.length >= 3) {
+        toast.error("Maximum 3 photos allowed. Remove a photo to add a new one.")
         return
       }
 
@@ -332,8 +435,15 @@ export default function ReportFoundPetPage() {
       }
       dt.items.add(file)
 
+      // Update form data with the new FileList
       setFormData(prev => ({ ...prev, photos: dt.files }))
-      toast.success(`Photo ${dt.files.length} uploaded successfully`)
+      setErrors(prev => ({
+        ...prev,
+        photos: dt.files.length === 3 ? '' : 'Please upload exactly 3 photos'
+      }))
+
+      // Show success message
+      toast.success(`Photo ${dt.files.length}/3 uploaded successfully`)
     }
   }
 
@@ -387,19 +497,34 @@ export default function ReportFoundPetPage() {
     }
   }
 
-  return (
-    <main className="relative min-h-screen">
-      <div className="fixed inset-0 w-full h-full bg-cover bg-center" style={{ 
-        backgroundImage: 'url("https://images.unsplash.com/photo-1444212477490-ca407925329e?auto=format&fit=crop&q=80")',
-        backgroundAttachment: "fixed",
-        filter: "blur(4px)",
-        zIndex: -1
-      }} />
-      <div className="relative h-full overflow-auto">
-        <div className="container mx-auto px-4 py-16 md:py-24">
-          <div className="max-w-3xl mx-auto bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden">
-            <div className="p-6 sm:p-8 md:p-10">
-              <h1 className="text-3xl font-bold mb-8 text-center">Report a Found Pet</h1>
+  return showConfirmation ? (
+    <FoundPetConfirmation
+      formData={formData}
+      onUpdate={() => setShowConfirmation(false)}
+      onConfirm={handleConfirm}
+    />
+  ) : (
+    <div className="min-h-screen relative">
+      {/* Fixed background */}
+      <div 
+        className="fixed top-0 left-0 w-full h-full z-0"
+        style={{
+          backgroundImage: 'url("https://images.unsplash.com/photo-1444212477490-ca407925329e?auto=format&fit=crop&q=80")',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundAttachment: 'fixed',
+          filter: 'blur(4px)',
+          transform: 'scale(1.1)',
+          pointerEvents: 'none' // Ensures clicks go through to content
+        }}
+      />
+      
+      {/* Main content */}
+      <div className="relative z-10">
+          <div className="container mx-auto px-4 py-16 md:py-24">
+            <div className="max-w-3xl mx-auto bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden">
+              <div className="p-6 sm:p-8 md:p-10">
+                <h1 className="text-3xl font-bold mb-8 text-center">Report a Found Pet</h1>
               
               <form onSubmit={handleSubmit} className="space-y-8">
                 {/* Pet Details Section */}
@@ -414,7 +539,13 @@ export default function ReportFoundPetPage() {
                       <Label htmlFor="petType">Pet Type</Label>
                       <Select
                         name="petType"
-                        onValueChange={(value: string) => handleSelectChange(value, "petType")}
+                        onValueChange={(value: string) => {
+                          handleSelectChange(value, "petType");
+                          // Clear the error when a value is selected
+                          if (value) {
+                            setErrors(prev => ({ ...prev, petType: '' }));
+                          }
+                        }}
                         value={formData.petType}
                       >
                         <SelectTrigger className={errors.petType && touched.petType ? 'border-red-500' : ''}>
@@ -425,6 +556,9 @@ export default function ReportFoundPetPage() {
                           <SelectItem value="Cat">Cat</SelectItem>
                           <SelectItem value="Bird">Bird</SelectItem>
                           <SelectItem value="Rabbit">Rabbit</SelectItem>
+                          <SelectItem value="Turtle">Turtle</SelectItem>
+                          <SelectItem value="Hamster">Hamster</SelectItem>
+                          <SelectItem value="Horse">Horse</SelectItem>
                           <SelectItem value="Other">Other</SelectItem>
                         </SelectContent>
                       </Select>
@@ -602,9 +736,20 @@ export default function ReportFoundPetPage() {
                         >
                           Add Photos
                         </Button>
-                        <p className="text-sm text-gray-500">
-                          Add clear photos of the found pet
-                        </p>
+                        <div className="flex flex-col gap-1">
+                      <p className="text-sm text-gray-500 font-medium">
+                        Add exactly 3 photos of the found pet
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        • Required: 3 photos of the pet
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        • Supported formats: JPG, PNG, WEBP
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        • Maximum size: 5MB per photo
+                      </p>
+                    </div>
                       </div>
                     </div>
 
@@ -667,6 +812,7 @@ export default function ReportFoundPetPage() {
                         name="finderName"
                         value={formData.finderName}
                         onChange={handleInputChange}
+                        onBlur={handleInputBlur}
                         className={errors.finderName && touched.finderName ? 'border-red-500' : ''}
                         required
                       />
@@ -738,8 +884,7 @@ export default function ReportFoundPetPage() {
                 {/* Submit Button */}
                 <Button 
                   type="submit" 
-                  className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={!isFormValid()}
+                  className="w-full bg-blue-600 hover:bg-blue-700 transition-all duration-200 ease-in-out"
                 >
                   Submit Report
                 </Button>
@@ -748,6 +893,6 @@ export default function ReportFoundPetPage() {
           </div>
         </div>
       </div>
-    </main>
+    </div>
   )
 }
