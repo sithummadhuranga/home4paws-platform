@@ -16,12 +16,6 @@ import {
 import { toast } from "sonner"
 import dynamic from "next/dynamic"
 
-// Import the confirmation component
-const FoundPetConfirmation = dynamic(
-  () => import('@/components/pet-finder/FoundPetConfirmation'),
-  { ssr: false }
-)
-
 // Define the form data type
 type FormErrors = {
   [key: string]: string;
@@ -52,7 +46,6 @@ export default function ReportFoundPetPage() {
   const router = useRouter()
   const [errors, setErrors] = useState<FormErrors>({})
   const [touched, setTouched] = useState<{ [key: string]: boolean }>({})
-  const [showConfirmation, setShowConfirmation] = useState(false)
 
   // Initialize form data
   const [formData, setFormData] = useState<FoundPetFormData>({
@@ -114,6 +107,7 @@ export default function ReportFoundPetPage() {
 
       case 'contactNumber':
         if (!/^\d+$/.test(value)) return 'Please enter only numbers'
+        if (value.length !== 10) return 'Phone number must be exactly 10 digits'
         return ''
 
       case 'email':
@@ -283,72 +277,79 @@ export default function ReportFoundPetPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    // Mark all fields as touched to show all validation states
-    const allFields = Object.keys(formData).reduce((acc, key) => ({
-      ...acc,
-      [key]: true
-    }), {})
-    setTouched(allFields)
+    // Show validation messages for all fields
+    setTouched(
+      Object.keys(formData).reduce((acc, key) => ({
+        ...acc,
+        [key]: true
+      }), {})
+    )
 
-    // Check if form is valid before proceeding
-    if (!isFormValid()) {
-      // Get list of empty required fields
-      const emptyFields: string[] = []
-      const requiredFields = {
-        petType: 'Pet Type',
-        color: 'Color & Markings',
-        size: 'Size',
-        dateFound: 'Date Found',
-        timeFound: 'Time Found',
-        locationFound: 'Location Found',
-        finderName: 'Name',
-        preferredContact: 'Preferred Contact Method'
-      }
-      
-      Object.entries(requiredFields).forEach(([key, label]) => {
-        const value = formData[key as keyof FoundPetFormData]
-        if (!value || (typeof value === 'string' && !value.trim())) {
-          emptyFields.push(label)
-        }
-      })
-
-      // Add contact info to empty fields if needed
-      if (formData.preferredContact === 'phone' && !formData.contactNumber) {
-        emptyFields.push('Phone Number')
-      }
-      if (formData.preferredContact === 'email' && !formData.email) {
-        emptyFields.push('Email')
-      }
-
-      // Check photo requirement
-      if (!formData.photos || formData.photos.length !== 3) {
-        emptyFields.push('3 Photos Required')
-      }
-
-      // Show error message with missing fields
-      if (emptyFields.length > 0) {
-        toast.error(
-          `Please complete the following: ${emptyFields.join(', ')}`,
-          { duration: 6000 }
-        )
-      } else {
-        // If no empty fields but form is invalid, there are validation errors
-        toast.error(
-          'Please fix the validation errors before submitting',
-          { duration: 4000 }
-        )
-      }
-      
-      // Scroll to first error
-      const firstErrorField = document.querySelector('.border-red-500')
-      if (firstErrorField) {
-        firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      }
+    // Validate required fields and photos
+    if (!formData.petType || !formData.color || !formData.size || 
+        !formData.dateFound || !formData.timeFound || !formData.locationFound ||
+        !formData.finderName || !formData.preferredContact) {
+      toast.error('Please fill in all required fields')
       return
     }
 
-    // If form is valid, proceed to confirmation
-    setShowConfirmation(true)
+    // Validate contact information
+    if (formData.preferredContact === 'phone') {
+      if (!formData.contactNumber) {
+        toast.error('Phone number is required')
+        return
+      }
+      if (!/^\d{10}$/.test(formData.contactNumber)) {
+        toast.error('Phone number must be exactly 10 digits')
+        return
+      }
+    }
+    if (formData.preferredContact === 'email' && !formData.email) {
+      toast.error('Email address is required')
+      return
+    }
+
+    // Validate photos
+    if (!formData.photos || formData.photos.length !== 3) {
+      toast.error('Please upload exactly 3 photos')
+      return
+    }
+
+    try {
+      // Generate ticket ID (using timestamp)
+      const ticketId = Date.now().toString().slice(-6)
+
+      // Convert photos to URLs
+      const imageUrls = Array.from(formData.photos).map(file => URL.createObjectURL(file))
+
+      // Prepare data to pass to ticket page
+      const params = new URLSearchParams({
+        ticketId,
+        petType: formData.petType,
+        breed: formData.breed || '',
+        color: formData.color,
+        size: formData.size,
+        gender: formData.gender || '',
+        uniqueFeatures: formData.uniqueFeatures || '',
+        dateFound: formData.dateFound,
+        timeFound: formData.timeFound,
+        locationFound: formData.locationFound,
+        finderName: formData.finderName,
+        contactNumber: formData.contactNumber || '',
+        email: formData.email || '',
+        preferredContact: formData.preferredContact,
+        imageUrls: imageUrls.join(',')
+      })
+
+      // Show loading message
+      toast.loading('Submitting your report...')
+
+      // Navigate to ticket page with all the data
+      router.push(`/pet-finder/report-found/ticket?${params.toString()}`)
+
+    } catch (error) {
+      toast.error('Failed to submit report. Please try again.')
+    }
   }
 
   const handleInputChange = (
@@ -458,52 +459,44 @@ export default function ReportFoundPetPage() {
       // Step 1: Simulated API call (would actually save data to backend)
       await new Promise(resolve => setTimeout(resolve, 2000))
 
-      // Step 2: Show success message in bottom right corner
-      toast.success('Information added successfully!', {
-        position: 'bottom-right',
-        duration: 3000
+      // Step 2: Show success message
+      toast.success('Processing your report...')
+
+      // Convert photos to URLs
+      const imageUrls = formData.photos 
+        ? Array.from(formData.photos).map(file => URL.createObjectURL(file))
+        : []
+
+      // Step 3: Create the URL with all the form data
+      const ticketId = Date.now().toString().slice(-6) // Generate a simple ticket ID
+      const params = new URLSearchParams({
+        ticketId,
+        petType: formData.petType,
+        breed: formData.breed || '',
+        color: formData.color,
+        size: formData.size,
+        gender: formData.gender || '',
+        uniqueFeatures: formData.uniqueFeatures || '',
+        dateFound: formData.dateFound,
+        timeFound: formData.timeFound,
+        locationFound: formData.locationFound,
+        finderName: formData.finderName,
+        contactNumber: formData.contactNumber || '',
+        email: formData.email || '',
+        preferredContact: formData.preferredContact,
+        imageUrls: imageUrls.join(',')
       })
 
-      // Step 3: Wait for 1 second, then navigate to pet-finder page
-      setTimeout(() => {
-        router.push('/pet-finder')
-      }, 1000)
+      // Navigate to the ticket page with the data
+      router.push(`/pet-finder/report-found/ticket?${params.toString()}`)
 
-      // Step 4: Reset form and state
-      setFormData({
-        petType: "",
-        breed: "",
-        color: "",
-        size: "",
-        gender: "",
-        uniqueFeatures: "",
-        dateFound: "",
-        timeFound: "",
-        locationFound: "",
-        photos: null,
-        finderName: "",
-        contactNumber: "",
-        email: "",
-        preferredContact: "",
-      })
-      setTouched({})
-      setErrors({})
-      setShowConfirmation(false)
     } catch (error) {
-      // Step 5: Show error in bottom right if something fails
-      toast.error('Failed to submit report. Please try again.', {
-        position: 'bottom-right'
-      })
+      // Show error if something fails
+      toast.error('Failed to submit report. Please try again.')
     }
   }
 
-  return showConfirmation ? (
-    <FoundPetConfirmation
-      formData={formData}
-      onUpdate={() => setShowConfirmation(false)}
-      onConfirm={handleConfirm}
-    />
-  ) : (
+  return (
     <div className="min-h-screen relative">
       {/* Fixed background */}
       <div 
@@ -850,8 +843,10 @@ export default function ReportFoundPetPage() {
                           type="tel"
                           value={formData.contactNumber}
                           onChange={handleInputChange}
-                          placeholder="Enter your phone number"
+                          placeholder="Enter your phone number (10 digits)"
+                          maxLength={10}
                           className={errors.contactNumber && touched.contactNumber ? 'border-red-500' : ''}
+                          pattern="\d{10}"
                           required
                         />
                         {errors.contactNumber && touched.contactNumber && (
