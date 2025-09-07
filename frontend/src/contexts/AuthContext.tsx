@@ -1,299 +1,160 @@
-"use client"
+"use client";
 
-import React, { createContext, useState, useEffect, useRef, useCallback, useContext } from "react"
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { toast } from 'sonner';
 
 interface User {
-  id: string
-  firstName: string
-  lastName: string
-  email: string
-  role: string
-  emailVerified: boolean
-  createdAt: string
-  lastLoginAt?: string
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: string;
+  emailVerified: boolean;
+  createdAt: string;
+  lastLoginAt?: string;
 }
 
-export interface AuthContextType {
+interface AuthContextType {
   user: User | null;
-  token: string | null; // Add token property
-  isLoading: boolean
-  isAuthenticated: boolean
-  login: (email: string, password: string, rememberMe?: boolean) => Promise<{ success: boolean; message: string }>
-  signup: (data: SignupData) => Promise<{ success: boolean; message: string }>
-  logout: () => Promise<void>
-  refreshToken: () => Promise<boolean>
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
+  register: (userData: RegisterData) => Promise<void>;
 }
 
-interface SignupData {
-  firstName: string
-  lastName: string
-  email: string
-  password: string
-  confirmPassword: string
-  agreeToTerms: boolean
+interface RegisterData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
 }
 
-export const AuthContext = createContext<AuthContextType | undefined>(undefined)
-
-const getApiUrl = () => process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5185'
-
-// Simple request deduplication
-const pendingRequests = new Map<string, Promise<unknown>>()
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [token, setToken] = useState<string | null>(null) // Add token state
-  const [isLoading, setIsLoading] = useState(true)
-  const refreshTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-  const abortControllerRef = useRef<AbortController | null>(null)
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Optimized API call with better error handling
-  const apiCall = useCallback(async (url: string, options: RequestInit = {}) => {
-    const cacheKey = `${url}-${options.method || 'GET'}`
-    
-    if (pendingRequests.has(cacheKey)) {
-      return pendingRequests.get(cacheKey)
-    }
-
-    const controller = new AbortController()
-    abortControllerRef.current = controller
-
-    const requestOptions: RequestInit = {
-      ...options,
-      signal: controller.signal,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
-    }
-
-    const promise = fetch(url, requestOptions)
-      .then(async res => {
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}: ${res.statusText}`)
-        }
-        return res.json()
-      })
-      .finally(() => {
-        pendingRequests.delete(cacheKey)
-        if (abortControllerRef.current === controller) {
-          abortControllerRef.current = null
-        }
-      })
-
-    pendingRequests.set(cacheKey, promise)
-    return promise
-  }, [])
-
-  const refreshToken = useCallback(async (): Promise<boolean> => {
-    try {
-      const refreshTokenValue = localStorage.getItem('refreshToken')
-      if (!refreshTokenValue) {
-        setUser(null)
-        return false
-      }
-
-      const data = await apiCall(`${getApiUrl()}/api/auth/refresh`, {
-        method: 'POST',
-        body: JSON.stringify({ refreshToken: refreshTokenValue })
-      })
-
-      if (data.success) {
-        localStorage.setItem('accessToken', data.tokens.accessToken)
-        localStorage.setItem('refreshToken', data.tokens.refreshToken)
-        setUser(data.user)
-        setToken(data.tokens.accessToken) // Set token state
-        return true
-      } else {
-        localStorage.removeItem('accessToken')
-        localStorage.removeItem('refreshToken')
-        setUser(null)
-        setToken(null) // Clear token state
-        return false
-      }
-    } catch (error) {
-      console.error('Token refresh error:', error)
-      localStorage.removeItem('accessToken')
-      localStorage.removeItem('refreshToken')
-      setUser(null)
-      setToken(null) // Clear token state
-      return false
-    }
-  }, [apiCall])
-
-  const checkAuthStatus = useCallback(async () => {
-    try {
-      const token = localStorage.getItem('accessToken')
-      if (!token) {
-        setIsLoading(false)
-        return
-      }
-
-      const data = await apiCall(`${getApiUrl()}/api/auth/verify`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-
-      if (data.success) {
-        setUser(data.user)
-        setToken(token) // Set token state
-      } else {
-        await refreshToken()
-      }
-    } catch (error) {
-      console.error('Auth check failed:', error)
-      await refreshToken()
-    } finally {
-      setIsLoading(false)
-    }
-  }, [apiCall, refreshToken])
-
-  // Cleanup on unmount
+  // Check if user is logged in on mount
   useEffect(() => {
-    const currentRefreshTimeout = refreshTimeoutRef.current
-    const currentAbortController = abortControllerRef.current
-    
-    return () => {
-      if (currentAbortController) {
-        currentAbortController.abort()
+    const checkAuth = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (token) {
+          // Simulate user data - replace with actual API call
+          const userData: User = {
+            id: '1',
+            firstName: 'John',
+            lastName: 'Doe',
+            email: 'john@example.com',
+            role: 'User',
+            emailVerified: true,
+            createdAt: new Date().toISOString(),
+          };
+          setUser(userData);
+        }
+      } catch (error) {
+        console.error('Auth check failed:', error);
+        localStorage.removeItem('token');
+      } finally {
+        setIsLoading(false);
       }
-      if (currentRefreshTimeout) {
-        clearTimeout(currentRefreshTimeout)
-      }
-    }
-  }, [])
+    };
 
-  useEffect(() => {
-    checkAuthStatus()
-  }, [checkAuthStatus])
+    checkAuth();
+  }, []);
 
-  const login = useCallback(async (email: string, password: string, rememberMe = false) => {
+  const login = useCallback(async (email: string, password: string) => {
+    setIsLoading(true);
     try {
-      setIsLoading(true)
+      // Simulate login - replace with actual API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      const data = await apiCall(`${getApiUrl()}/api/auth/login`, {
-        method: 'POST',
-        body: JSON.stringify({
-          email,
-          password,
-          rememberMe,
-          deviceInfo: typeof navigator !== 'undefined' ? navigator.userAgent : 'Unknown'
-        })
-      })
+      const token = 'fake-jwt-token';
+      const userData: User = {
+        id: '1',
+        firstName: 'John',
+        lastName: 'Doe',
+        email,
+        role: 'User',
+        emailVerified: true,
+        createdAt: new Date().toISOString(),
+        lastLoginAt: new Date().toISOString(),
+      };
 
-      if (data.success) {
-        localStorage.setItem('accessToken', data.tokens.accessToken)
-        localStorage.setItem('refreshToken', data.tokens.refreshToken)
-        setUser(data.user)
-        setToken(data.tokens.accessToken) // Set token state
-        return { success: true, message: 'Login successful!' }
-      } else {
-        return { success: false, message: data.message || 'Login failed' }
-      }
-    } catch (error: unknown) {
-      console.error('Login error:', error)
-      const errorMessage = error instanceof Error && error.name === 'AbortError' 
-        ? 'Request cancelled' 
-        : 'Network error. Please try again.'
-      return { 
-        success: false, 
-        message: errorMessage
-      }
+      localStorage.setItem('token', token);
+      setUser(userData);
+      toast.success('Successfully logged in!');
+    } catch (error) {
+      toast.error('Login failed. Please try again.');
+      throw error;
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }, [apiCall])
-
-  const signup = useCallback(async (signupData: SignupData) => {
-    try {
-      setIsLoading(true)
-
-      const data = await apiCall(`${getApiUrl()}/api/auth/signup`, {
-        method: 'POST',
-        body: JSON.stringify({
-          firstName: signupData.firstName,
-          lastName: signupData.lastName,
-          email: signupData.email,
-          password: signupData.password,
-          confirmPassword: signupData.confirmPassword,
-          agreeToTerms: signupData.agreeToTerms,
-          deviceInfo: typeof navigator !== 'undefined' ? navigator.userAgent : 'Unknown'
-        })
-      })
-
-      if (data.success) {
-        localStorage.setItem('accessToken', data.tokens.accessToken)
-        localStorage.setItem('refreshToken', data.tokens.refreshToken)
-        setUser(data.user)
-        setToken(data.tokens.accessToken) // Set token state
-        return { success: true, message: 'Account created successfully!' }
-      } else {
-        return { success: false, message: data.message || 'Signup failed' }
-      }
-    } catch (error: unknown) {
-      console.error('Signup error:', error)
-      const errorMessage = error instanceof Error && error.name === 'AbortError' 
-        ? 'Request cancelled' 
-        : 'Network error. Please try again.'
-      return { 
-        success: false, 
-        message: errorMessage
-      }
-    } finally {
-      setIsLoading(false)
-    }
-  }, [apiCall])
+  }, []);
 
   const logout = useCallback(async () => {
     try {
-      // Cancel any pending requests
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort()
-      }
-
-      const refreshTokenValue = localStorage.getItem('refreshToken')
-      
-      if (refreshTokenValue) {
-        // Don't await this - logout immediately
-        apiCall(`${getApiUrl()}/api/auth/logout`, {
-          method: 'POST',
-          body: JSON.stringify({ refreshToken: refreshTokenValue })
-        }).catch(console.error)
-      }
+      localStorage.removeItem('token');
+      setUser(null);
+      toast.success('Successfully logged out!');
     } catch (error) {
-      console.error('Logout error:', error)
-    } finally {
-      // Clear immediately for instant response
-      localStorage.removeItem('accessToken')
-      localStorage.removeItem('refreshToken')
-      setUser(null)
-      setToken(null) // Clear token state
-      
-      if (refreshTimeoutRef.current) {
-        clearTimeout(refreshTimeoutRef.current)
-      }
+      toast.error('Logout failed. Please try again.');
+      throw error;
     }
-  }, [apiCall])
+  }, []);
+
+  const register = useCallback(async (userData: RegisterData) => {
+    setIsLoading(true);
+    try {
+      // Simulate registration - replace with actual API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      const token = 'fake-jwt-token';
+      const newUser: User = {
+        id: '1',
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        email: userData.email,
+        role: 'User',
+        emailVerified: false,
+        createdAt: new Date().toISOString(),
+      };
+
+      localStorage.setItem('token', token);
+      setUser(newUser);
+      toast.success('Account created successfully!');
+    } catch (error) {
+      toast.error('Registration failed. Please try again.');
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const isAuthenticated = !!user;
 
   return (
-    <AuthContext.Provider value={{
-      user,
-      token, // Provide token
-      isLoading,
-      isAuthenticated: !!user,
-      login,
-      signup,
-      logout,
-      refreshToken
-    }}>
+    <AuthContext.Provider 
+      value={{
+        user,
+        isAuthenticated,
+        isLoading,
+        login,
+        logout,
+        register,
+      }}
+    >
       {children}
     </AuthContext.Provider>
-  )
+  );
 }
 
-export const useAuth = () => {
-  const context = useContext(AuthContext)
+export function useAuth() {
+  const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider')
+    throw new Error('useAuth must be used within an AuthProvider');
   }
-  return context
+  return context;
 }

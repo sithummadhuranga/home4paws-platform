@@ -1,35 +1,17 @@
 // src/app/layout.tsx
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
-
-// Your Providers
-import { AuthProvider } from "@/contexts/AuthContext";
-import { CartProvider } from "@/contexts/CartContext"; // Make sure this is imported
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { CartProvider } from "@/contexts/CartContext";
 
-// Your UI Components
-import { Toaster } from "@/components/ui/sonner"; // Updated import for notifications
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-  display: "swap",
-  preload: true,
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-  display: "swap",
-  preload: false,
-});
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "PawsHome – Find Your Perfect Pet",
+  title: "PawsHome - Find Your Perfect Pet Companion",
   description:
-    "Fast, secure pet adoption platform. Connect with loving pets from verified shelters.",
-  keywords: "pet adoption, dogs, cats, animal shelter, fast adoption",
+    "Connect with loving pets looking for their forever homes. Browse adoptable pets, find shelters, and discover premium pet products.",
 };
 
 export default function RootLayout({
@@ -38,14 +20,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html 
-      lang="en" 
-      suppressHydrationWarning 
-      data-scroll-behavior="smooth"
-    >
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground transition-colors duration-200`}
-      >
+    <html lang="en" suppressHydrationWarning>
+      <body className={inter.className}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
@@ -53,13 +29,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <AuthProvider>
-            <CartProvider> {/* This MUST wrap your children */}
-              {/* You would typically place your Header and Footer components here */}
-              <main>
-                {children}
-              </main>
-              <Toaster /> {/* This component displays the notifications */}
-            </CartProvider>
+            <CartProvider>{children}</CartProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>
