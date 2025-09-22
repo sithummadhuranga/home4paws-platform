@@ -99,160 +99,180 @@ export default function Testimonials() {
 
     if (!mounted) {
         return (
-            <section className="py-12 sm:py-16 lg:py-20 bg-gradient-to-br from-black via-black to-purple-900/10">
-                <Container>
-                    <div className="animate-pulse">
-                        <div className="h-8 bg-neutral-900 dark:bg-neutral-900 rounded w-64 mb-4 mx-auto"></div>
-                        <div className="h-40 bg-neutral-900 dark:bg-neutral-900 rounded-2xl max-w-4xl mx-auto"></div>
+            <section className="py-12 sm:py-16 lg:py-20">
+                <div className="max-w-[1299px] mx-auto px-4 md:px-[71px]">
+                    <div className="relative rounded-[50px] overflow-hidden bg-gradient-to-br from-black via-neutral-900 to-purple-900/20 backdrop-blur-sm border border-purple-400/10">
+                        {/* Decorative Elements */}
+                        <div className="absolute -top-20 -left-20 w-40 h-40 bg-purple-500/10 rounded-full blur-3xl animate-pulse" />
+                        <div className="absolute -bottom-20 -right-20 w-60 h-60 bg-purple-400/8 rounded-full blur-3xl animate-pulse" />
+                        
+                        <div className="relative py-16 sm:py-20 lg:py-24 px-8 sm:px-12 lg:px-16">
+                            <div className="animate-pulse">
+                                <div className="h-8 bg-neutral-800 rounded w-64 mb-4 mx-auto"></div>
+                                <div className="h-40 bg-neutral-800 rounded-2xl max-w-4xl mx-auto"></div>
+                            </div>
+                        </div>
                     </div>
-                </Container>
+                </div>
             </section>
         )
     }
 
     return (
-        <section className="py-12 sm:py-16 lg:py-20 bg-gradient-to-br from-black via-black to-purple-900/10">
-            <Container>
-                {/* Header */}
-                <div className="text-center mb-8 sm:mb-12 lg:mb-16 animate-fadeInUp">
-                    <div className="inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-neutral-900/80 dark:bg-neutral-900/80 backdrop-blur-sm border border-purple-400/20 dark:border-purple-400/20 mb-4 sm:mb-6">
-                        <Heart className="w-3 h-3 sm:w-4 sm:h-4 text-purple-400 mr-2" />
-                        <span className="text-xs sm:text-sm font-medium text-purple-200 dark:text-purple-200 font-inter">Success Stories</span>
-                    </div>
+        <section className="py-12 sm:py-16 lg:py-20">
+            <div className="max-w-[1299px] mx-auto px-4 md:px-[71px]">
+                <div className="relative rounded-[50px] overflow-hidden bg-gradient-to-br from-black via-neutral-900 to-purple-900/20 backdrop-blur-sm border border-purple-400/10">
+                    {/* Decorative Elements - Clipped by rounded corners */}
+                    <div className="absolute -top-20 -left-20 w-40 h-40 bg-purple-500/10 rounded-full blur-3xl animate-pulse" />
+                    <div className="absolute -bottom-20 -right-20 w-60 h-60 bg-purple-400/8 rounded-full blur-3xl animate-pulse" />
+                    <div className="absolute top-1/2 -left-10 w-32 h-32 bg-purple-600/6 rounded-full blur-2xl animate-pulse" />
+                    <div className="absolute top-1/4 -right-10 w-48 h-48 bg-purple-300/5 rounded-full blur-3xl animate-pulse" />
                     
-                    <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold text-purple-200 dark:text-purple-200 mb-4 sm:mb-6 leading-tight px-4 font-urbanist">
-                        What Adopters
-                        <span className="bg-gradient-to-r from-purple-400 to-purple-300 bg-clip-text text-transparent block sm:inline sm:ml-3">Say</span>
-                    </h2>
-                    
-                    <p className="text-sm sm:text-base lg:text-lg text-purple-300 dark:text-purple-300 max-w-3xl mx-auto leading-relaxed px-4 font-inter">
-                        Real families, real stories, real love. 
-                        <span className="font-semibold text-purple-400 dark:text-purple-400"> See why 15,000+ families trust PawsHome.</span>
-                    </p>
-                </div>
-
-                {/* Testimonial Carousel */}
-                <div className="relative max-w-4xl mx-auto">
-                    {/* Main Testimonial */}
-                    <div 
-                        className="relative animate-fadeInUp px-4"
-                        onMouseEnter={() => setAutoPlay(false)}
-                        onMouseLeave={() => setAutoPlay(true)}
-                    >
-                        <div className="bg-neutral-900 dark:bg-neutral-900 rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-12 shadow-xl border border-purple-400/20 dark:border-purple-400/20 relative overflow-hidden">
-                            {/* Quote Icon */}
-                            <div className="absolute top-4 right-4 sm:top-6 sm:right-6 text-purple-800/20 dark:text-purple-800/20">
-                                <Quote className="w-8 h-8 sm:w-12 sm:h-12 fill-current" />
+                    <div className="relative py-16 sm:py-20 lg:py-24 px-8 sm:px-12 lg:px-16">
+                        <Container>
+                            {/* Header */}
+                            <div className="text-center mb-8 sm:mb-12 lg:mb-16 animate-fadeInUp">
+                                <div className="inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-neutral-900/60 backdrop-blur-sm border border-purple-400/20 mb-4 sm:mb-6">
+                                    <Heart className="w-3 h-3 sm:w-4 sm:h-4 text-purple-400 mr-2" />
+                                    <span className="text-xs sm:text-sm font-medium text-purple-200 font-inter">Success Stories</span>
+                                </div>
+                                
+                                <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold text-purple-200 mb-4 sm:mb-6 leading-tight px-4 font-urbanist">
+                                    What Adopters
+                                    <span className="bg-gradient-to-r from-purple-400 to-purple-300 bg-clip-text text-transparent block sm:inline sm:ml-3">Say</span>
+                                </h2>
+                                
+                                <p className="text-sm sm:text-base lg:text-lg text-purple-300 max-w-3xl mx-auto leading-relaxed px-4 font-inter">
+                                    Real families, real stories, real love. 
+                                    <span className="font-semibold text-purple-400"> See why 15,000+ families trust PawsHome.</span>
+                                </p>
                             </div>
 
-                            {/* Rating */}
-                            <div className="flex items-center gap-1 mb-4 sm:mb-6">
-                                {[...Array(testimonials[currentIndex].rating)].map((_, i) => (
-                                    <Star key={i} className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400 fill-current" />
+                            {/* Testimonial Carousel */}
+                            <div className="relative max-w-4xl mx-auto">
+                                {/* Main Testimonial */}
+                                <div 
+                                    className="relative animate-fadeInUp px-4"
+                                    onMouseEnter={() => setAutoPlay(false)}
+                                    onMouseLeave={() => setAutoPlay(true)}
+                                >
+                                    <div className="bg-neutral-900/60 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-12 shadow-xl border border-purple-400/20 relative overflow-hidden">
+                                        {/* Quote Icon */}
+                                        <div className="absolute top-4 right-4 sm:top-6 sm:right-6 text-purple-800/20">
+                                            <Quote className="w-8 h-8 sm:w-12 sm:h-12 fill-current" />
+                                        </div>
+
+                                        {/* Rating */}
+                                        <div className="flex items-center gap-1 mb-4 sm:mb-6">
+                                            {[...Array(testimonials[currentIndex].rating)].map((_, i) => (
+                                                <Star key={i} className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400 fill-current" />
+                                            ))}
+                                        </div>
+
+                                        {/* Testimonial Text */}
+                                        <blockquote className="text-base sm:text-lg lg:text-xl text-purple-200 leading-relaxed mb-6 sm:mb-8 font-medium font-inter">
+                                            &ldquo;{testimonials[currentIndex].text}&rdquo;
+                                        </blockquote>
+
+                                        {/* Author Info - Mobile Optimized */}
+                                        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
+                                            <div className="relative">
+                                                <Image
+                                                    src={testimonials[currentIndex].image}
+                                                    alt={testimonials[currentIndex].name}
+                                                    width={60}
+                                                    height={60}
+                                                    className="rounded-full object-cover border-2 border-purple-400/30"
+                                                />
+                                                <div className="absolute -bottom-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 bg-purple-500 rounded-full border-2 border-neutral-900 flex items-center justify-center">
+                                                    <Heart className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white fill-current" />
+                                                </div>
+                                            </div>
+                                            
+                                            <div className="flex-1 text-center sm:text-left">
+                                                <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-1">
+                                                    <h4 className="font-bold text-purple-200 text-sm sm:text-base font-inter">
+                                                        {testimonials[currentIndex].name}
+                                                    </h4>
+                                                    <span className="hidden sm:inline text-sm text-purple-300">•</span>
+                                                    <span className="text-xs sm:text-sm text-purple-400 font-medium font-inter">
+                                                        {testimonials[currentIndex].role}
+                                                    </span>
+                                                </div>
+                                                <p className="text-xs sm:text-sm text-purple-300 font-inter">
+                                                    {testimonials[currentIndex].location}
+                                                </p>
+                                            </div>
+
+                                            {/* Pet Info */}
+                                            <div className="text-center sm:text-right">
+                                                <p className="text-xs sm:text-sm font-semibold text-purple-200 font-inter">
+                                                    Adopted {testimonials[currentIndex].petName}
+                                                </p>
+                                                <p className="text-xs text-purple-300 font-inter">
+                                                    {testimonials[currentIndex].petType}
+                                                </p>
+                                                <p className="text-xs text-purple-400 font-medium font-inter">
+                                                    {testimonials[currentIndex].adoptionDate}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Navigation Buttons - Mobile Optimized */}
+                                <button
+                                    onClick={prevTestimonial}
+                                    className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 bg-neutral-900/80 backdrop-blur-sm rounded-full shadow-lg border border-purple-400/20 flex items-center justify-center hover:bg-neutral-800/80 transition-colors duration-200 z-10"
+                                    suppressHydrationWarning
+                                >
+                                    <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6 text-purple-300" />
+                                </button>
+                                
+                                <button
+                                    onClick={nextTestimonial}
+                                    className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 bg-neutral-900/80 backdrop-blur-sm rounded-full shadow-lg border border-purple-400/20 flex items-center justify-center hover:bg-neutral-800/80 transition-colors duration-200 z-10"
+                                    suppressHydrationWarning
+                                >
+                                    <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6 text-purple-300" />
+                                </button>
+                            </div>
+
+                            {/* Pagination Dots - Mobile Optimized */}
+                            <div className="flex justify-center gap-1.5 sm:gap-2 mt-6 sm:mt-8 animate-fadeInUp stagger-2">
+                                {testimonials.map((_, index) => (
+                                    <button
+                                        key={index}
+                                        onClick={() => setCurrentIndex(index)}
+                                        className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full transition-all duration-300 ${
+                                            currentIndex === index 
+                                                ? "bg-purple-500 scale-125" 
+                                                : "bg-purple-700/50 hover:bg-purple-600/70"
+                                        }`}
+                                        suppressHydrationWarning
+                                    />
                                 ))}
                             </div>
 
-                            {/* Testimonial Text */}
-                            <blockquote className="text-base sm:text-lg lg:text-xl text-purple-200 dark:text-purple-200 leading-relaxed mb-6 sm:mb-8 font-medium font-inter">
-                                &ldquo;{testimonials[currentIndex].text}&rdquo;
-                            </blockquote>
-
-                            {/* Author Info - Mobile Optimized */}
-                            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
-                                <div className="relative">
-                                    <Image
-                                        src={testimonials[currentIndex].image}
-                                        alt={testimonials[currentIndex].name}
-                                        width={60}
-                                        height={60}
-                                        className="rounded-full object-cover border-2 border-purple-400/30 dark:border-purple-400/30"
-                                    />
-                                    <div className="absolute -bottom-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 bg-purple-500 rounded-full border-2 border-neutral-900 dark:border-neutral-900 flex items-center justify-center">
-                                        <Heart className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white fill-current" />
-                                    </div>
+                            {/* Stats Footer */}
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mt-8 sm:mt-12 animate-fadeInUp stagger-3">
+                                <div className="text-center p-4 sm:p-6 bg-neutral-900/40 backdrop-blur-sm rounded-xl sm:rounded-2xl border border-purple-400/20 shadow-lg">
+                                    <div className="text-xl sm:text-2xl lg:text-3xl font-semibold text-purple-400 mb-1 font-inter">4.9★</div>
+                                    <p className="text-xs sm:text-sm text-purple-300 font-inter">Average Rating</p>
                                 </div>
-                                
-                                <div className="flex-1 text-center sm:text-left">
-                                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-1">
-                                        <h4 className="font-bold text-purple-200 dark:text-purple-200 text-sm sm:text-base font-inter">
-                                            {testimonials[currentIndex].name}
-                                        </h4>
-                                        <span className="hidden sm:inline text-sm text-purple-300 dark:text-purple-300">•</span>
-                                        <span className="text-xs sm:text-sm text-purple-400 dark:text-purple-400 font-medium font-inter">
-                                            {testimonials[currentIndex].role}
-                                        </span>
-                                    </div>
-                                    <p className="text-xs sm:text-sm text-purple-300 dark:text-purple-300 font-inter">
-                                        {testimonials[currentIndex].location}
-                                    </p>
+                                <div className="text-center p-4 sm:p-6 bg-neutral-900/40 backdrop-blur-sm rounded-xl sm:rounded-2xl border border-purple-400/20 shadow-lg">
+                                    <div className="text-xl sm:text-2xl lg:text-3xl font-semibold text-purple-400 mb-1 font-inter">15K+</div>
+                                    <p className="text-xs sm:text-sm text-purple-300 font-inter">Happy Families</p>
                                 </div>
-
-                                {/* Pet Info */}
-                                <div className="text-center sm:text-right">
-                                    <p className="text-xs sm:text-sm font-semibold text-purple-200 dark:text-purple-200 font-inter">
-                                        Adopted {testimonials[currentIndex].petName}
-                                    </p>
-                                    <p className="text-xs text-purple-300 dark:text-purple-300 font-inter">
-                                        {testimonials[currentIndex].petType}
-                                    </p>
-                                    <p className="text-xs text-purple-400 dark:text-purple-400 font-medium font-inter">
-                                        {testimonials[currentIndex].adoptionDate}
-                                    </p>
+                                <div className="text-center p-4 sm:p-6 bg-neutral-900/40 backdrop-blur-sm rounded-xl sm:rounded-2xl border border-purple-400/20 shadow-lg">
+                                    <div className="text-xl sm:text-2xl lg:text-3xl font-semibold text-purple-400 mb-1 font-inter">98%</div>
+                                    <p className="text-xs sm:text-sm text-purple-300 font-inter">Success Rate</p>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-
-                    {/* Navigation Buttons - Mobile Optimized */}
-                    <button
-                        onClick={prevTestimonial}
-                        className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 bg-neutral-900 dark:bg-neutral-900 rounded-full shadow-lg border border-purple-400/20 dark:border-purple-400/20 flex items-center justify-center hover:bg-neutral-800 dark:hover:bg-neutral-800 transition-colors duration-200 z-10"
-                        suppressHydrationWarning
-                    >
-                        <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6 text-purple-300 dark:text-purple-300" />
-                    </button>
-                    
-                    <button
-                        onClick={nextTestimonial}
-                        className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 bg-neutral-900 dark:bg-neutral-900 rounded-full shadow-lg border border-purple-400/20 dark:border-purple-400/20 flex items-center justify-center hover:bg-neutral-800 dark:hover:bg-neutral-800 transition-colors duration-200 z-10"
-                        suppressHydrationWarning
-                    >
-                        <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6 text-purple-300 dark:text-purple-300" />
-                    </button>
-                </div>
-
-                {/* Pagination Dots - Mobile Optimized */}
-                <div className="flex justify-center gap-1.5 sm:gap-2 mt-6 sm:mt-8 animate-fadeInUp stagger-2">
-                    {testimonials.map((_, index) => (
-                        <button
-                            key={index}
-                            onClick={() => setCurrentIndex(index)}
-                            className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full transition-all duration-300 ${
-                                currentIndex === index 
-                                    ? "bg-purple-500 scale-125" 
-                                    : "bg-purple-700/50 dark:bg-purple-700/50 hover:bg-purple-600/70 dark:hover:bg-purple-600/70"
-                            }`}
-                            suppressHydrationWarning
-                        />
-                    ))}
-                </div>
-
-                {/* Stats Footer */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mt-8 sm:mt-12 animate-fadeInUp stagger-3">
-                    <div className="text-center p-4 sm:p-6 bg-neutral-900/50 dark:bg-neutral-900/50 backdrop-blur-sm rounded-xl sm:rounded-2xl border border-purple-400/20 dark:border-purple-400/20">
-                        <div className="text-xl sm:text-2xl lg:text-3xl font-semibold text-purple-400 dark:text-purple-400 mb-1 font-inter">4.9★</div>
-                        <p className="text-xs sm:text-sm text-purple-300 dark:text-purple-300 font-inter">Average Rating</p>
-                    </div>
-                    <div className="text-center p-4 sm:p-6 bg-neutral-900/50 dark:bg-neutral-900/50 backdrop-blur-sm rounded-xl sm:rounded-2xl border border-purple-400/20 dark:border-purple-400/20">
-                        <div className="text-xl sm:text-2xl lg:text-3xl font-semibold text-purple-400 dark:text-purple-400 mb-1 font-inter">15K+</div>
-                        <p className="text-xs sm:text-sm text-purple-300 dark:text-purple-300 font-inter">Happy Families</p>
-                    </div>
-                    <div className="text-center p-4 sm:p-6 bg-neutral-900/50 dark:bg-neutral-900/50 backdrop-blur-sm rounded-xl sm:rounded-2xl border border-purple-400/20 dark:border-purple-400/20">
-                        <div className="text-xl sm:text-2xl lg:text-3xl font-semibold text-purple-400 dark:text-purple-400 mb-1 font-inter">98%</div>
-                        <p className="text-xs sm:text-sm text-purple-300 dark:text-purple-300 font-inter">Success Rate</p>
+                        </Container>
                     </div>
                 </div>
-            </Container>
+            </div>
         </section>
     )
 }
