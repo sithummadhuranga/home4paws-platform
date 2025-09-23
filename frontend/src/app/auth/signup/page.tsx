@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Eye, EyeOff, ArrowLeft, Check, Loader2, Mail, Lock, User, Sparkles, Shield, Zap, Crown, Rocket } from "lucide-react"
+import { Eye, EyeOff, ArrowLeft, Check, Loader2, Mail, Lock, User, Sparkles, Crown, Rocket } from "lucide-react"
 import { useAuth } from "@/contexts/AuthContext"
 import Image from "next/image"
 
@@ -82,7 +82,7 @@ export default function SignupPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-neutral-900 to-purple-900/10 flex">
-      {/* Left Side - Enhanced Form (Opposite of login) */}
+      {/* Left Side - Enhanced Form */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-4 animate-fadeInUp">
         <div className="max-w-md w-full">
           {/* Back Button */}
@@ -313,48 +313,21 @@ export default function SignupPage() {
         </div>
       </div>
 
-      {/* Right Side - Enhanced Image (Opposite of login) */}
-      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden animate-fadeInUp">
-        <Image
-          src="/images/auth/signup-background.jpg" // Replace with your custom image
-          alt="Happy pets and families"
-          fill
-          sizes="50vw"
-          className="object-cover"
-          priority
-        />
-        <div className="absolute inset-0 bg-gradient-to-l from-purple-900/90 to-purple-600/50 flex items-center">
-          <div className="p-12 text-white">
-            <div className="mb-6">
-              <div className="flex items-center space-x-3 mb-4 animate-fadeInUp stagger-1">
-                <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-                  <Crown className="w-6 h-6 text-white" />
-                </div>
-                <Zap className="w-6 h-6 text-purple-300 animate-pulse" />
-              </div>
-              <h2 className="text-4xl font-bold mb-4 leading-tight animate-fadeInUp stagger-2 font-urbanist">Welcome to the Home4Paws Family! 🏠</h2>
-              <p className="text-xl opacity-90 mb-6 animate-fadeInUp stagger-3 font-inter">Join 50,000+ families who found their perfect companion. Your journey to unconditional love starts here!</p>
-              
-              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20 animate-fadeInUp stagger-4">
-                <div className="flex items-center space-x-3">
-                  <Shield className="w-5 h-5 text-purple-300" />
-                  <span className="text-sm font-medium font-inter">✨ Free • Secure • Instant Access</span>
-                </div>
-              </div>
-
-              {/* Floating stats */}
-              <div className="mt-8 grid grid-cols-2 gap-4 animate-fadeInUp stagger-5">
-                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-                  <div className="text-2xl font-bold font-urbanist">15K+</div>
-                  <div className="text-sm opacity-90 font-inter">Happy Families</div>
-                </div>
-                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-                  <div className="text-2xl font-bold font-urbanist">99%</div>
-                  <div className="text-sm opacity-90 font-inter">Success Rate</div>
-                </div>
-              </div>
-            </div>
-          </div>
+      {/* Right Side - Fixed Image Display */}
+      <div className="hidden lg:flex lg:w-1/2 items-center justify-center bg-black">
+        <div className="relative w-full h-screen max-h-screen">
+          <Image
+            src="/images/auth/signup-background.svg" // Changed from .svg to .jpg for your custom image
+            alt="Happy pets and families"
+            fill
+            sizes="50vw"
+            className="object-contain object-center"
+            priority
+            style={{
+              objectFit: 'contain',
+              objectPosition: 'center center'
+            }}
+          />
         </div>
       </div>
     </div>
