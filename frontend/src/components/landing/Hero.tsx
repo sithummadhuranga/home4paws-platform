@@ -14,15 +14,19 @@ const stats = [
     { number: "24/7", label: "Support", icon: Clock, color: "text-purple-300" }
 ] as const
 
-// Updated slider images to use the SVG files
+// Updated slider images to include all three SVG files
 const sliderImages = [
     {
-        src: "/images/Home4Paws.svg", // changed from "/Home4Paws.svg"
+        src: "/images/Home4Paws.svg",
         alt: "Home4Paws Logo"
     },
     {
-        src: "/images/Home4Paws1.svg", // changed from "/Home4Paws1.svg"
+        src: "/images/Home4Paws3.svg",
         alt: "Home4Paws Alternative Logo"
+    },
+    {
+        src: "/images/Home4Paws2.svg",
+        alt: "Home4Paws Secondary Logo"
     }
 ]
 
@@ -86,16 +90,16 @@ const ImageSlider = () => {
             
             {/* Slider Controls */}
             <div className="absolute bottom-8 left-0 right-0 z-20 flex flex-col items-center">
-                {/* Dots Indicators */}
+                {/* Dots Indicators - Updated to show all three dots */}
                 <div className="flex gap-2 mb-4">
                     {sliderImages.map((_, index) => (
                         <button
                             key={index}
                             onClick={() => goToSlide(index)}
-                            className={`w-3 h-3 rounded-full transition-all ${
+                            className={`w-3 h-3 rounded-full transition-all duration-300 ${
                                 currentIndex === index 
-                                    ? "bg-white scale-110 opacity-90" 
-                                    : "bg-white/50 hover:bg-white/70"
+                                    ? "bg-white scale-110 opacity-90 shadow-lg" 
+                                    : "bg-white/50 hover:bg-white/70 hover:scale-105"
                             }`}
                             aria-label={`Go to slide ${index + 1}`}
                         />
