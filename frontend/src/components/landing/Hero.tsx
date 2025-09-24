@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input"
 import Link from "next/link"
 import Image from "next/image"
 import { Search, MapPin, Filter, Heart, ArrowRight, Users, Award, Clock, Sparkles, ChevronLeft, ChevronRight } from "lucide-react"
-import { useState, memo, useEffect, useCallback } from "react"
+import { useState, memo, useEffect, useCallback, useRef } from "react"
 
 const stats = [
     { number: "15K+", label: "Happy Adoptions", icon: Heart, color: "text-purple-400" },
@@ -30,67 +30,298 @@ const sliderImages = [
     }
 ]
 
-// Image Slider Component
+// Enhanced Image Slider Component with Fixed Touch/Drag Support
 const ImageSlider = () => {
     const [currentIndex, setCurrentIndex] = useState(0)
     const [isAnimating, setIsAnimating] = useState(false)
+    const [isDragging, setIsDragging] = useState(false)
+    const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
+    const [dragOffset, setDragOffset] = useState(0)
+    const [dragVelocity, setDragVelocity] = useState(0)
+    const [lastDragTime, setLastDragTime] = useState(0)
+    const [containerWidth, setContainerWidth] = useState(1000)
+    const sliderRef = useRef<HTMLDivElement>(null)
+    
+    // Update container width on mount and resize
+    useEffect(() => {
+        const updateWidth = () => {
+            if (sliderRef.current) {
+                setContainerWidth(sliderRef.current.offsetWidth)
+            }
+        }
+        
+        updateWidth()
+        window.addEventListener('resize', updateWidth)
+        return () => window.removeEventListener('resize', updateWidth)
+    }, [])
     
     const goToSlide = useCallback((index: number) => {
         if (isAnimating) return
         setIsAnimating(true)
         setCurrentIndex(index)
-        setTimeout(() => setIsAnimating(false), 500)
+        setTimeout(() => setIsAnimating(false), 400)
     }, [isAnimating])
     
     const goToPrevious = useCallback(() => {
-        if (isAnimating) return
+        if (isAnimating || isDragging) return
         const isFirstSlide = currentIndex === 0
         const newIndex = isFirstSlide ? sliderImages.length - 1 : currentIndex - 1
         goToSlide(newIndex)
-    }, [currentIndex, goToSlide, isAnimating])
+    }, [currentIndex, goToSlide, isAnimating, isDragging])
     
     const goToNext = useCallback(() => {
-        if (isAnimating) return
+        if (isAnimating || isDragging) return
         const isLastSlide = currentIndex === sliderImages.length - 1
         const newIndex = isLastSlide ? 0 : currentIndex + 1
         goToSlide(newIndex)
-    }, [currentIndex, goToSlide, isAnimating])
-    
-    // Auto-slide functionality
+    }, [currentIndex, goToSlide, isAnimating, isDragging])
+
+    // Helper functions to get adjacent slide indices
+    const getPreviousIndex = () => {
+        return currentIndex === 0 ? sliderImages.length - 1 : currentIndex - 1
+    }
+
+    const getNextIndex = () => {
+        return currentIndex === sliderImages.length - 1 ? 0 : currentIndex + 1
+    }
+
+    // Enhanced Touch/Mouse event handlers
+    const handleDragStart = useCallback((clientX: number, clientY: number) => {
+        setIsDragging(true)
+        setDragStart({ x: clientX, y: clientY })
+        setDragOffset(0)
+        setDragVelocity(0)
+        setLastDragTime(Date.now())
+        
+        // Prevent text selection during drag
+        document.body.style.userSelect = 'none'
+    }, [])
+
+    const handleDragMove = useCallback((clientX: number, clientY: number) => {
+        if (!isDragging) return
+        
+        const deltaX = clientX - dragStart.x
+        const deltaY = clientY - dragStart.y
+        
+        // Calculate velocity for momentum detection
+        const now = Date.now()
+        const timeDelta = now - lastDragTime
+        if (timeDelta > 0) {
+            const newVelocity = Math.abs(deltaX) / timeDelta
+            setDragVelocity(newVelocity)
+            setLastDragTime(now)
+        }
+        
+        // Only track horizontal movement if it's more significant than vertical
+        if (Math.abs(deltaX) > Math.abs(deltaY) * 0.5) {
+            setDragOffset(deltaX)
+            
+            // Prevent page scrolling during horizontal drag
+            if (window.event) {
+                window.event.preventDefault()
+            }
+        }
+    }, [isDragging, dragStart, lastDragTime])
+
+    const handleDragEnd = useCallback(() => {
+        if (!isDragging) return
+        
+        setIsDragging(false)
+        
+        // Much more sensitive thresholds
+        const threshold = 30 // Reduced from 50 to 30 pixels
+        const velocityThreshold = 0.2 // For quick swipes
+        
+        const shouldChangeSlide = Math.abs(dragOffset) > threshold || dragVelocity > velocityThreshold
+        
+        if (shouldChangeSlide) {
+            if (dragOffset > 0) {
+                // Dragged right - go to previous
+                goToPrevious()
+            } else if (dragOffset < 0) {
+                // Dragged left - go to next
+                goToNext()
+            }
+        }
+        
+        // Reset states
+        setDragOffset(0)
+        setDragVelocity(0)
+        document.body.style.userSelect = ''
+    }, [isDragging, dragOffset, dragVelocity, goToPrevious, goToNext])
+
+    // Mouse events
+    const handleMouseDown = useCallback((e: React.MouseEvent) => {
+        e.preventDefault()
+        handleDragStart(e.clientX, e.clientY)
+    }, [handleDragStart])
+
+    const handleMouseMove = useCallback((e: React.MouseEvent) => {
+        if (isDragging) {
+            e.preventDefault()
+            handleDragMove(e.clientX, e.clientY)
+        }
+    }, [handleDragMove, isDragging])
+
+    const handleMouseUp = useCallback(() => {
+        handleDragEnd()
+    }, [handleDragEnd])
+
+    // Enhanced touch events with better handling
+    const handleTouchStart = useCallback((e: React.TouchEvent) => {
+        if (e.touches.length === 1) {
+            const touch = e.touches[0]
+            handleDragStart(touch.clientX, touch.clientY)
+        }
+    }, [handleDragStart])
+
+    const handleTouchMove = useCallback((e: React.TouchEvent) => {
+        if (e.touches.length === 1 && isDragging) {
+            const touch = e.touches[0]
+            handleDragMove(touch.clientX, touch.clientY)
+            
+            // Prevent scrolling when we have significant horizontal movement
+            if (Math.abs(dragOffset) > 10) {
+                e.preventDefault()
+            }
+        }
+    }, [handleDragMove, isDragging, dragOffset])
+
+    const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+        e.preventDefault()
+        handleDragEnd()
+    }, [handleDragEnd])
+
+    // Auto-slide functionality (pause when dragging)
     useEffect(() => {
+        if (isDragging) return
+        
         const slideInterval = setInterval(() => {
             goToNext()
-        }, 5000)
+        }, 4000)
         
         return () => clearInterval(slideInterval)
-    }, [goToNext])
+    }, [goToNext, isDragging])
+
+    // Enhanced global mouse event listeners when dragging
+    useEffect(() => {
+        if (!isDragging) return
+
+        const handleGlobalMouseMove = (e: MouseEvent) => {
+            e.preventDefault()
+            handleDragMove(e.clientX, e.clientY)
+        }
+
+        const handleGlobalMouseUp = (e: MouseEvent) => {
+            e.preventDefault()
+            handleDragEnd()
+        }
+
+        document.addEventListener('mousemove', handleGlobalMouseMove, { passive: false })
+        document.addEventListener('mouseup', handleGlobalMouseUp, { passive: false })
+
+        return () => {
+            document.removeEventListener('mousemove', handleGlobalMouseMove)
+            document.removeEventListener('mouseup', handleGlobalMouseUp)
+        }
+    }, [isDragging, handleDragMove, handleDragEnd])
+    
+    // Calculate transform values with better responsiveness
+    const getTransformValue = (basePercent: number) => {
+        if (!isDragging || dragOffset === 0) {
+            return `translateX(${basePercent}%)`
+        }
+        
+        // Calculate drag percentage with enhanced sensitivity
+        const dragPercent = (dragOffset / containerWidth) * 100
+        const newPercent = basePercent + (dragPercent * 1.2) // Increased multiplier for more responsive feel
+        
+        return `translateX(${newPercent}%)`
+    }
     
     return (
         <div className="w-full relative h-[50vh] sm:h-[60vh] md:h-[70vh] lg:h-[80vh]">
             {/* Main Slider */}
-            <div className="w-full h-full relative overflow-hidden">
-                {sliderImages.map((image, index) => (
-                    <div
-                        key={index}
-                        className={`absolute top-0 left-0 w-full h-full transition-opacity duration-500 ease-in-out ${
-                            index === currentIndex ? "opacity-100 z-10" : "opacity-0 z-0"
-                        }`}
-                    >
-                        <Image
-                            src={image.src}
-                            alt={image.alt}
-                            fill
-                            priority
-                            className="object-cover"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/70"></div>
-                    </div>
-                ))}
+            <div 
+                ref={sliderRef}
+                className="w-full h-full relative overflow-hidden cursor-grab active:cursor-grabbing select-none"
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+                style={{
+                    touchAction: 'pan-y', // Allow vertical scrolling, prevent horizontal
+                }}
+            >
+                {/* Previous Slide */}
+                <div
+                    className="absolute top-0 left-0 w-full h-full"
+                    style={{
+                        transform: getTransformValue(-100),
+                        transition: isDragging ? 'none' : 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                        willChange: 'transform'
+                    }}
+                >
+                    <Image
+                        src={sliderImages[getPreviousIndex()].src}
+                        alt={sliderImages[getPreviousIndex()].alt}
+                        fill
+                        className="object-cover pointer-events-none"
+                        draggable={false}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/70 pointer-events-none"></div>
+                </div>
+
+                {/* Current Slide */}
+                <div
+                    className="absolute top-0 left-0 w-full h-full"
+                    style={{
+                        transform: getTransformValue(0),
+                        transition: isDragging ? 'none' : 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                        willChange: 'transform'
+                    }}
+                >
+                    <Image
+                        src={sliderImages[currentIndex].src}
+                        alt={sliderImages[currentIndex].alt}
+                        fill
+                        priority
+                        className="object-cover pointer-events-none"
+                        draggable={false}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/70 pointer-events-none"></div>
+                </div>
+
+                {/* Next Slide */}
+                <div
+                    className="absolute top-0 left-0 w-full h-full"
+                    style={{
+                        transform: getTransformValue(100),
+                        transition: isDragging ? 'none' : 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                        willChange: 'transform'
+                    }}
+                >
+                    <Image
+                        src={sliderImages[getNextIndex()].src}
+                        alt={sliderImages[getNextIndex()].alt}
+                        fill
+                        className="object-cover pointer-events-none"
+                        draggable={false}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/70 pointer-events-none"></div>
+                </div>
+                
+                {/* Enhanced drag indicator overlay */}
+                {isDragging && (
+                    <div className="absolute inset-0 bg-black/5 z-20 pointer-events-none" />
+                )}
             </div>
             
             {/* Slider Controls */}
             <div className="absolute bottom-8 left-0 right-0 z-20 flex flex-col items-center">
-                {/* Dots Indicators - Updated to show all three dots */}
+                {/* Dots Indicators */}
                 <div className="flex gap-2 mb-4">
                     {sliderImages.map((_, index) => (
                         <button
@@ -112,6 +343,7 @@ const ImageSlider = () => {
                 className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 sm:w-12 sm:h-12 bg-black/30 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/20 hover:bg-black/50 transition-colors duration-200"
                 onClick={goToPrevious}
                 aria-label="Previous slide"
+                disabled={isDragging}
             >
                 <ChevronLeft className="w-6 h-6 text-white" />
             </button>
@@ -120,9 +352,15 @@ const ImageSlider = () => {
                 className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 sm:w-12 sm:h-12 bg-black/30 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/20 hover:bg-black/50 transition-colors duration-200"
                 onClick={goToNext}
                 aria-label="Next slide"
+                disabled={isDragging}
             >
                 <ChevronRight className="w-6 h-6 text-white" />
             </button>
+
+            {/* Enhanced swipe hint for mobile */}
+            <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 px-3 py-1 bg-black/50 backdrop-blur-sm rounded-full text-white/70 text-xs font-medium animate-pulse sm:hidden">
+                <span>👆 Swipe to explore</span>
+            </div>
         </div>
     )
 }
