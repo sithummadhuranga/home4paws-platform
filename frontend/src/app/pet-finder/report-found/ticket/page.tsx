@@ -77,177 +77,193 @@ export default function FoundPetTicket() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-6 flex items-center">
-      <div className="max-w-4xl mx-auto px-4 w-full">
-        <div className="lg:flex gap-6 justify-center">
-          {/* Main Content */}
-          <div className="flex-1 max-w-3xl">
-            {/* Ticket Card */}
-            <Card className="bg-white dark:bg-gray-800 shadow-lg rounded-lg overflow-hidden">
-              {/* Ticket Header */}
-              <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-4">
-                    <h3 className="text-lg font-medium text-white">Found Pet Details</h3>
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                      Pending Confirmation
-                    </span>
-                  </div>
-                  <span className="text-blue-100">Ticket #{ticketData.ticketId}</span>
-                </div>
-              </div>
-
-              {/* Ticket Content */}
-              <div className="p-6">
-                <div className="grid grid-cols-1 gap-6">
-                  {/* Photos Grid */}
-                  <div>
-                    <div className="grid grid-cols-3 gap-3">
-                      {ticketData.imageUrls.map((url, index) => (
-                        <div key={index} className="aspect-square rounded-lg overflow-hidden bg-gray-100">
-                          <img src={url} alt={`Pet photo ${index + 1}`} className="w-full h-full object-cover" />
-                        </div>
-                      ))}
+    <div className="min-h-screen relative">
+      {/* Fixed background */}
+      <div 
+        className="fixed top-0 left-0 w-full h-full z-0"
+        style={{
+          backgroundImage: 'url("https://images.unsplash.com/photo-1444212477490-ca407925329e?auto=format&fit=crop&q=80")',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundAttachment: 'fixed',
+          filter: 'blur(4px)',
+          transform: 'scale(1.1)',
+          pointerEvents: 'none'
+        }}
+      />
+      {/* Main content */}
+      <div className="relative z-10 flex items-center min-h-screen">
+        <div className="max-w-4xl mx-auto px-4 w-full">
+          <div className="lg:flex gap-6 justify-center">
+            {/* Main Content */}
+            <div className="flex-1 max-w-3xl">
+              {/* Ticket Card */}
+              <Card className="bg-white dark:bg-gray-800 shadow-lg rounded-lg overflow-hidden">
+                {/* Ticket Header */}
+                <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-4">
+                      <h3 className="text-lg font-medium text-white">Found Pet Details</h3>
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                        Pending Confirmation
+                      </span>
                     </div>
-                  </div>
-
-                  {/* Details Grid */}
-                  <div className="grid sm:grid-cols-2 gap-6">
-                    {/* Pet Details */}
-                    <div className="space-y-3">
-                      <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase">Pet Details</h4>
-                      <div className="space-y-2">
-                        <div>
-                          <span className="text-sm text-gray-500">Type:</span>
-                          <span className="ml-2 font-medium">{ticketData.petType}</span>
-                        </div>
-                        {ticketData.breed && (
-                          <div>
-                            <span className="text-sm text-gray-500">Breed:</span>
-                            <span className="ml-2 font-medium">{ticketData.breed}</span>
-                          </div>
-                        )}
-                        <div>
-                          <span className="text-sm text-gray-500">Color:</span>
-                          <span className="ml-2 font-medium">{ticketData.color}</span>
-                        </div>
-                        <div>
-                          <span className="text-sm text-gray-500">Size:</span>
-                          <span className="ml-2 font-medium">{ticketData.size}</span>
-                        </div>
-                        {ticketData.gender && (
-                          <div>
-                            <span className="text-sm text-gray-500">Gender:</span>
-                            <span className="ml-2 font-medium">{ticketData.gender}</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Location Details */}
-                    <div className="space-y-3">
-                      <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase">Found Details</h4>
-                      <div className="space-y-2">
-                        <div>
-                          <span className="text-sm text-gray-500">Date:</span>
-                          <span className="ml-2 font-medium">{formatDate(ticketData.dateFound)}</span>
-                        </div>
-                        <div>
-                          <span className="text-sm text-gray-500">Time:</span>
-                          <span className="ml-2 font-medium">{formatTime(ticketData.timeFound)}</span>
-                        </div>
-                        <div>
-                          <span className="text-sm text-gray-500">Location:</span>
-                          <span className="ml-2 font-medium">{ticketData.locationFound}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Contact Details */}
-                    <div className="sm:col-span-2 space-y-3">
-                      <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase">Contact Details</h4>
-                      <div className="grid sm:grid-cols-2 gap-2">
-                        <div>
-                          <span className="text-sm text-gray-500">Name:</span>
-                          <span className="ml-2 font-medium">{ticketData.finderName}</span>
-                        </div>
-                        <div>
-                          <span className="text-sm text-gray-500">Preferred Contact:</span>
-                          <span className="ml-2 font-medium capitalize">{ticketData.preferredContact}</span>
-                        </div>
-                        {ticketData.contactNumber && (
-                          <div>
-                            <span className="text-sm text-gray-500">Phone:</span>
-                            <span className="ml-2 font-medium">{ticketData.contactNumber}</span>
-                          </div>
-                        )}
-                        {ticketData.email && (
-                          <div>
-                            <span className="text-sm text-gray-500">Email:</span>
-                            <span className="ml-2 font-medium">{ticketData.email}</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
+                    <span className="text-blue-100">Ticket #{ticketData.ticketId}</span>
                   </div>
                 </div>
-              </div>
-            </Card>
-          </div>
 
-          {/* Action Sidebar */}
-          <div className="mt-6 lg:mt-0 lg:w-64">
-            <div className="space-y-3">
-              <Button
-                className="w-full bg-blue-600 hover:bg-blue-700"
-                onClick={() => window.location.href = '/pet-finder/report-found/confirmation'}
-              >
-                Confirm Report
-              </Button>
-              
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={handleUpdate}
-              >
-                Update Report
-              </Button>
+                {/* Ticket Content */}
+                <div className="p-6">
+                  <div className="grid grid-cols-1 gap-6">
+                    {/* Photos Grid */}
+                    <div>
+                      <div className="grid grid-cols-3 gap-3">
+                        {ticketData.imageUrls.map((url, index) => (
+                          <div key={index} className="aspect-square rounded-lg overflow-hidden bg-gray-100">
+                            <img src={url} alt={`Pet photo ${index + 1}`} className="w-full h-full object-cover" />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
 
-              <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-                <DialogTrigger asChild>
-                  <Button variant="outline" className="w-full text-red-600 border-red-200 hover:bg-red-50">
-                    Delete Report
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Delete Report</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <p>Are you sure you want to delete this report? This action cannot be undone.</p>
-                    <div className="flex justify-end space-x-4">
-                      <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
-                        Cancel
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        onClick={handleDelete}
-                      >
-                        Delete
-                      </Button>
+                    {/* Details Grid */}
+                    <div className="grid sm:grid-cols-2 gap-6">
+                      {/* Pet Details */}
+                      <div className="space-y-3">
+                        <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase">Pet Details</h4>
+                        <div className="space-y-2">
+                          <div>
+                            <span className="text-sm text-gray-500">Type:</span>
+                            <span className="ml-2 font-medium">{ticketData.petType}</span>
+                          </div>
+                          {ticketData.breed && (
+                            <div>
+                              <span className="text-sm text-gray-500">Breed:</span>
+                              <span className="ml-2 font-medium">{ticketData.breed}</span>
+                            </div>
+                          )}
+                          <div>
+                            <span className="text-sm text-gray-500">Color:</span>
+                            <span className="ml-2 font-medium">{ticketData.color}</span>
+                          </div>
+                          <div>
+                            <span className="text-sm text-gray-500">Size:</span>
+                            <span className="ml-2 font-medium">{ticketData.size}</span>
+                          </div>
+                          {ticketData.gender && (
+                            <div>
+                              <span className="text-sm text-gray-500">Gender:</span>
+                              <span className="ml-2 font-medium">{ticketData.gender}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Location Details */}
+                      <div className="space-y-3">
+                        <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase">Found Details</h4>
+                        <div className="space-y-2">
+                          <div>
+                            <span className="text-sm text-gray-500">Date:</span>
+                            <span className="ml-2 font-medium">{formatDate(ticketData.dateFound)}</span>
+                          </div>
+                          <div>
+                            <span className="text-sm text-gray-500">Time:</span>
+                            <span className="ml-2 font-medium">{formatTime(ticketData.timeFound)}</span>
+                          </div>
+                          <div>
+                            <span className="text-sm text-gray-500">Location:</span>
+                            <span className="ml-2 font-medium">{ticketData.locationFound}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Contact Details */}
+                      <div className="sm:col-span-2 space-y-3">
+                        <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase">Contact Details</h4>
+                        <div className="grid sm:grid-cols-2 gap-2">
+                          <div>
+                            <span className="text-sm text-gray-500">Name:</span>
+                            <span className="ml-2 font-medium">{ticketData.finderName}</span>
+                          </div>
+                          <div>
+                            <span className="text-sm text-gray-500">Preferred Contact:</span>
+                            <span className="ml-2 font-medium capitalize">{ticketData.preferredContact}</span>
+                          </div>
+                          {ticketData.contactNumber && (
+                            <div>
+                              <span className="text-sm text-gray-500">Phone:</span>
+                              <span className="ml-2 font-medium">{ticketData.contactNumber}</span>
+                            </div>
+                          )}
+                          {ticketData.email && (
+                            <div>
+                              <span className="text-sm text-gray-500">Email:</span>
+                              <span className="ml-2 font-medium">{ticketData.email}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </DialogContent>
-              </Dialog>
+                </div>
+              </Card>
+            </div>
 
-              <Link href="/pet-finder" className="block">
+            {/* Action Sidebar */}
+            <div className="mt-6 lg:mt-0 lg:w-64">
+              <div className="space-y-3">
+                <Button
+                  className="w-full bg-blue-600 hover:bg-blue-700"
+                  onClick={() => window.location.href = '/pet-finder/report-found/confirmation'}
+                >
+                  Confirm Report
+                </Button>
+                
                 <Button
                   variant="outline"
                   className="w-full"
+                  onClick={handleUpdate}
                 >
-                  Back to Pet Finder
+                  Update Report
                 </Button>
-              </Link>
+
+                <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" className="w-full text-red-600 border-red-200 hover:bg-red-50">
+                      Delete Report
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="bg-white dark:bg-gray-800">
+                    <DialogHeader>
+                      <DialogTitle>Delete Report</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 pt-2">
+                      <p className="text-base text-gray-700 dark:text-gray-300">Are you sure you want to delete this report? This action cannot be undone.</p>
+                      <div className="flex justify-end space-x-4">
+                        <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
+                          Cancel
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          onClick={handleDelete}
+                        >
+                          Delete
+                        </Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+
+                <Link href="/pet-finder" className="block">
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                  >
+                    Back to Pet Finder
+                  </Button>
+                </Link>
+              </div>
             </div>
           </div>
         </div>
