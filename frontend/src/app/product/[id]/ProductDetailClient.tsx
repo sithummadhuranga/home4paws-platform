@@ -1,14 +1,23 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
-import Link from "next/link";
+import { useCart } from "@/contexts/CartContext";
 import { Product } from "@/types";
+import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useCart } from "@/contexts/CartContext";
-import { Heart, Share2, ShoppingCart, Star, Truck, Clock, ShieldCheck, Plus, Minus } from "lucide-react";
+import { 
+  Star, 
+  ShoppingCart, 
+  Heart, 
+  Truck, 
+  Clock, 
+  ShieldCheck,
+  Minus,
+  Plus
+} from "lucide-react";
 
 export function ProductDetailClient({ product }: { product: Product }) {
   const { addToCart } = useCart();
@@ -147,18 +156,16 @@ export function ProductDetailClient({ product }: { product: Product }) {
                     <div className="flex items-center border border-gray-300 rounded-lg">
                       <button 
                         onClick={decrementQuantity}
+                        className="p-2 hover:bg-gray-100 transition-colors"
                         disabled={quantity <= 1}
-                        className="p-2 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <Minus className="w-4 h-4" />
                       </button>
-                      <span className="px-4 py-2 min-w-[3rem] text-center font-medium">
-                        {quantity}
-                      </span>
+                      <span className="px-4 py-2 font-medium">{quantity}</span>
                       <button 
                         onClick={incrementQuantity}
+                        className="p-2 hover:bg-gray-100 transition-colors"
                         disabled={quantity >= product.stockQuantity}
-                        className="p-2 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <Plus className="w-4 h-4" />
                       </button>
@@ -177,10 +184,6 @@ export function ProductDetailClient({ product }: { product: Product }) {
                     
                     <Button size="lg" variant="outline">
                       <Heart className="w-5 h-5" />
-                    </Button>
-                    
-                    <Button size="lg" variant="outline">
-                      <Share2 className="w-5 h-5" />
                     </Button>
                   </div>
                 </div>
@@ -231,13 +234,13 @@ export function ProductDetailClient({ product }: { product: Product }) {
                 <h3 className="text-xl font-semibold text-gray-900">Specifications</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-3">
-                    <div className="flex justify-between py-2 border-b border-gray-200">
-                      <span className="font-medium text-gray-900">SKU</span>
-                      <span className="text-gray-700">{product.sku}</span>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Brand:</span>
+                      <span className="font-medium">Premium Pet Co.</span>
                     </div>
-                    <div className="flex justify-between py-2 border-b border-gray-200">
-                      <span className="font-medium text-gray-900">Category</span>
-                      <span className="text-gray-700">{product.categoryName}</span>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Material:</span>
+                      <span className="font-medium">High Quality</span>
                     </div>
                   </div>
                 </div>
