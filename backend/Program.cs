@@ -256,4 +256,5 @@ logger.LogInformation("   POST /api/auth/refresh");
 logger.LogInformation("   POST /api/auth/logout");
 logger.LogInformation("   GET  /api/auth/health");
 
+// Seed database if needed
 app.Run();

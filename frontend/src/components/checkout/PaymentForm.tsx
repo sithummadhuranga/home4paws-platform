@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Card, CardContent } from '@/components/ui/card';
 import { CreditCard, Smartphone, DollarSign } from 'lucide-react';
+import { cn } from '@/lib/utils'; // Add this import
 
 const paymentSchema = z.object({
   paymentType: z.enum(['card', 'paypal', 'apple_pay', 'google_pay']),
@@ -55,109 +56,244 @@ export function PaymentForm({ onComplete, onBack }: PaymentFormProps) {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-          <CreditCard className="w-5 h-5 text-blue-600" />
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex items-center gap-4">
+        <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+          <CreditCard className="w-6 h-6 text-white" />
         </div>
         <div>
-          <h2 className="text-xl font-semibold text-gray-900">Payment Information</h2>
-          <p className="text-gray-600">Choose your payment method</p>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Payment Information</h2>
+          <p className="text-gray-600 dark:text-gray-400">Choose your preferred payment method</p>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+        {/* Payment Method Selection */}
         <div className="space-y-4">
-          <Label className="text-base font-medium">Payment Method</Label>
+          <Label className="text-lg font-semibold text-gray-900 dark:text-white">Payment Method</Label>
           
-          <RadioGroup value={paymentType} onValueChange={(value) => setPaymentType(value as any)}>
-            <Card className="cursor-pointer">
-              <CardContent className="p-4">
-                <div className="flex items-center space-x-3">
-                  <RadioGroupItem value="card" id="card" />
-                  <CreditCard className="w-5 h-5 text-gray-600" />
-                  <Label htmlFor="card" className="flex-1 cursor-pointer">Credit or Debit Card</Label>
+          <RadioGroup value={paymentType} onValueChange={(value) => setPaymentType(value as any)} className="space-y-3">
+            {/* Credit/Debit Card */}
+            <Card className={cn(
+              "cursor-pointer transition-all duration-200 hover:shadow-md",
+              paymentType === 'card' 
+                ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 shadow-md" 
+                : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
+            )}>
+              <CardContent className="p-6">
+                <div className="flex items-center space-x-4">
+                  <RadioGroupItem value="card" id="card" className="text-blue-600" />
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
+                    <CreditCard className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <Label htmlFor="card" className="text-base font-semibold text-gray-900 dark:text-white cursor-pointer">
+                      Credit or Debit Card
+                    </Label>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Visa, Mastercard, American Express (LKR)
+                    </p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
             
-            <Card className="cursor-pointer">
-              <CardContent className="p-4">
-                <div className="flex items-center space-x-3">
-                  <RadioGroupItem value="paypal" id="paypal" />
-                  <DollarSign className="w-5 h-5 text-gray-600" />
-                  <Label htmlFor="paypal" className="flex-1 cursor-pointer">PayPal</Label>
+            {/* Online Banking */}
+            <Card className={cn(
+              "cursor-pointer transition-all duration-200 hover:shadow-md",
+              paymentType === 'bank_transfer' 
+                ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 shadow-md" 
+                : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
+            )}>
+              <CardContent className="p-6">
+                <div className="flex items-center space-x-4">
+                  <RadioGroupItem value="bank_transfer" id="bank_transfer" className="text-blue-600" />
+                  <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center">
+                    <DollarSign className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <Label htmlFor="bank_transfer" className="text-base font-semibold text-gray-900 dark:text-white cursor-pointer">
+                      Online Banking
+                    </Label>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Commercial Bank, BOC, Sampath, HNB, NSB
+                    </p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
             
-            <Card className="cursor-pointer">
-              <CardContent className="p-4">
-                <div className="flex items-center space-x-3">
-                  <RadioGroupItem value="apple_pay" id="apple_pay" />
-                  <Smartphone className="w-5 h-5 text-gray-600" />
-                  <Label htmlFor="apple_pay" className="flex-1 cursor-pointer">Apple Pay</Label>
+            {/* Mobile Payments */}
+            <Card className={cn(
+              "cursor-pointer transition-all duration-200 hover:shadow-md",
+              paymentType === 'mobile_payment' 
+                ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 shadow-md" 
+                : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
+            )}>
+              <CardContent className="p-6">
+                <div className="flex items-center space-x-4">
+                  <RadioGroupItem value="mobile_payment" id="mobile_payment" className="text-blue-600" />
+                  <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center">
+                    <Smartphone className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <Label htmlFor="mobile_payment" className="text-base font-semibold text-gray-900 dark:text-white cursor-pointer">
+                      Mobile Payment
+                    </Label>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      eZ Cash, mCash, Dialog Pay, Mobitel Pay
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Cash on Delivery */}
+            <Card className={cn(
+              "cursor-pointer transition-all duration-200 hover:shadow-md",
+              paymentType === 'cod' 
+                ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 shadow-md" 
+                : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
+            )}>
+              <CardContent className="p-6">
+                <div className="flex items-center space-x-4">
+                  <RadioGroupItem value="cod" id="cod" className="text-blue-600" />
+                  <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center">
+                    <DollarSign className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <Label htmlFor="cod" className="text-base font-semibold text-gray-900 dark:text-white cursor-pointer">
+                      Cash on Delivery
+                    </Label>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Pay when your order arrives (Available in Colombo, Gampaha & Kalutara)
+                    </p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
           </RadioGroup>
         </div>
 
+        {/* Credit Card Form */}
         {paymentType === 'card' && (
-          <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
-            <div className="space-y-2">
-              <Label htmlFor="cardName">Cardholder Name *</Label>
-              <Input
-                id="cardName"
-                {...register('cardName', { required: paymentType === 'card' })}
-                placeholder="John Doe"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="cardNumber">Card Number *</Label>
-              <Input
-                id="cardNumber"
-                {...register('cardNumber', { required: paymentType === 'card' })}
-                placeholder="1234 5678 9012 3456"
-                maxLength={19}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
+          <div className="p-6 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 rounded-2xl border border-gray-200 dark:border-gray-600 space-y-6">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Card Details</h3>
+            
+            <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="expiryDate">Expiry Date *</Label>
+                <Label htmlFor="cardName" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Cardholder Name *
+                </Label>
                 <Input
-                  id="expiryDate"
-                  {...register('expiryDate', { required: paymentType === 'card' })}
-                  placeholder="MM/YY"
-                  maxLength={5}
+                  id="cardName"
+                  {...register('cardName', { required: paymentType === 'card' })}
+                  placeholder="John Perera"
+                  className="h-12 rounded-xl border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:border-blue-500 focus:ring-blue-500 transition-all duration-200"
                 />
               </div>
-              
+
               <div className="space-y-2">
-                <Label htmlFor="cvv">CVV *</Label>
+                <Label htmlFor="cardNumber" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Card Number *
+                </Label>
                 <Input
-                  id="cvv"
-                  {...register('cvv', { required: paymentType === 'card' })}
-                  placeholder="123"
-                  maxLength={4}
+                  id="cardNumber"
+                  {...register('cardNumber', { required: paymentType === 'card' })}
+                  placeholder="4111 1111 1111 1111"
+                  maxLength={19}
+                  className="h-12 rounded-xl border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:border-blue-500 focus:ring-blue-500 transition-all duration-200"
                 />
               </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="expiryDate" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Expiry Date *
+                  </Label>
+                  <Input
+                    id="expiryDate"
+                    {...register('expiryDate', { required: paymentType === 'card' })}
+                    placeholder="MM/YY"
+                    maxLength={5}
+                    className="h-12 rounded-xl border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:border-blue-500 focus:ring-blue-500 transition-all duration-200"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="cvv" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    CVV *
+                  </Label>
+                  <Input
+                    id="cvv"
+                    {...register('cvv', { required: paymentType === 'card' })}
+                    placeholder="123"
+                    maxLength={4}
+                    className="h-12 rounded-xl border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:border-blue-500 focus:ring-blue-500 transition-all duration-200"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Security Notice */}
+            <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
+              <p className="text-sm text-blue-800 dark:text-blue-200">
+                🔒 Your payment is secured with 256-bit SSL encryption. We never store your card details.
+              </p>
             </div>
           </div>
         )}
 
-        <div className="flex gap-4 pt-6">
-          <Button type="button" variant="outline" onClick={onBack} className="flex-1">
+        {/* Mobile Payment Info */}
+        {paymentType === 'mobile_payment' && (
+          <div className="p-6 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-2xl border border-purple-200 dark:border-purple-700">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Mobile Payment Instructions</h3>
+            <div className="space-y-3 text-sm text-gray-700 dark:text-gray-300">
+              <p>• You will be redirected to your mobile payment provider</p>
+              <p>• Complete the payment using your mobile app or USSD</p>
+              <p>• Return to our site to complete your order</p>
+              <p>• Supported: Dialog eZ Cash, Mobitel mCash, Hutch Pay</p>
+            </div>
+          </div>
+        )}
+
+        {/* Cash on Delivery Info */}
+        {paymentType === 'cod' && (
+          <div className="p-6 bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 rounded-2xl border border-orange-200 dark:border-orange-700">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Cash on Delivery</h3>
+            <div className="space-y-3 text-sm text-gray-700 dark:text-gray-300">
+              <p>• Pay in cash when your order is delivered</p>
+              <p>• Available in Colombo, Gampaha, and Kalutara districts</p>
+              <p>• Additional LKR 200 service charge applies</p>
+              <p>• Please have exact change ready for faster delivery</p>
+            </div>
+          </div>
+        )}
+
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row gap-4 pt-6">
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={onBack} 
+            className="flex-1 h-12 rounded-xl border-2 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200"
+          >
             Back to Shipping
           </Button>
           <Button
             type="submit"
             disabled={!isValid || isSubmitting}
-            className="flex-1"
+            className="flex-1 h-12 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
           >
-            {isSubmitting ? 'Processing...' : 'Continue to Review'}
+            {isSubmitting ? (
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span>Processing...</span>
+              </div>
+            ) : (
+              'Continue to Review'
+            )}
           </Button>
         </div>
       </form>

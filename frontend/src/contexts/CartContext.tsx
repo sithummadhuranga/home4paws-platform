@@ -17,9 +17,10 @@ export interface ShippingAddress {
   address: string;
   apartment?: string;
   city: string;
-  state: string;
-  zipCode: string;
+  state: string; // This maps to province
+  zipCode: string; // This maps to postalCode
   country: string;
+  district?: string; // Add this new field for Sri Lankan districts
 }
 
 export interface PaymentMethod {
@@ -71,10 +72,12 @@ function calculateOrderSummary(items: CartItem[], promoCode: string | null): Ord
   const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
   const tax = subtotal * TAX_RATE;
   
-  // Simple promo code logic
   let discount = 0;
-  if (promoCode === 'SAVE10') discount = subtotal * 0.1;
-  if (promoCode === 'FREESHIP') discount = shipping;
+  if (promoCode === 'WELCOME10') {
+    discount = subtotal * 0.1; // 10% discount
+  } else if (promoCode === 'SAVE20') {
+    discount = subtotal * 0.2; // 20% discount
+  }
   
   const total = subtotal + shipping + tax - discount;
   
@@ -183,7 +186,9 @@ interface CartContextType extends CartState {
   removePromoCode: () => void;
   cartCount: number;
   cartTotal: number;
-  cartItems: CartItem[]; // Add this for backward compatibility
+  cartItems: CartItem[];
+  isInCart: (productId: number) => boolean; // Add this line
+  getCartItemQuantity: (productId: number) => number; // Add this line too
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -257,6 +262,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     toast.success('Promo code removed');
   };
 
+  // Add these new functions
+  const isInCart = (productId: number): boolean => {
+    return state.items.some(item => item.id === productId);
+  };
+
+  const getCartItemQuantity = (productId: number): number => {
+    const item = state.items.find(item => item.id === productId);
+    return item ? item.quantity : 0;
+  };
+
   const cartCount = state.items.reduce((total, item) => total + item.quantity, 0);
   const cartTotal = state.orderSummary.subtotal;
 
@@ -274,7 +289,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       removePromoCode,
       cartCount,
       cartTotal,
-      cartItems: state.items, // Add this for backward compatibility
+      cartItems: state.items,
+      isInCart, // Add this
+      getCartItemQuantity, // Add this
     }}>
       {children}
     </CartContext.Provider>

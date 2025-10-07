@@ -31,7 +31,8 @@ export const getProducts = async (): Promise<Product[]> => {
       return [];
     }
     
-    return await response.json();
+    const data = await response.json();
+    return Array.isArray(data) ? data : [];
   } catch (error) {
     console.error('Error fetching products:', error);
     // Return empty array instead of throwing
@@ -39,10 +40,20 @@ export const getProducts = async (): Promise<Product[]> => {
   }
 };
 
-export const getProductById = async (id: number): Promise<Product> => {
+export const getProductById = async (id: number): Promise<Product | null> => {
+  try {
     const response = await fetch(`${API_BASE_URL}/products/${id}`);
-    if (!response.ok) throw new Error(`Failed to fetch product with id: ${id}`);
-    return response.json();
+    if (!response.ok) {
+      if (response.status === 404) {
+        return null;
+      }
+      throw new Error(`Failed to fetch product with id: ${id}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching product:', error);
+    return null;
+  }
 };
 
 // These functions are for ADMINS ONLY, so they REQUIRE a token.
@@ -80,8 +91,22 @@ export const deleteProduct = async (id: number, token: string): Promise<Response
 
 // This can also be public.
 export const getCategories = async (): Promise<Category[]> => {
-  // IMPORTANT: Make sure you have a controller at `/api/categories` in your backend
-  const response = await fetch(`${API_BASE_URL}/categories`);
-  if (!response.ok) throw new Error('Failed to fetch categories');
-  return response.json();
+  try {
+    console.log(`Fetching categories from: ${API_BASE_URL}/categories`);
+    const response = await fetch(`${API_BASE_URL}/categories`, {
+      cache: 'no-store',
+      next: { revalidate: 0 }
+    });
+    
+    if (!response.ok) {
+      console.error(`Categories API error: ${response.status} ${response.statusText}`);
+      return [];
+    }
+    
+    const data = await response.json();
+    return Array.isArray(data) ? data : [];
+  } catch (error) {
+    console.error('Error fetching categories:', error);
+    return [];
+  }
 };

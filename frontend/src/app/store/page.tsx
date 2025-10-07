@@ -1,185 +1,250 @@
 // src/app/store/page.tsx
 import { getProducts, getCategories } from "@/services/apiService";
 import { Product, Category } from "@/types";
-import Link from "next/link";
-import Image from "next/image";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Filter, Heart, Search, ShoppingCart, Star, Grid, List } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { 
+  Search, 
+  Filter, 
+  SlidersHorizontal, 
+  Grid3X3, 
+  List,
+  ShoppingCart,
+  Truck,
+  Shield,
+  Clock,
+  Award,
+  ArrowRight
+} from "lucide-react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import { ProductCard } from "@/components/store/ProductCard";
 
-// Enhanced Product Card Component with Agoda-style design
-function ProductCard({ product }: { product: Product }) {
-  return (
-    <Card className="group relative overflow-hidden bg-white border border-gray-100 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-      {/* Image Container */}
-      <div className="relative aspect-[4/3] overflow-hidden">
-        <Image 
-          src={product.imageUrl || 'https://images.unsplash.com/photo-1601758124510-52d32d8ffc47?w=600&h=450&fit=crop'} 
-          alt={product.name}
-          fill
-          sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-          className="object-cover transition-transform duration-500 group-hover:scale-105"
-        />
-        
-        {/* Featured Badge */}
-        {product.isFeatured && (
-          <Badge className="absolute top-3 left-3 bg-blue-600 hover:bg-blue-700 text-white">
-            Featured
-          </Badge>
-        )}
-        
-        {/* Heart Icon */}
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className="absolute top-3 right-3 h-8 w-8 rounded-full bg-white/90 hover:bg-white shadow-sm"
-        >
-          <Heart className="h-4 w-4 text-gray-600" />
-        </Button>
-        
-        {/* Quick Add Button */}
-        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-          <Button size="sm" className="bg-white text-gray-900 hover:bg-gray-100">
-            <ShoppingCart className="h-4 w-4 mr-2" />
-            Quick Add
-          </Button>
-        </div>
-      </div>
-      
-      {/* Content */}
-      <CardContent className="p-4 space-y-3">
-        {/* Category */}
-        <Badge variant="secondary" className="text-xs font-medium">
-          {product.categoryName || 'Uncategorized'}
-        </Badge>
-        
-        {/* Rating */}
-        <div className="flex items-center gap-1">
-          {[...Array(5)].map((_, i) => (
-            <Star
-              key={i}
-              className={`w-3 h-3 ${i < 4 ? "fill-yellow-400 text-yellow-400" : "fill-gray-200 text-gray-200"}`}
-            />
-          ))}
-          <span className="text-xs text-gray-500 ml-1">4.0 (24)</span>
-        </div>
-        
-        {/* Title */}
-        <h3 className="font-semibold text-gray-900 line-clamp-2 leading-tight">
-          {product.name}
-        </h3>
-        
-        {/* Description */}
-        <p className="text-sm text-gray-600 line-clamp-2">
-          {product.description || 'High-quality pet product for your beloved companion'}
-        </p>
-      </CardContent>
-      
-      {/* Footer */}
-      <CardFooter className="p-4 pt-0 flex items-center justify-between">
-        <div className="space-y-1">
-          <div className="flex items-baseline gap-2">
-            <span className="text-xl font-bold text-blue-600">${product.price.toFixed(2)}</span>
-            {product.price > 50 && (
-              <span className="text-sm line-through text-gray-400">${(product.price * 1.3).toFixed(2)}</span>
-            )}
-          </div>
-          <p className="text-xs text-green-600 font-medium">
-            {product.stockQuantity > 0 ? `${product.stockQuantity} in stock` : 'Out of stock'}
-          </p>
-        </div>
-        
-        <Button variant="outline" size="sm" asChild>
-          <Link href={`/product/${product.id}`}>
-            View Details
-          </Link>
-        </Button>
-      </CardFooter>
-    </Card>
-  );
-}
-
-// The enhanced Store Page
+// Modern Store Page
 export default async function StorePage() {
   let products: Product[] = [];
   let categories: Category[] = [];
+  let error: string | null = null;
   
   try {
-    const [productsData, categoriesData] = await Promise.all([
+    const [productsData, categoriesData] = await Promise.allSettled([
       getProducts(),
       getCategories()
     ]);
     
-    products = productsData || [];
-    categories = categoriesData || [];
-  } catch (error) {
-    console.error("Failed to load products:", error);
-    products = [];
-    categories = [];
+    if (productsData.status === 'fulfilled') {
+      products = productsData.value || [];
+    } else {
+      console.error('Failed to load products:', productsData.reason);
+      error = 'Failed to load products';
+    }
+    
+    if (categoriesData.status === 'fulfilled') {
+      categories = categoriesData.value || [];
+    } else {
+      console.error('Failed to load categories:', categoriesData.reason);
+    }
+  } catch (err) {
+    console.error("Failed to load store data:", err);
+    error = 'Failed to load store data';
   }
 
-  // Only show active products
   const activeProducts = products.filter(p => p?.isActive);
   const featuredProducts = activeProducts.filter(p => p?.isFeatured);
   
   return (
     <>
       <Header />
-      <main className="min-h-screen bg-gray-50">
-        {/* Hero Section */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
-          <div className="container mx-auto px-4 py-16">
-            <div className="max-w-2xl">
-              <h1 className="text-4xl md:text-5xl font-bold mb-4">
-                Premium Pet Products
-              </h1>
-              <p className="text-xl mb-8 text-blue-100">
-                Everything your furry friends need, delivered with love
-              </p>
+      {/* Add proper padding-top to account for fixed header */}
+      <main className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 pt-16 md:pt-20">
+        
+        {/* Hero Section - Modern Design */}
+        <section className="relative bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+          {/* Background Pattern */}
+          <div className="absolute inset-0 opacity-5 dark:opacity-10">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600"></div>
+          </div>
+          
+          <div className="relative container mx-auto px-4 py-16 md:py-24">
+            <div className="max-w-4xl mx-auto text-center space-y-8">
+              {/* Header */}
+              <div className="space-y-4">
+                <div className="inline-flex items-center px-4 py-2 rounded-full bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700">
+                  <ShoppingCart className="w-4 h-4 text-blue-600 dark:text-blue-400 mr-2" />
+                  <span className="text-sm font-medium text-blue-700 dark:text-blue-300">Sri Lanka's Premier Pet Store</span>
+                </div>
+                
+                <h1 className="text-4xl md:text-6xl font-bold text-gray-900 dark:text-white">
+                  Everything Your Pet
+                  <span className="block bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                    Needs & Loves
+                  </span>
+                </h1>
+                
+                <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto leading-relaxed">
+                  Discover premium products, trusted brands, and everything your furry friends need. Island-wide delivery across Sri Lanka.
+                </p>
+              </div>
               
-              {/* Search Bar */}
-              <div className="relative max-w-md">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input 
-                  type="text" 
-                  placeholder="Search for products..." 
-                  className="w-full pl-12 pr-4 py-3 rounded-lg border-0 text-gray-900 focus:ring-2 focus:ring-blue-300"
-                />
+              {/* Enhanced Search Bar */}
+              <div className="relative max-w-2xl mx-auto">
+                <div className="relative bg-white dark:bg-gray-700 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-600 overflow-hidden">
+                  <div className="flex items-center">
+                    <div className="flex items-center px-6">
+                      <Search className="w-5 h-5 text-gray-400" />
+                    </div>
+                    <Input 
+                      type="text" 
+                      placeholder="Search for products, brands, or categories..." 
+                      className="flex-1 border-0 bg-transparent focus:ring-0 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 text-lg py-4"
+                    />
+                    <Button className="m-2 px-8 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800">
+                      Search
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick Stats */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                {[
+                  { number: `${activeProducts.length}+`, label: 'Products' },
+                  { number: '🇱🇰', label: 'Made in SL' },
+                  { number: '4.9★', label: 'Rating' },
+                  { number: 'Free', label: 'Delivery' }
+                ].map((stat, index) => (
+                  <div key={index} className="text-center">
+                    <div className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-1">
+                      {stat.number}
+                    </div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+                      {stat.label}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
-        </div>
-        
-        <div className="container mx-auto px-4 py-8">
-          {/* Quick Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
-            {[
-              { icon: '🐕', title: 'Dog Products', count: '150+' },
-              { icon: '🐱', title: 'Cat Products', count: '120+' },
-              { icon: '🐦', title: 'Bird Products', count: '80+' },
-              { icon: '🐠', title: 'Fish Products', count: '60+' },
-            ].map((item, index) => (
-              <div key={index} className="bg-white rounded-lg p-6 text-center border border-gray-100 hover:shadow-md transition-shadow">
-                <div className="text-3xl mb-2">{item.icon}</div>
-                <h3 className="font-semibold text-gray-900">{item.title}</h3>
-                <p className="text-sm text-gray-600">{item.count}</p>
+        </section>
+
+        {/* Main Content */}
+        <div className="container mx-auto px-4 py-12 space-y-16">
+          
+          {/* Error Message */}
+          {error && (
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl p-8">
+              <div className="flex items-start gap-4">
+                <div className="w-8 h-8 rounded-full bg-red-100 dark:bg-red-800 flex items-center justify-center flex-shrink-0">
+                  <div className="w-3 h-3 bg-red-600 dark:bg-red-400 rounded-full"></div>
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold text-red-800 dark:text-red-200 mb-2">
+                    Connection Error
+                  </h3>
+                  <p className="text-red-700 dark:text-red-300 mb-3">
+                    Unable to connect to our servers. Please ensure your backend API is running on http://localhost:5185
+                  </p>
+                  <p className="text-sm text-red-600 dark:text-red-400">
+                    Error: {error}
+                  </p>
+                </div>
               </div>
-            ))}
+            </div>
+          )}
+
+          {/* Filter and Sort Bar */}
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+              <div className="flex items-center gap-4">
+                <Button variant="outline" size="sm" className="gap-2 rounded-xl">
+                  <Filter className="w-4 h-4" />
+                  Filters
+                </Button>
+                <Button variant="outline" size="sm" className="gap-2 rounded-xl">
+                  <SlidersHorizontal className="w-4 h-4" />
+                  Sort by Price
+                </Button>
+              </div>
+              
+              <div className="flex items-center gap-4">
+                <span className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+                  {activeProducts.length} products found
+                </span>
+                <div className="flex items-center bg-gray-100 dark:bg-gray-700 rounded-xl p-1">
+                  <Button variant="ghost" size="sm" className="rounded-lg">
+                    <Grid3X3 className="w-4 h-4" />
+                  </Button>
+                  <Button variant="ghost" size="sm" className="rounded-lg opacity-50">
+                    <List className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
           </div>
+
+          {/* Categories Section */}
+          {categories.length > 0 && (
+            <section>
+              <div className="flex items-center justify-between mb-8">
+                <div>
+                  <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                    Shop by Category
+                  </h2>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    Find exactly what you're looking for
+                  </p>
+                </div>
+                <Button variant="outline" className="gap-2 rounded-xl">
+                  View All
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+              </div>
+              
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+                {categories.slice(0, 6).map((category, index) => (
+                  <div
+                    key={category.id}
+                    className="group cursor-pointer bg-white dark:bg-gray-800 rounded-2xl p-6 text-center hover:shadow-lg transition-all duration-300 border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600 hover:-translate-y-1"
+                  >
+                    <div className={`w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center bg-gradient-to-br ${
+                      index % 6 === 0 ? 'from-blue-500 to-blue-600' :
+                      index % 6 === 1 ? 'from-green-500 to-green-600' :
+                      index % 6 === 2 ? 'from-purple-500 to-purple-600' :
+                      index % 6 === 3 ? 'from-orange-500 to-orange-600' :
+                      index % 6 === 4 ? 'from-pink-500 to-pink-600' :
+                      'from-indigo-500 to-indigo-600'
+                    }`}>
+                      <div className="w-7 h-7 bg-white/20 rounded-lg"></div>
+                    </div>
+                    <h3 className="font-semibold text-gray-900 dark:text-white text-sm mb-2">
+                      {category.name}
+                    </h3>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 leading-relaxed">
+                      {category.description}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
           
           {/* Featured Products */}
           {featuredProducts.length > 0 && (
-            <section className="mb-16">
+            <section>
               <div className="flex items-center justify-between mb-8">
                 <div>
-                  <h2 className="text-3xl font-bold text-gray-900 mb-2">Featured Products</h2>
-                  <p className="text-gray-600">Hand-picked favorites for your pets</p>
+                  <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                    Featured Products
+                  </h2>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    Hand-picked favorites for your pets
+                  </p>
                 </div>
-                <Button variant="outline">View All Featured</Button>
+                <Button variant="outline" className="gap-2 rounded-xl">
+                  View All Featured
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
               </div>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -190,84 +255,98 @@ export default async function StorePage() {
             </section>
           )}
           
-          {/* All Products Section */}
+          {/* All Products */}
           <section>
-            <div className="mb-8">
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">All Products</h2>
-              <p className="text-gray-600">Browse our complete collection</p>
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                  All Products
+                </h2>
+                <p className="text-gray-600 dark:text-gray-400">
+                  Browse our complete collection
+                </p>
+              </div>
             </div>
             
-            {categories.length > 0 ? (
-              <Tabs defaultValue="all" className="w-full">
-                <div className="flex items-center justify-between mb-6">
-                  <TabsList className="bg-white border border-gray-200">
-                    <TabsTrigger value="all" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
-                      All Products
-                    </TabsTrigger>
-                    {categories.slice(0, 5).map((category) => (
-                      <TabsTrigger 
-                        key={category.id} 
-                        value={category.id.toString()}
-                        className="data-[state=active]:bg-blue-600 data-[state=active]:text-white"
-                      >
-                        {category.name}
-                      </TabsTrigger>
-                    ))}
-                  </TabsList>
-                  
-                  <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm">
-                      <Filter className="w-4 h-4 mr-2" />
-                      Filters
-                    </Button>
-                    <Button variant="outline" size="sm">
-                      <Grid className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-                
-                <TabsContent value="all" className="space-y-6">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {activeProducts.map((product) => (
-                      <ProductCard key={product.id} product={product} />
-                    ))}
-                  </div>
-                </TabsContent>
-                
-                {categories.map((category) => (
-                  <TabsContent key={category.id} value={category.id.toString()} className="space-y-6">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                      {activeProducts
-                        .filter(p => p.categoryId === category.id)
-                        .map((product) => (
-                          <ProductCard key={product.id} product={product} />
-                        ))}
-                    </div>
-                  </TabsContent>
-                ))}
-              </Tabs>
-            ) : (
+            {activeProducts.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {activeProducts.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}
               </div>
+            ) : (
+              <div className="text-center py-20 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700">
+                <div className="w-24 h-24 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <ShoppingCart className="w-10 h-10 text-gray-400" />
+                </div>
+                <h3 className="text-2xl font-semibold text-gray-900 dark:text-white mb-3">
+                  No Products Available
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-8 max-w-md mx-auto leading-relaxed">
+                  {error 
+                    ? "We're having trouble loading products. Please try again later." 
+                    : "We're working on adding products to our store. Check back soon!"
+                  }
+                </p>
+                <Button onClick={() => window.location.reload()} className="rounded-xl">
+                  Try Again
+                </Button>
+              </div>
             )}
           </section>
           
           {/* Trust Indicators */}
-          <section className="mt-20 bg-white rounded-lg p-8">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 text-center">
+          <section className="bg-white dark:bg-gray-800 rounded-3xl p-8 md:p-12 border border-gray-200 dark:border-gray-700 shadow-sm">
+            <div className="text-center mb-12">
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
+                Why Shop With Us?
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400">
+                We're committed to providing the best experience for you and your pets across Sri Lanka
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
               {[
-                { icon: '🚚', title: 'Free Shipping', desc: 'On orders over $50' },
-                { icon: '🔒', title: 'Secure Payment', desc: '100% secure checkout' },
-                { icon: '↩️', title: 'Easy Returns', desc: '30-day return policy' },
-                { icon: '💬', title: '24/7 Support', desc: 'Always here to help' },
+                { 
+                  icon: Truck, 
+                  title: 'Island-wide Delivery', 
+                  desc: 'Free delivery over LKR 5,000',
+                  color: 'text-blue-600 dark:text-blue-400',
+                  bg: 'bg-blue-100 dark:bg-blue-900/20'
+                },
+                { 
+                  icon: Shield, 
+                  title: 'Secure Payment', 
+                  desc: 'Local banks & mobile payments',
+                  color: 'text-green-600 dark:text-green-400',
+                  bg: 'bg-green-100 dark:bg-green-900/20'
+                },
+                { 
+                  icon: Clock, 
+                  title: 'Fast Delivery', 
+                  desc: '2-5 days across Sri Lanka',
+                  color: 'text-purple-600 dark:text-purple-400',
+                  bg: 'bg-purple-100 dark:bg-purple-900/20'
+                },
+                { 
+                  icon: Award, 
+                  title: 'Quality Guarantee', 
+                  desc: '30-day return policy',
+                  color: 'text-orange-600 dark:text-orange-400',
+                  bg: 'bg-orange-100 dark:bg-orange-900/20'
+                },
               ].map((item, index) => (
-                <div key={index} className="space-y-2">
-                  <div className="text-3xl">{item.icon}</div>
-                  <h3 className="font-semibold text-gray-900">{item.title}</h3>
-                  <p className="text-sm text-gray-600">{item.desc}</p>
+                <div key={index} className="text-center group">
+                  <div className={`w-16 h-16 ${item.bg} rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-200`}>
+                    <item.icon className={`w-8 h-8 ${item.color}`} />
+                  </div>
+                  <h4 className="font-bold text-gray-900 dark:text-white text-lg mb-2">
+                    {item.title}
+                  </h4>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    {item.desc}
+                  </p>
                 </div>
               ))}
             </div>
