@@ -86,6 +86,50 @@ export const deleteProduct = async (id: number, token: string): Promise<Response
   return response;
 };
 
+export const searchProducts = async (query: string): Promise<Product[]> => {
+  try {
+    // If query is empty, return all products
+    if (!query || !query.trim()) {
+      console.log('Empty search query - fetching all products');
+      return await getProducts();
+    }
+    
+    const trimmedQuery = query.trim();
+    const searchUrl = `${API_BASE_URL}/products/search?query=${encodeURIComponent(trimmedQuery)}`;
+    
+    console.log(`Searching products: ${searchUrl}`);
+    
+    const response = await fetch(searchUrl, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      cache: 'no-store',
+      next: { revalidate: 0 }
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Search API error: ${response.status} ${response.statusText}`, errorText);
+      
+      // If 400 error, try to parse the error message
+      if (response.status === 400) {
+        console.error('Bad Request - Query might be malformed:', trimmedQuery);
+      }
+      
+      // Return empty array instead of throwing
+      return [];
+    }
+    
+    const data = await response.json();
+    console.log(`Search found ${data?.length || 0} products`);
+    return Array.isArray(data) ? data : [];
+  } catch (error) {
+    console.error('Error searching products:', error);
+    return [];
+  }
+};
+
 
 // --- Category Service Functions ---
 

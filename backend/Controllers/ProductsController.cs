@@ -138,4 +138,75 @@ public class ProductsController : ControllerBase
 
         return NoContent(); // Standard HTTP 204 response for a successful delete
     }
+
+    // GET: api/products/search
+    // Public endpoint to search for products by a query string.
+    [HttpGet("search")]
+    public async Task<ActionResult<IEnumerable<ProductDto>>> SearchProducts([FromQuery] string? query)
+    {
+        try
+        {
+            _logger.LogInformation("Search request received with query: {Query}", query ?? "empty");
+            
+            // Test database connectivity first
+            if (!await _context.Database.CanConnectAsync())
+            {
+                _logger.LogError("Database connection failed");
+                return StatusCode(503, new { 
+                    success = false, 
+                    message = "Database is currently unavailable. Please try again in a moment.",
+                    error = "Database connection failed"
+                });
+            }
+            
+            // If query is null or empty, return all active products
+            if (string.IsNullOrWhiteSpace(query))
+            {
+                _logger.LogInformation("Empty query - returning all products");
+                var allProducts = await _context.Products
+                    .Include(p => p.Category)
+                    .Where(p => p.IsActive)
+                    .OrderBy(p => p.Name)
+                    .AsNoTracking() // Add this for better performance
+                    .ToListAsync();
+                
+                return Ok(_mapper.Map<IEnumerable<ProductDto>>(allProducts));
+            }
+
+            var searchTerm = query.Trim().ToLower();
+            _logger.LogInformation("Searching for: {SearchTerm}", searchTerm);
+
+            var products = await _context.Products
+                .Include(p => p.Category)
+                .Where(p => p.IsActive && 
+                       (p.Name.ToLower().Contains(searchTerm) ||
+                        p.Description.ToLower().Contains(searchTerm) ||
+                        p.Sku.ToLower().Contains(searchTerm) ||
+                        (p.Category != null && p.Category.Name.ToLower().Contains(searchTerm))))
+                .OrderBy(p => p.Name)
+                .AsNoTracking() // Add this for better performance
+                .ToListAsync();
+            
+            _logger.LogInformation("Found {Count} products matching '{SearchTerm}'", products.Count, searchTerm);
+            return Ok(_mapper.Map<IEnumerable<ProductDto>>(products));
+        }
+        catch (Npgsql.NpgsqlException ex)
+        {
+            _logger.LogError(ex, "Database connection error during search: {Message}", ex.Message);
+            return StatusCode(503, new { 
+                success = false, 
+                message = "Database is temporarily unavailable. Please try again in a moment.",
+                error = "Database connection error"
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error searching products with query: {Query}", query ?? "null");
+            return StatusCode(500, new { 
+                success = false, 
+                message = "An error occurred while searching products",
+                error = ex.Message 
+            });
+        }
+    }
 }
