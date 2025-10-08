@@ -36,3 +36,39 @@ export const productFormSchema = z.object({
 
 // We infer the TypeScript type directly from the Zod schema
 export type ProductFormData = z.infer<typeof productFormSchema>;
+
+export interface SavedAddress {
+  id: number;
+  userId: number;
+  addressType: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email: string;
+  address: string;
+  apartment?: string;
+  city: string;
+  province: string;
+  district: string;
+  postalCode: string;
+  country: string;
+  isDefault: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateUpdateAddressDto {
+  addressType: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email: string;
+  address: string;
+  apartment?: string;
+  city: string;
+  province: string;
+  district: string;
+  postalCode: string;
+  country: string;
+  isDefault: boolean;
+}

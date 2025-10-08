@@ -21,6 +21,13 @@ namespace Home4Paws.API.Helpers
 
             // Map from CreateUpdateCategoryDto to Category
             CreateMap<CreateUpdateCategoryDto, Category>();
+
+            // Map from UserAddress to UserAddressDto
+            CreateMap<UserAddress, UserAddressDto>();
+
+            // Map from CreateUpdateUserAddressDto to UserAddress
+            CreateMap<CreateUpdateUserAddressDto, UserAddress>()
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow));
         }
     }
 }

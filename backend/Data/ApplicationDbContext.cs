@@ -20,6 +20,7 @@ namespace Home4Paws.API.Data
         public DbSet<Category> Categories { get; set; } = null!;
         public DbSet<Order> Orders { get; set; } = null!;
         public DbSet<OrderItem> OrderItems { get; set; } = null!;
+        public DbSet<UserAddress> UserAddresses { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -182,6 +183,40 @@ namespace Home4Paws.API.Data
                     .HasForeignKey(e => e.ProductId)
                     .OnDelete(DeleteBehavior.Restrict);
             });
+
+            // Configure UserAddress entity
+            modelBuilder.Entity<UserAddress>(entity =>
+            {
+                entity.ToTable("user_addresses");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).HasColumnName("id");
+                entity.Property(e => e.UserId).HasColumnName("user_id").IsRequired();
+                entity.Property(e => e.AddressType).HasColumnName("address_type").HasMaxLength(50).IsRequired();
+                entity.Property(e => e.FirstName).HasColumnName("first_name").HasMaxLength(50).IsRequired();
+                entity.Property(e => e.LastName).HasColumnName("last_name").HasMaxLength(50).IsRequired();
+                entity.Property(e => e.Phone).HasColumnName("phone").HasMaxLength(20).IsRequired();
+                entity.Property(e => e.Email).HasColumnName("email").HasMaxLength(255).IsRequired();
+                entity.Property(e => e.Address).HasColumnName("address").HasMaxLength(255).IsRequired();
+                entity.Property(e => e.Apartment).HasColumnName("apartment").HasMaxLength(100);
+                entity.Property(e => e.City).HasColumnName("city").HasMaxLength(100).IsRequired();
+                entity.Property(e => e.Province).HasColumnName("province").HasMaxLength(100).IsRequired();
+                entity.Property(e => e.District).HasColumnName("district").HasMaxLength(100).IsRequired();
+                entity.Property(e => e.PostalCode).HasColumnName("postal_code").HasMaxLength(20).IsRequired();
+                entity.Property(e => e.Country).HasColumnName("country").HasMaxLength(100).HasDefaultValue("Sri Lanka");
+                entity.Property(e => e.IsDefault).HasColumnName("is_default").HasDefaultValue(false);
+                entity.Property(e => e.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("NOW()");
+                entity.Property(e => e.UpdatedAt).HasColumnName("updated_at").HasDefaultValueSql("NOW()");
+
+                entity.HasIndex(e => e.UserId);
+                entity.HasIndex(e => new { e.UserId, e.IsDefault });
+            });
+
+            // Configure User-UserAddress relationship
+            modelBuilder.Entity<User>()
+                .HasMany<UserAddress>()
+                .WithOne(a => a.User)
+                .HasForeignKey(a => a.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }
