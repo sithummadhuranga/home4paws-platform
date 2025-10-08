@@ -16,6 +16,7 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
+  token: string | null; // Add this
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
@@ -34,14 +35,16 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(null); // Add this
   const [isLoading, setIsLoading] = useState(true);
 
   // Check if user is logged in on mount
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const token = localStorage.getItem('token');
-        if (token) {
+        const storedToken = localStorage.getItem('token');
+        if (storedToken) {
+          setToken(storedToken); // Set token from localStorage
           // Simulate user data - replace with actual API call
           const userData: User = {
             id: '1',
@@ -57,6 +60,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } catch (error) {
         console.error('Auth check failed:', error);
         localStorage.removeItem('token');
+        setToken(null);
       } finally {
         setIsLoading(false);
       }
@@ -71,7 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Simulate login - replace with actual API call
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      const token = 'fake-jwt-token';
+      const authToken = 'fake-jwt-token';
       const userData: User = {
         id: '1',
         firstName: 'John',
@@ -83,7 +87,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         lastLoginAt: new Date().toISOString(),
       };
 
-      localStorage.setItem('token', token);
+      localStorage.setItem('token', authToken);
+      setToken(authToken); // Set token in state
       setUser(userData);
       toast.success('Successfully logged in!');
     } catch (error) {
@@ -97,6 +102,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = useCallback(async () => {
     try {
       localStorage.removeItem('token');
+      setToken(null); // Clear token from state
       setUser(null);
       toast.success('Successfully logged out!');
     } catch (error) {
@@ -111,7 +117,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Simulate registration - replace with actual API call
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      const token = 'fake-jwt-token';
+      const authToken = 'fake-jwt-token';
       const newUser: User = {
         id: '1',
         firstName: userData.firstName,
@@ -122,7 +128,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         createdAt: new Date().toISOString(),
       };
 
-      localStorage.setItem('token', token);
+      localStorage.setItem('token', authToken);
+      setToken(authToken); // Set token in state
       setUser(newUser);
       toast.success('Account created successfully!');
     } catch (error) {
@@ -139,6 +146,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     <AuthContext.Provider 
       value={{
         user,
+        token, // Add this
         isAuthenticated,
         isLoading,
         login,
