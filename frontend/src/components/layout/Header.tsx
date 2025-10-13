@@ -2,10 +2,10 @@
 
 import Link from "next/link"
 import { useState, useEffect, memo, useCallback } from "react"
-import { usePathname } from "next/navigation" // Add this import
+import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/common/ThemeToggle"
-import { Menu, X, Heart, Search, User, LogOut, Bell, ShoppingCart } from "lucide-react"
+import { Menu, X, Search, User, LogOut, ShoppingCart } from "lucide-react"
 import { useAuth } from "@/contexts/AuthContext"
 import { useCart } from "@/contexts/CartContext"
 import {
@@ -29,39 +29,46 @@ interface UserData {
   lastLoginAt?: string
 }
 
-// Mobile-optimized navigation item
+// Navigation item with pill-shaped design
 const NavItem = memo(({ href, children, className = "", onClick }: {
   href: string
   children: React.ReactNode
   className?: string
   onClick?: () => void
-}) => (
-  <Link 
-    href={href} 
-    onClick={onClick}
-    className={`
-      block px-4 py-3 rounded-xl text-gray-700 dark:text-gray-200 
-      hover:text-blue-600 dark:hover:text-blue-400 
-      hover:bg-blue-50 dark:hover:bg-blue-900/20 
-      transition-all duration-200 font-medium text-base
-      active:scale-95 active:duration-75 touch-target
-      md:inline-block md:px-3 md:py-2 md:text-sm ${className}
-    `}
-  >
-    {children}
-  </Link>
-))
+}) => {
+  const pathname = usePathname()
+  const isActive = pathname === href || 
+    (href !== "/" && pathname?.startsWith(href))
+  
+  return (
+    <Link 
+      href={href} 
+      onClick={onClick}
+      className={`
+        inline-block rounded-full px-4 py-2
+        ${isActive 
+          ? "bg-purple-500/20 text-purple-300 font-medium" 
+          : "text-purple-200 hover:bg-purple-500/10 hover:text-purple-300"
+        }
+        transition-all duration-200 text-sm font-urbanist
+        ${className}
+      `}
+    >
+      {children}
+    </Link>
+  )
+})
 NavItem.displayName = "NavItem"
 
-// Optimized user avatar with mobile sizing
+// Optimized user avatar
 const UserAvatar = memo(({ user }: { user: UserData }) => (
-  <Avatar className="w-9 h-9 ring-2 ring-blue-500/20 transition-all duration-200 hover:ring-blue-500/40">
+  <Avatar className="w-9 h-9 ring-2 ring-purple-500/20 transition-all duration-200 hover:ring-purple-500/40">
     <AvatarImage 
       src={`https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=64&h=64&fit=crop&crop=face`}
       alt={`${user.firstName} ${user.lastName}`}
       className="object-cover"
     />
-    <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-600 text-white text-sm font-semibold">
+    <AvatarFallback className="bg-gradient-to-br from-purple-500 to-purple-600 text-white text-sm font-urbanist">
       {user.firstName[0]}{user.lastName[0]}
     </AvatarFallback>
   </Avatar>
@@ -72,11 +79,11 @@ export default function Header() {
   const [isOpen, setIsOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const { user, logout, isAuthenticated, isLoading } = useAuth()
-  const { cartCount } = useCart();
-  const pathname = usePathname(); // Get current route path
+  const { cartCount } = useCart()
+  const pathname = usePathname()
   
   // Check if current path is store related
-  const isStorePage = pathname?.includes('/store') || pathname?.includes('/product') || pathname?.includes('/cart');
+  const isStorePage = pathname?.includes('/store') || pathname?.includes('/product') || pathname?.includes('/cart')
   
   // Performance-optimized scroll handler
   useEffect(() => {
@@ -85,7 +92,7 @@ export default function Header() {
     const handleScroll = () => {
       if (!ticking) {
         requestAnimationFrame(() => {
-          setScrolled(window.scrollY > 20)
+          setScrolled(window.scrollY > 50)
           ticking = false
         })
         ticking = true
@@ -126,64 +133,58 @@ export default function Header() {
 
   return (
     <>
-      <header className={`
-        fixed top-0 left-0 right-0 z-50 transition-all duration-300
-        ${scrolled 
-          ? "bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border-b border-gray-200/50 dark:border-slate-700/50 shadow-lg" 
-          : "bg-transparent"
-        }
-      `}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="flex items-center justify-between h-16 sm:h-18">
+      {/* Fixed, centered pill-shaped header */}
+      <header className="fixed top-5 left-1/2 transform -translate-x-1/2 z-50 w-[950px] max-w-[95%]">
+        <div 
+          className={`
+            relative rounded-[50px] backdrop-blur-[7.5px] shadow-lg
+            ${scrolled ? 'bg-opacity-90' : 'bg-opacity-100'}
+            transition-all duration-300
+            bg-gradient-to-r from-neutral-900 to-neutral-800
+            before:content-[''] before:absolute before:inset-0 before:rounded-[50px]
+            before:p-[1px] before:bg-gradient-to-r before:from-purple-500/30 before:to-transparent
+            before:-z-10
+          `}
+        >
+          <div className="flex items-center justify-between h-14 sm:h-16 px-5 sm:px-8">
+            {/* Brand - Left Side */}
+            <div className="flex-1 flex justify-start">
+              <Link href="/" className="inline-block">
+                <span className="text-lg sm:text-xl font-bold text-purple-200 font-urbanist">
+                  Home4Paws
+                </span>
+              </Link>
+            </div>
             
-            {/* Logo - Mobile Optimized */}
-            <Link href="/" className="flex items-center space-x-3 group touch-target">
-              <div className="relative">
-                <div className="w-10 h-10 sm:w-11 sm:h-11 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-blue-500/25 group-hover:scale-105 transition-all duration-200">
-                  <Heart className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                </div>
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full shadow-sm animate-pulse" />
-              </div>
-              <div className="hidden xs:block">
-                <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">PawsHome</h1>
-                <p className="text-xs text-gray-500 dark:text-gray-400 -mt-1 font-medium">Find • Adopt • Love</p>
-              </div>
-            </Link>
-
-            {/* Desktop Navigation */}
-            <nav className="hidden lg:flex items-center space-x-2">
-              <NavItem href="/adopt">🐕 Adopt Pets</NavItem>
-              <NavItem href="/shelters">🏠 Shelters</NavItem>
-              <NavItem href="/store">🛍️ Store</NavItem>
-              <NavItem href="/resources">📚 Resources</NavItem>
-              <NavItem href="/about">ℹ️ About</NavItem>
+            {/* Desktop Navigation - Center */}
+            <nav className="hidden md:flex items-center justify-center flex-1">
+              <NavItem href="/adopt">Adopt</NavItem>
+              <NavItem href="/shelters">Shelters</NavItem>
+              <NavItem href="/store">Store</NavItem>
+              <NavItem href="/resources">Resources</NavItem>
+              <NavItem href="/about">About</NavItem>
             </nav>
 
-            {/* Desktop Actions */}
-            <div className="hidden md:flex items-center space-x-3">
+            {/* Actions - Right Side */}
+            <div className="flex-1 flex items-center justify-end gap-2">
               <ThemeToggle />
               
               {!isLoading && (
                 <>
                   {isAuthenticated && user ? (
-                    <div className="flex items-center space-x-2">
-                      <Button variant="ghost" size="sm" className="w-10 h-10 p-0 rounded-xl hover:bg-gray-100 dark:hover:bg-slate-800">
-                        <Search className="w-4 h-4" />
-                        <span className="sr-only">Search</span>
-                      </Button>
-                      
+                    <div className="hidden md:flex items-center gap-2">
                       {/* Show Cart Button only on store pages */}
                       {isStorePage && (
                         <Button 
                           variant="ghost" 
                           size="sm" 
-                          className="w-10 h-10 p-0 rounded-xl hover:bg-gray-100 dark:hover:bg-slate-800 relative"
+                          className="w-9 h-9 p-0 rounded-full hover:bg-purple-500/10 text-purple-200 relative"
                           asChild
                         >
                           <Link href="/cart">
                             <ShoppingCart className="w-4 h-4" />
                             {cartCount > 0 && (
-                              <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-xs text-white">
+                              <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-purple-500 text-xs text-white">
                                 {cartCount}
                               </span>
                             )}
@@ -194,29 +195,29 @@ export default function Header() {
                       
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <button className="flex items-center space-x-2 p-1 rounded-xl hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors duration-200 touch-target">
+                          <button className="flex items-center p-1 rounded-full hover:bg-purple-500/10 transition-colors duration-200">
                             <UserAvatar user={user} />
                           </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent 
                           align="end" 
-                          className="w-64 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 shadow-xl"
+                          className="w-64 bg-neutral-900 border border-purple-400/30 shadow-xl"
                         >
                           <DropdownMenuLabel>
                             <div>
-                              <p className="font-semibold text-gray-900 dark:text-white">{user.firstName} {user.lastName}</p>
-                              <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user.email}</p>
+                              <p className="font-semibold text-purple-200 font-urbanist">{user.firstName} {user.lastName}</p>
+                              <p className="text-xs text-purple-300 truncate">{user.email}</p>
                             </div>
                           </DropdownMenuLabel>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem className="cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-700">
-                            <User className="w-4 h-4 mr-3" />
+                          <DropdownMenuItem className="cursor-pointer hover:bg-purple-900/20 text-purple-200">
+                            <User className="w-4 h-4 mr-3 text-purple-300" />
                             Profile Settings
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem 
                             onClick={handleLogout} 
-                            className="text-red-600 dark:text-red-400 cursor-pointer hover:bg-red-50 dark:hover:bg-red-900/20"
+                            className="text-red-400 cursor-pointer hover:bg-red-900/20"
                           >
                             <LogOut className="w-4 h-4 mr-3" />
                             Sign Out
@@ -225,19 +226,19 @@ export default function Header() {
                       </DropdownMenu>
                     </div>
                   ) : (
-                    <div className="flex items-center space-x-3">
+                    <div className="hidden md:flex items-center gap-2">
                       {/* Only show Cart Button for non-authenticated users on store pages */}
                       {isStorePage && (
                         <Button 
                           variant="ghost" 
                           size="sm" 
-                          className="w-10 h-10 p-0 rounded-xl hover:bg-gray-100 dark:hover:bg-slate-800 relative"
+                          className="w-9 h-9 p-0 rounded-full hover:bg-purple-500/10 text-purple-200 relative"
                           asChild
                         >
                           <Link href="/cart">
                             <ShoppingCart className="w-4 h-4" />
                             {cartCount > 0 && (
-                              <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-xs text-white">
+                              <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-purple-500 text-xs text-white">
                                 {cartCount}
                               </span>
                             )}
@@ -246,12 +247,12 @@ export default function Header() {
                         </Button>
                       )}
                       <Link href="/auth/login">
-                        <Button variant="ghost" size="sm" className="h-10 px-4 font-medium">
+                        <Button variant="ghost" size="sm" className="h-9 px-4 font-medium text-purple-200 hover:bg-purple-500/10 rounded-full font-urbanist">
                           Sign In
                         </Button>
                       </Link>
                       <Link href="/auth/signup">
-                        <Button size="sm" className="h-10 px-4 font-medium bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700">
+                        <Button size="sm" className="h-9 px-4 font-medium bg-gradient-to-r from-purple-900 to-purple-800 hover:from-purple-950 hover:to-purple-900 rounded-full text-white font-urbanist">
                           Sign Up
                         </Button>
                       </Link>
@@ -259,16 +260,13 @@ export default function Header() {
                   )}
                 </>
               )}
-            </div>
-
-            {/* Mobile Controls */}
-            <div className="flex items-center space-x-3 md:hidden">
-              <ThemeToggle />
+              
+              {/* Mobile Menu Button */}
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsOpen(!isOpen)}
-                className="w-10 h-10 p-0 rounded-xl hover:bg-gray-100 dark:hover:bg-slate-800 touch-target"
+                className="md:hidden w-9 h-9 p-0 rounded-full hover:bg-purple-500/10 text-purple-200"
                 aria-expanded={isOpen}
                 aria-label="Toggle navigation menu"
               >
@@ -279,102 +277,109 @@ export default function Header() {
         </div>
       </header>
 
-      {/* Mobile Navigation Overlay - Full Screen */}
-      {isOpen && (
-        <>
-          {/* Backdrop */}
-          <div 
-            className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm md:hidden"
-            onClick={closeMenu}
-            aria-hidden="true"
-          />
-          
-          {/* Mobile Menu Panel */}
-          <div className="fixed top-16 sm:top-18 left-0 right-0 bottom-0 z-50 md:hidden">
-            <div className="bg-white dark:bg-slate-900 border-t border-gray-200 dark:border-slate-700 shadow-2xl h-full overflow-y-auto">
-              <nav className="px-6 py-6 space-y-2">
-                
-                {/* Navigation Links */}
-                <div className="space-y-1">
-                  <NavItem href="/adopt" onClick={closeMenu}>
-                    🐕 Adopt Pets
-                  </NavItem>
-                  <NavItem href="/shelters" onClick={closeMenu}>
-                    🏠 Shelters
-                  </NavItem>
-                  <NavItem href="/store" onClick={closeMenu}>
-                    🛍️ Store
-                  </NavItem>
-                  <NavItem href="/resources" onClick={closeMenu}>
-                    📚 Resources
-                  </NavItem>
-                  <NavItem href="/about" onClick={closeMenu}>
-                    ℹ️ About
-                  </NavItem>
-                </div>
-                
-                {/* User Section */}
-                <div className="pt-6 border-t border-gray-200 dark:border-slate-700">
-                  {!isLoading ? (
-                    isAuthenticated && user ? (
-                      <div className="space-y-4">
-                        {/* User Info Card */}
-                        <div className="flex items-center space-x-4 p-4 bg-gray-50 dark:bg-slate-800 rounded-2xl">
-                          <UserAvatar user={user} />
-                          <div className="flex-1 min-w-0">
-                            <p className="font-semibold text-gray-900 dark:text-white truncate">
-                              {user.firstName} {user.lastName}
-                            </p>
-                            <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
-                              {user.email}
-                            </p>
-                          </div>
-                        </div>
-                        
-                        {/* Action Buttons */}
-                        <div className="space-y-2">
-                          <Link 
-                            href="/profile" 
-                            onClick={closeMenu}
-                            className="flex items-center px-4 py-3 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl transition-colors duration-200 touch-target"
-                          >
-                            <User className="w-5 h-5 mr-4" />
-                            Profile Settings
-                          </Link>
-                          
-                          <button 
-                            onClick={handleLogout}
-                            className="w-full flex items-center px-4 py-3 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors duration-200 touch-target"
-                          >
-                            <LogOut className="w-5 h-5 mr-4" />
-                            Sign Out
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        <Link href="/auth/login" onClick={closeMenu} className="block">
-                          <Button variant="ghost" className="w-full h-12 text-base font-medium justify-start px-4">
-                            Sign In
-                          </Button>
-                        </Link>
-                        <Link href="/auth/signup" onClick={closeMenu} className="block">
-                          <Button className="w-full h-12 text-base font-medium bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700">
-                            Sign Up
-                          </Button>
-                        </Link>
-                      </div>
-                    )
-                  ) : (
-                    <div className="flex items-center justify-center py-8">
-                      <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-                    </div>
-                  )}
-                </div>
-              </nav>
+      {/* Spacer to prevent content from hiding under fixed header */}
+      <div className="h-24" aria-hidden="true" />
+
+      {/* Mobile Navigation Overlay */}
+      <div 
+        className={`
+          fixed inset-x-0 top-24 z-40 transform transition-all duration-300 md:hidden
+          ${isOpen 
+            ? "opacity-100 translate-y-0 pointer-events-auto" 
+            : "opacity-0 -translate-y-4 pointer-events-none"
+          }
+        `}
+      >
+        <div className="mx-auto max-w-[95%] w-[450px] bg-neutral-900 rounded-2xl border border-purple-400/20 shadow-xl overflow-hidden">
+          <nav className="p-5 space-y-2">
+            {/* Navigation Links */}
+            <div className="space-y-2 pb-5 border-b border-purple-400/20">
+              <NavItem href="/adopt" onClick={closeMenu} className="block w-full">
+                Adopt Pets
+              </NavItem>
+              <NavItem href="/shelters" onClick={closeMenu} className="block w-full">
+                Shelters
+              </NavItem>
+              <NavItem href="/store" onClick={closeMenu} className="block w-full">
+                Store
+              </NavItem>
+              <NavItem href="/resources" onClick={closeMenu} className="block w-full">
+                Resources
+              </NavItem>
+              <NavItem href="/about" onClick={closeMenu} className="block w-full">
+                About
+              </NavItem>
             </div>
-          </div>
-        </>
+            
+            {/* User Section */}
+            <div className="pt-2">
+              {!isLoading ? (
+                isAuthenticated && user ? (
+                  <div className="space-y-4">
+                    {/* User Info Card */}
+                    <div className="flex items-center space-x-4 p-4 bg-neutral-800 rounded-xl border border-purple-400/20">
+                      <UserAvatar user={user} />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-purple-200 truncate font-urbanist">
+                          {user.firstName} {user.lastName}
+                        </p>
+                        <p className="text-sm text-purple-300 truncate">
+                          {user.email}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    {/* Action Buttons */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <Link 
+                        href="/profile" 
+                        onClick={closeMenu}
+                        className="flex items-center justify-center px-4 py-2 bg-neutral-800 text-purple-200 hover:bg-purple-900/40 rounded-xl transition-colors duration-200"
+                      >
+                        <User className="w-4 h-4 mr-2 text-purple-300" />
+                        Profile
+                      </Link>
+                      
+                      <button 
+                        onClick={handleLogout}
+                        className="flex items-center justify-center px-4 py-2 bg-neutral-800 text-red-400 hover:bg-red-900/20 rounded-xl transition-colors duration-200"
+                      >
+                        <LogOut className="w-4 h-4 mr-2" />
+                        Sign Out
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <Link href="/auth/login" onClick={closeMenu} className="flex-1">
+                      <Button variant="outline" className="w-full h-10 font-medium text-purple-200 rounded-xl font-urbanist">
+                        Sign In
+                      </Button>
+                    </Link>
+                    <Link href="/auth/signup" onClick={closeMenu} className="flex-1">
+                      <Button className="w-full h-10 font-medium bg-gradient-to-r from-purple-900 to-purple-800 hover:from-purple-950 hover:to-purple-900 rounded-xl text-white font-urbanist">
+                        Sign Up
+                      </Button>
+                    </Link>
+                  </div>
+                )
+              ) : (
+                <div className="flex items-center justify-center py-6">
+                  <div className="w-6 h-6 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
+                </div>
+              )}
+            </div>
+          </nav>
+        </div>
+      </div>
+      
+      {/* Backdrop for mobile menu */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 z-30 bg-black/50 backdrop-blur-sm md:hidden"
+          onClick={closeMenu}
+          aria-hidden="true"
+        />
       )}
     </>
   )
