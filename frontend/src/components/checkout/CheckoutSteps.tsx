@@ -27,10 +27,10 @@ export function CheckoutSteps({ steps, currentStep, className }: CheckoutStepsPr
                   className={cn(
                     "flex items-center justify-center w-12 h-12 rounded-2xl border-2 transition-all duration-300 shadow-sm",
                     step.id < currentStep
-                      ? "bg-gradient-to-br from-blue-600 to-blue-700 border-blue-600 text-white shadow-blue-200 dark:shadow-blue-900/20"
+                      ? "bg-gradient-to-br from-purple-600 to-purple-700 border-purple-600 text-white shadow-purple-200 dark:shadow-purple-900/20"
                       : step.id === currentStep
-                      ? "border-blue-600 text-blue-600 bg-white dark:bg-gray-800 shadow-lg"
-                      : "border-gray-300 dark:border-gray-600 text-gray-400 dark:text-gray-500 bg-white dark:bg-gray-800"
+                      ? "border-purple-600 text-purple-600 bg-neutral-900 dark:bg-neutral-800 shadow-lg border-purple-400/40"
+                      : "border-purple-400/30 text-purple-400/60 bg-neutral-900 dark:bg-neutral-800"
                   )}
                 >
                   {step.id < currentStep ? (
@@ -44,20 +44,20 @@ export function CheckoutSteps({ steps, currentStep, className }: CheckoutStepsPr
                 <div className="ml-4 min-w-0 flex-1">
                   <p
                     className={cn(
-                      "text-sm font-semibold transition-colors duration-200",
+                      "text-sm font-semibold transition-colors duration-200 font-urbanist",
                       step.id <= currentStep 
-                        ? "text-gray-900 dark:text-white" 
-                        : "text-gray-400 dark:text-gray-500"
+                        ? "text-purple-200" 
+                        : "text-purple-400/60"
                     )}
                   >
                     {step.name}
                   </p>
                   <p
                     className={cn(
-                      "text-xs mt-1 transition-colors duration-200",
+                      "text-xs mt-1 transition-colors duration-200 font-inter",
                       step.id <= currentStep 
-                        ? "text-gray-600 dark:text-gray-400" 
-                        : "text-gray-400 dark:text-gray-500"
+                        ? "text-purple-300" 
+                        : "text-purple-400/60"
                     )}
                   >
                     {step.description}
@@ -72,8 +72,8 @@ export function CheckoutSteps({ steps, currentStep, className }: CheckoutStepsPr
                     className={cn(
                       "flex-1 h-1 rounded-full transition-colors duration-300",
                       step.id < currentStep 
-                        ? "bg-gradient-to-r from-blue-600 to-blue-700" 
-                        : "bg-gray-200 dark:bg-gray-700"
+                        ? "bg-gradient-to-r from-purple-600 to-purple-700" 
+                        : "bg-purple-400/20"
                     )}
                   />
                 </div>

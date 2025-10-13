@@ -114,51 +114,51 @@ export function StoreClient({ initialProducts, initialCategories, error: initial
   return (
     <>
       {/* Hero Section - Modern Design */}
-      <section className="relative bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
-        <div className="absolute inset-0 opacity-5 dark:opacity-10">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600"></div>
+      <section className="relative bg-gradient-to-br from-purple-900/20 via-neutral-900 to-black shadow-sm border-b border-purple-400/20">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-purple-400"></div>
         </div>
         
         <div className="relative container mx-auto px-4 py-16 md:py-24">
           <div className="max-w-4xl mx-auto text-center space-y-8">
             <div className="space-y-4">
-              <div className="inline-flex items-center px-4 py-2 rounded-full bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700">
-                <ShoppingCart className="w-4 h-4 text-blue-600 dark:text-blue-400 mr-2" />
-                <span className="text-sm font-medium text-blue-700 dark:text-blue-300">Sri Lanka's Premier Pet Store</span>
+              <div className="inline-flex items-center px-4 py-2 rounded-full bg-purple-900/30 border border-purple-400/20">
+                <ShoppingCart className="w-4 h-4 text-purple-400 mr-2" />
+                <span className="text-sm font-medium text-purple-200">Sri Lanka's Premier Pet Store</span>
               </div>
               
-              <h1 className="text-4xl md:text-6xl font-bold text-gray-900 dark:text-white">
+              <h1 className="text-4xl md:text-6xl font-bold text-purple-200 font-urbanist">
                 Everything Your Pet
-                <span className="block bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                <span className="block bg-gradient-to-r from-purple-400 to-purple-300 bg-clip-text text-transparent">
                   Needs & Loves
                 </span>
               </h1>
               
-              <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto leading-relaxed">
+              <p className="text-xl text-purple-300 max-w-2xl mx-auto leading-relaxed font-inter">
                 Discover premium products, trusted brands, and everything your furry friends need. Island-wide delivery across Sri Lanka.
               </p>
             </div>
             
             {/* Enhanced Search Bar */}
             <div className="relative max-w-2xl mx-auto">
-              <div className="relative bg-white dark:bg-gray-700 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-600 overflow-hidden">
+              <div className="relative bg-neutral-900/80 backdrop-blur-sm rounded-2xl shadow-lg border border-purple-400/20 overflow-hidden">
                 <div className="flex items-center">
                   <div className="flex items-center px-6">
-                    <Search className="w-5 h-5 text-gray-400" />
+                    <Search className="w-5 h-5 text-purple-400" />
                   </div>
                   <Input 
                     type="text" 
                     placeholder="Search for products, brands, or categories..." 
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="flex-1 border-0 bg-transparent focus:ring-0 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 text-lg py-4"
+                    className="flex-1 border-0 bg-transparent focus:ring-0 text-purple-200 placeholder:text-purple-400/70 text-lg py-4"
                   />
                   {(searchQuery || selectedCategory) && (
                     <Button 
                       variant="ghost" 
                       size="sm"
                       onClick={handleClearSearch}
-                      className="m-2 px-4 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-600"
+                      className="m-2 px-4 rounded-xl hover:bg-purple-500/20 text-purple-300"
                     >
                       <X className="w-4 h-4 mr-2" />
                       Clear
@@ -167,7 +167,7 @@ export function StoreClient({ initialProducts, initialCategories, error: initial
                   <Button 
                     onClick={() => handleSearch(searchQuery)}
                     disabled={isSearching}
-                    className="m-2 px-8 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
+                    className="m-2 px-8 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600"
                   >
                     {isSearching ? (
                       <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -177,17 +177,6 @@ export function StoreClient({ initialProducts, initialCategories, error: initial
                   </Button>
                 </div>
               </div>
-
-              {/* Search Results Info */}
-              {searchQuery && !isSearching && (
-                <div className="mt-4 text-sm text-gray-600 dark:text-gray-400">
-                  {filteredProducts.length > 0 ? (
-                    <span>Found {filteredProducts.length} result{filteredProducts.length !== 1 ? 's' : ''} for "{searchQuery}"</span>
-                  ) : (
-                    <span className="text-red-600 dark:text-red-400">No results found for "{searchQuery}"</span>
-                  )}
-                </div>
-              )}
             </div>
 
             {/* Quick Stats */}
@@ -199,10 +188,10 @@ export function StoreClient({ initialProducts, initialCategories, error: initial
                 { number: 'Free', label: 'Delivery' }
               ].map((stat, index) => (
                 <div key={index} className="text-center">
-                  <div className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-1">
+                  <div className="text-2xl md:text-3xl font-bold text-purple-200 mb-1 font-urbanist">
                     {stat.number}
                   </div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">{stat.label}</p>
+                  <p className="text-sm text-purple-300 font-inter">{stat.label}</p>
                 </div>
               ))}
             </div>
@@ -259,28 +248,28 @@ export function StoreClient({ initialProducts, initialCategories, error: initial
         )}
 
         {/* Filter and Sort Bar */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+        <div className="bg-neutral-900/60 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-purple-400/20">
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
             <div className="flex items-center gap-4">
-              <Button variant="outline" size="sm" className="gap-2 rounded-xl">
+              <Button variant="outline" size="sm" className="gap-2 rounded-xl border-purple-400/30 text-purple-200 hover:bg-purple-500/20">
                 <Filter className="w-4 h-4" />
                 Filters
               </Button>
-              <Button variant="outline" size="sm" className="gap-2 rounded-xl">
+              <Button variant="outline" size="sm" className="gap-2 rounded-xl border-purple-400/30 text-purple-200 hover:bg-purple-500/20">
                 <SlidersHorizontal className="w-4 h-4" />
                 Sort by Price
               </Button>
             </div>
             
             <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+              <span className="text-sm text-purple-300 font-medium font-inter">
                 {filteredProducts.length} products found
               </span>
-              <div className="flex items-center bg-gray-100 dark:bg-gray-700 rounded-xl p-1">
-                <Button variant="ghost" size="sm" className="rounded-lg">
+              <div className="flex items-center bg-purple-900/30 rounded-xl p-1 border border-purple-400/20">
+                <Button variant="ghost" size="sm" className="rounded-lg text-purple-200">
                   <Grid3X3 className="w-4 h-4" />
                 </Button>
-                <Button variant="ghost" size="sm" className="rounded-lg opacity-50">
+                <Button variant="ghost" size="sm" className="rounded-lg opacity-50 text-purple-400">
                   <List className="w-4 h-4" />
                 </Button>
               </div>
@@ -293,10 +282,10 @@ export function StoreClient({ initialProducts, initialCategories, error: initial
           <section>
             <div className="flex items-center justify-between mb-8">
               <div>
-                <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                <h2 className="text-3xl font-bold text-purple-200 mb-2 font-urbanist">
                   Shop by Category
                 </h2>
-                <p className="text-gray-600 dark:text-gray-400">
+                <p className="text-purple-300 font-inter">
                   Find exactly what you're looking for
                 </p>
               </div>
@@ -307,17 +296,17 @@ export function StoreClient({ initialProducts, initialCategories, error: initial
                 <button
                   key={category.id}
                   onClick={() => handleCategoryClick(category.id)}
-                  className={`group cursor-pointer bg-white dark:bg-gray-800 rounded-2xl p-6 text-center hover:shadow-lg transition-all duration-300 border-2 hover:-translate-y-1 ${
+                  className={`group cursor-pointer bg-neutral-900/60 backdrop-blur-sm rounded-2xl p-6 text-center hover:shadow-lg transition-all duration-300 border-2 hover:-translate-y-1 ${
                     selectedCategory === category.id
-                      ? 'border-blue-500 dark:border-blue-400 shadow-lg'
-                      : 'border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600'
+                      ? 'border-purple-500 shadow-lg shadow-purple-500/20'
+                      : 'border-purple-400/20 hover:border-purple-400/40'
                   }`}
                 >
                   <div className="text-3xl mb-3">🐾</div>
-                  <h3 className={`font-semibold transition-colors ${
+                  <h3 className={`font-semibold transition-colors font-urbanist ${
                     selectedCategory === category.id
-                      ? 'text-blue-600 dark:text-blue-400'
-                      : 'text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400'
+                      ? 'text-purple-300'
+                      : 'text-purple-200 group-hover:text-purple-300'
                   }`}>
                     {category.name}
                   </h3>
@@ -392,12 +381,12 @@ export function StoreClient({ initialProducts, initialCategories, error: initial
         </section>
         
         {/* Trust Indicators */}
-        <section className="bg-white dark:bg-gray-800 rounded-3xl p-8 md:p-12 border border-gray-200 dark:border-gray-700 shadow-sm">
+        <section className="bg-neutral-900/60 backdrop-blur-sm rounded-3xl p-8 md:p-12 border border-purple-400/20 shadow-sm">
           <div className="text-center mb-12">
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
+            <h3 className="text-2xl font-bold text-purple-200 mb-3 font-urbanist">
               Why Shop With Us?
             </h3>
-            <p className="text-gray-600 dark:text-gray-400">
+            <p className="text-purple-300 font-inter">
               We're committed to providing the best experience for you and your pets across Sri Lanka
             </p>
           </div>
@@ -408,39 +397,39 @@ export function StoreClient({ initialProducts, initialCategories, error: initial
                 icon: Truck, 
                 title: 'Island-wide Delivery', 
                 desc: 'Free delivery over LKR 5,000',
-                color: 'text-blue-600 dark:text-blue-400',
-                bg: 'bg-blue-100 dark:bg-blue-900/20'
+                color: 'text-purple-400',
+                bg: 'bg-purple-900/20'
               },
               { 
                 icon: Shield, 
                 title: 'Secure Payment', 
                 desc: 'Local banks & mobile payments',
-                color: 'text-green-600 dark:text-green-400',
-                bg: 'bg-green-100 dark:bg-green-900/20'
+                color: 'text-purple-300',
+                bg: 'bg-purple-900/20'
               },
               { 
                 icon: Clock, 
                 title: 'Fast Delivery', 
                 desc: '2-5 days across Sri Lanka',
-                color: 'text-purple-600 dark:text-purple-400',
-                bg: 'bg-purple-100 dark:bg-purple-900/20'
+                color: 'text-purple-400',
+                bg: 'bg-purple-900/20'
               },
               { 
                 icon: Award, 
                 title: 'Quality Guarantee', 
                 desc: '30-day return policy',
-                color: 'text-orange-600 dark:text-orange-400',
-                bg: 'bg-orange-100 dark:bg-orange-900/20'
+                color: 'text-purple-300',
+                bg: 'bg-purple-900/20'
               },
             ].map((item, index) => (
               <div key={index} className="text-center group">
-                <div className={`w-16 h-16 ${item.bg} rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-200`}>
+                <div className={`w-16 h-16 ${item.bg} rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-200 border border-purple-400/20`}>
                   <item.icon className={`w-8 h-8 ${item.color}`} />
                 </div>
-                <h4 className="font-bold text-gray-900 dark:text-white text-lg mb-2">
+                <h4 className="font-bold text-purple-200 text-lg mb-2 font-urbanist">
                   {item.title}
                 </h4>
-                <p className="text-gray-600 dark:text-gray-400">
+                <p className="text-purple-300 font-inter">
                   {item.desc}
                 </p>
               </div>

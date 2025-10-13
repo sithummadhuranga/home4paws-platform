@@ -76,25 +76,30 @@ export function PaymentForm({ onComplete, onBack }: PaymentFormProps) {
           <RadioGroup value={paymentType} onValueChange={(value) => setPaymentType(value as any)} className="space-y-3">
             {/* Credit/Debit Card */}
             <Card className={cn(
-              "cursor-pointer transition-all duration-200 hover:shadow-md",
+              "cursor-pointer transition-all duration-200 hover:shadow-md hover:shadow-purple-500/20",
               paymentType === 'card' 
-                ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 shadow-md" 
-                : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
+                ? "border-purple-500 bg-purple-900/20 shadow-md shadow-purple-500/20" 
+                : "border-purple-400/20 bg-neutral-900/40 hover:border-purple-400/40"
             )}>
               <CardContent className="p-6">
                 <div className="flex items-center space-x-4">
-                  <RadioGroupItem value="card" id="card" className="text-blue-600" />
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
-                    <CreditCard className="w-5 h-5 text-white" />
-                  </div>
-                  <div className="flex-1">
-                    <Label htmlFor="card" className="text-base font-semibold text-gray-900 dark:text-white cursor-pointer">
-                      Credit or Debit Card
-                    </Label>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Visa, Mastercard, American Express (LKR)
-                    </p>
-                  </div>
+                  <RadioGroupItem value="card" id="card" className="text-purple-600" />
+                  <Label htmlFor="card" className="flex-1 cursor-pointer">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-semibold text-purple-200 font-urbanist">Credit/Debit Card</p>
+                        <p className="text-sm text-purple-300 font-inter">Visa, Mastercard, American Express</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <div className="w-8 h-5 bg-blue-600 rounded-sm flex items-center justify-center">
+                          <span className="text-xs text-white font-bold">V</span>
+                        </div>
+                        <div className="w-8 h-5 bg-red-600 rounded-sm flex items-center justify-center">
+                          <span className="text-xs text-white font-bold">M</span>
+                        </div>
+                      </div>
+                    </div>
+                  </Label>
                 </div>
               </CardContent>
             </Card>
@@ -178,24 +183,24 @@ export function PaymentForm({ onComplete, onBack }: PaymentFormProps) {
 
         {/* Credit Card Form */}
         {paymentType === 'card' && (
-          <div className="p-6 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 rounded-2xl border border-gray-200 dark:border-gray-600 space-y-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Card Details</h3>
+          <div className="p-6 bg-neutral-800/30 backdrop-blur-sm rounded-2xl border border-purple-400/20 space-y-6">
+            <h3 className="text-lg font-semibold text-purple-200 font-urbanist">Card Details</h3>
             
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="cardName" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <Label htmlFor="cardName" className="text-sm font-medium text-purple-300 font-inter">
                   Cardholder Name *
                 </Label>
                 <Input
                   id="cardName"
                   {...register('cardName', { required: paymentType === 'card' })}
                   placeholder="John Perera"
-                  className="h-12 rounded-xl border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:border-blue-500 focus:ring-blue-500 transition-all duration-200"
+                  className="h-12 rounded-xl border-purple-400/30 bg-neutral-900 text-purple-200 placeholder:text-purple-400/70 focus:border-purple-400 focus:ring-purple-400/20 transition-all duration-200"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="cardNumber" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <Label htmlFor="cardNumber" className="text-sm font-medium text-purple-300 font-inter">
                   Card Number *
                 </Label>
                 <Input
@@ -203,13 +208,13 @@ export function PaymentForm({ onComplete, onBack }: PaymentFormProps) {
                   {...register('cardNumber', { required: paymentType === 'card' })}
                   placeholder="4111 1111 1111 1111"
                   maxLength={19}
-                  className="h-12 rounded-xl border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:border-blue-500 focus:ring-blue-500 transition-all duration-200"
+                  className="h-12 rounded-xl border-purple-400/30 bg-neutral-900 text-purple-200 placeholder:text-purple-400/70 focus:border-purple-400 focus:ring-purple-400/20 transition-all duration-200"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="expiryDate" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <Label htmlFor="expiryDate" className="text-sm font-medium text-purple-300 font-inter">
                     Expiry Date *
                   </Label>
                   <Input
@@ -217,12 +222,12 @@ export function PaymentForm({ onComplete, onBack }: PaymentFormProps) {
                     {...register('expiryDate', { required: paymentType === 'card' })}
                     placeholder="MM/YY"
                     maxLength={5}
-                    className="h-12 rounded-xl border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:border-blue-500 focus:ring-blue-500 transition-all duration-200"
+                    className="h-12 rounded-xl border-purple-400/30 bg-neutral-900 text-purple-200 placeholder:text-purple-400/70 focus:border-purple-400 focus:ring-purple-400/20 transition-all duration-200"
                   />
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="cvv" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <Label htmlFor="cvv" className="text-sm font-medium text-purple-300 font-inter">
                     CVV *
                   </Label>
                   <Input
@@ -230,15 +235,15 @@ export function PaymentForm({ onComplete, onBack }: PaymentFormProps) {
                     {...register('cvv', { required: paymentType === 'card' })}
                     placeholder="123"
                     maxLength={4}
-                    className="h-12 rounded-xl border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:border-blue-500 focus:ring-blue-500 transition-all duration-200"
+                    className="h-12 rounded-xl border-purple-400/30 bg-neutral-900 text-purple-200 placeholder:text-purple-400/70 focus:border-purple-400 focus:ring-purple-400/20 transition-all duration-200"
                   />
                 </div>
               </div>
             </div>
 
             {/* Security Notice */}
-            <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
-              <p className="text-sm text-blue-800 dark:text-blue-200">
+            <div className="p-3 bg-purple-900/20 rounded-lg border border-purple-400/30">
+              <p className="text-sm text-purple-200 font-inter">
                 🔒 Your payment is secured with 256-bit SSL encryption. We never store your card details.
               </p>
             </div>

@@ -13,7 +13,7 @@ import { OrderSummary } from '@/components/checkout/OrderSummary';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Shield, Clock, Award, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Shield, Clock, Award, Heart } from 'lucide-react';
 import Link from 'next/link';
 
 const checkoutSteps = [
@@ -82,7 +82,7 @@ export default function CheckoutPage() {
     return (
       <>
         <Header />
-        <main className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 pt-16 md:pt-20">
+        <main className="min-h-screen bg-gradient-to-br from-black via-neutral-900 to-purple-900/10 pt-16 md:pt-20">
           <div className="container mx-auto px-4 py-12">
             <div className="max-w-4xl mx-auto">
               <OrderConfirmation orderId={orderId} />
@@ -97,14 +97,14 @@ export default function CheckoutPage() {
   return (
     <>
       <Header />
-      <main className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 pt-16 md:pt-20">
+      <main className="min-h-screen bg-gradient-to-br from-black via-neutral-900 to-purple-900/10 pt-16 md:pt-20">
         
         {/* Hero Section */}
-        <section className="relative bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+        <section className="relative bg-neutral-900/60 backdrop-blur-sm shadow-sm border-b border-purple-400/20">
           <div className="container mx-auto px-4 py-8">
             <div className="max-w-6xl mx-auto">
               {/* Back Navigation */}
-              <Button variant="ghost" asChild className="mb-4 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl">
+              <Button variant="ghost" asChild className="mb-4 hover:bg-purple-500/10 rounded-xl text-purple-200 hover:text-purple-300">
                 <Link href="/cart" className="gap-2">
                   <ArrowLeft className="w-4 h-4" />
                   Back to Cart
@@ -113,11 +113,19 @@ export default function CheckoutPage() {
 
               {/* Header */}
               <div className="text-center mb-8">
-                <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-3">
-                  Secure Checkout
+                <div className="inline-flex items-center px-4 py-2 rounded-full bg-purple-900/30 border border-purple-400/20 mb-4">
+                  <Heart className="w-4 h-4 text-purple-400 mr-2" />
+                  <span className="text-sm font-medium text-purple-200 font-inter">Secure Checkout</span>
+                </div>
+                
+                <h1 className="text-3xl md:text-4xl font-bold text-purple-200 mb-3 font-urbanist">
+                  Complete Your
+                  <span className="block bg-gradient-to-r from-purple-400 to-purple-300 bg-clip-text text-transparent">
+                    Pet Store Order
+                  </span>
                 </h1>
-                <p className="text-lg text-gray-600 dark:text-gray-300">
-                  Complete your order in just a few simple steps
+                <p className="text-lg text-purple-300 max-w-2xl mx-auto font-inter">
+                  Just a few more steps to get your pet supplies delivered across Sri Lanka
                 </p>
               </div>
 
@@ -136,7 +144,7 @@ export default function CheckoutPage() {
               
               {/* Forms Section */}
               <div className="lg:col-span-2 space-y-6">
-                <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+                <div className="bg-neutral-900/60 backdrop-blur-sm rounded-2xl border border-purple-400/20 shadow-sm overflow-hidden">
                   
                   {currentStep === 1 && (
                     <div className="p-8">
@@ -165,8 +173,8 @@ export default function CheckoutPage() {
                 </div>
 
                 {/* Trust & Security Indicators */}
-                <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
-                  <h3 className="font-bold text-gray-900 dark:text-white mb-4 text-center">
+                <div className="bg-neutral-900/60 backdrop-blur-sm rounded-2xl border border-purple-400/20 shadow-sm p-6">
+                  <h3 className="font-bold text-purple-200 mb-4 text-center font-urbanist">
                     🔒 Your Information is Safe & Secure
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -175,30 +183,30 @@ export default function CheckoutPage() {
                         icon: Shield,
                         title: 'SSL Encrypted',
                         desc: '256-bit security',
-                        color: 'text-green-600 dark:text-green-400'
+                        color: 'text-green-400'
                       },
                       {
                         icon: Clock,
                         title: 'Fast Processing',
                         desc: 'Instant confirmation',
-                        color: 'text-blue-600 dark:text-blue-400'
+                        color: 'text-purple-400'
                       },
                       {
                         icon: Award,
                         title: 'Trusted Store',
-                        desc: '1000+ happy customers',
-                        color: 'text-purple-600 dark:text-purple-400'
+                        desc: '1000+ happy pets',
+                        color: 'text-blue-400'
                       }
                     ].map((item, index) => (
-                      <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
-                        <div className="w-10 h-10 bg-white dark:bg-gray-800 rounded-lg flex items-center justify-center shadow-sm">
+                      <div key={index} className="flex items-center gap-3 p-3 bg-neutral-800/50 rounded-xl border border-purple-400/20">
+                        <div className="w-10 h-10 bg-neutral-900 rounded-lg flex items-center justify-center shadow-sm border border-purple-400/20">
                           <item.icon className={`w-5 h-5 ${item.color}`} />
                         </div>
                         <div>
-                          <p className="font-semibold text-gray-900 dark:text-white text-sm">
+                          <p className="font-semibold text-purple-200 text-sm font-urbanist">
                             {item.title}
                           </p>
-                          <p className="text-xs text-gray-600 dark:text-gray-400">
+                          <p className="text-xs text-purple-300 font-inter">
                             {item.desc}
                           </p>
                         </div>

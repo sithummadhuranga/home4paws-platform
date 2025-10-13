@@ -46,7 +46,7 @@ export function ProductCard({ product }: ProductCardProps) {
 
   return (
     <Link href={`/product/${product.id}`} className="block group">
-      <Card className="relative overflow-hidden bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:shadow-2xl dark:hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 rounded-2xl">
+      <Card className="relative overflow-hidden bg-neutral-900/60 backdrop-blur-sm border border-purple-400/20 hover:shadow-2xl hover:shadow-purple-500/20 transition-all duration-500 hover:-translate-y-2 rounded-2xl group">
         {/* Image Container */}
         <div className="relative aspect-square overflow-hidden bg-gray-100 dark:bg-gray-700">
           <Image
@@ -68,9 +68,9 @@ export function ProductCard({ product }: ProductCardProps) {
                 size="sm"
                 className={`${
                   inCart
-                    ? "bg-green-600 hover:bg-green-700"
-                    : "bg-white text-gray-900 hover:bg-gray-100"
-                } shadow-lg rounded-xl transition-all duration-200 transform hover:scale-105`}
+                    ? "bg-purple-600 hover:bg-purple-700"
+                    : "bg-neutral-800/90 text-purple-200 hover:bg-neutral-700"
+                } shadow-lg rounded-xl transition-all duration-200 transform hover:scale-105 border border-purple-400/30`}
                 onClick={handleAddToCart}
                 disabled={isLoading || product.stockQuantity === 0}
               >
@@ -134,12 +134,12 @@ export function ProductCard({ product }: ProductCardProps) {
         </div>
 
         {/* Content */}
-        <CardContent className="p-6 space-y-4">
+        <CardContent className="p-6 space-y-4 bg-neutral-900/40">
           {/* Category & Rating */}
           <div className="flex items-center justify-between">
             <Badge
               variant="secondary"
-              className="text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg"
+              className="text-xs font-medium bg-purple-900/30 text-purple-200 rounded-lg border border-purple-400/30"
             >
               {product.categoryName || "Uncategorized"}
             </Badge>
@@ -164,33 +164,28 @@ export function ProductCard({ product }: ProductCardProps) {
           </div>
 
           {/* Title */}
-          <h3 className="font-bold text-gray-900 dark:text-white line-clamp-2 leading-tight text-lg group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-200">
+          <h3 className="font-bold text-purple-200 line-clamp-2 leading-tight text-lg group-hover:text-purple-300 transition-colors duration-200 font-urbanist">
             {product.name}
           </h3>
 
           {/* Description */}
-          <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 leading-relaxed">
+          <p className="text-sm text-purple-300/80 line-clamp-2 leading-relaxed font-inter">
             {product.description || "Premium quality product for your beloved pet"}
           </p>
 
-          {/* Price and Action */}
-          <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-700">
+          {/* Price */}
+          <div className="flex items-center justify-between pt-2 border-t border-purple-400/20">
             <div>
               <div className="flex items-baseline gap-2 mb-1">
-                <span className="text-2xl font-bold text-gray-900 dark:text-white">
+                <span className="text-2xl font-bold text-purple-200 font-urbanist">
                   ${product.price?.toFixed(2) || "0.00"}
                 </span>
-                {product.price > 50 && (
-                  <span className="text-sm line-through text-gray-400 dark:text-gray-500">
-                    ${(product.price * 1.15).toFixed(2)}
-                  </span>
-                )}
               </div>
               <p
-                className={`text-xs font-medium ${
+                className={`text-xs font-medium font-inter ${
                   product.stockQuantity > 0
-                    ? "text-green-600 dark:text-green-400"
-                    : "text-red-600 dark:text-red-400"
+                    ? "text-green-400"
+                    : "text-red-400"
                 }`}
               >
                 {product.stockQuantity > 0
@@ -201,10 +196,10 @@ export function ProductCard({ product }: ProductCardProps) {
 
             <Button
               size="sm"
-              className={`rounded-xl transition-all duration-200 transform hover:scale-105 ${
+              className={`rounded-xl transition-all duration-200 transform hover:scale-105 font-inter ${
                 inCart
-                  ? "bg-green-600 hover:bg-green-700 text-white"
-                  : "bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white"
+                  ? "bg-purple-600 hover:bg-purple-700 text-white"
+                  : "bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white"
               }`}
               onClick={handleAddToCart}
               disabled={isLoading || product.stockQuantity === 0}
