@@ -75,7 +75,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-// Add Entity Framework with PostgreSQL (Supabase)
+// Add Entity Framework with PostgreSQL (Supabase) and PostGIS
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 if (!string.IsNullOrEmpty(connectionString))
 {
@@ -84,6 +84,7 @@ if (!string.IsNullOrEmpty(connectionString))
         options.UseNpgsql(connectionString, npgsqlOptions =>
         {
             npgsqlOptions.EnableRetryOnFailure(maxRetryCount: 3);
+            npgsqlOptions.UseNetTopologySuite();
         });
 
         // Add detailed logging in development
@@ -95,12 +96,28 @@ if (!string.IsNullOrEmpty(connectionString))
     });
 }
 
-// Register Dapper for lightweight queries
+// Register Repositories
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IPetReportRepository, PetReportRepository>();
 
 // Register Services
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<JwtHelper>();
+
+// Register Pet Services
+builder.Services.AddScoped<IPetReportService, PetReportService>();
+builder.Services.AddScoped<ILocationSearchService, LocationSearchService>();
+builder.Services.AddScoped<IImageSimilarityService, ImageSimilarityService>();
+
+// Register HTTP Client for Image Similarity Service
+builder.Services.AddHttpClient("ImageSimilarityService", client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration.GetValue<string>("ImageSimilarityService:BaseUrl") ?? "http://localhost:5000");
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
+
+// Configure static files for uploads
+builder.Services.AddDirectoryBrowser();
 
 // Add health checks
 builder.Services.AddHealthChecks()
@@ -175,6 +192,9 @@ else
 {
     app.UseCors();
 }
+
+// Configure static file serving
+app.UseStaticFiles();
 
 // Add Authentication & Authorization (AFTER CORS)
 app.UseAuthentication();
