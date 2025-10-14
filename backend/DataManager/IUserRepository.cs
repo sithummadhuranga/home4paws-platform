@@ -14,5 +14,7 @@ namespace Home4Paws.API.DataManager
         Task<bool> DeactivateUserSessionAsync(string refreshToken);
         Task<bool> DeactivateAllUserSessionsAsync(int userId);
         Task<bool> CleanupExpiredSessionsAsync();
+        Task<bool> UpdateUserRoleAsync(int userId, string role);
+        Task<List<User>> GetAllUsersAsync();
     }
 }

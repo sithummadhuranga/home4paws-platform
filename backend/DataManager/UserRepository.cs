@@ -18,9 +18,34 @@ namespace Home4Paws.API.DataManager
                 using var connection = new NpgsqlConnection(_connectionString);
                 await connection.OpenAsync();
 
-                var user = await connection.QueryFirstOrDefaultAsync<User>(
-                    AuthQueries.GetUserByEmail(),
-                    new { Email = email });
+                // ✅ FIX: Use explicit column mapping
+                var sql = @"
+                    SELECT 
+                        id as Id,
+                        first_name as FirstName,
+                        last_name as LastName,
+                        email as Email,
+                        password_hash as PasswordHash,
+                        role as Role,
+                        is_active as IsActive,
+                        email_verified as EmailVerified,
+                        created_at as CreatedAt,
+                        updated_at as UpdatedAt,
+                        last_login_at as LastLoginAt
+                    FROM development.users 
+                    WHERE email = @Email AND is_active = true";
+
+                var user = await connection.QueryFirstOrDefaultAsync<User>(sql, new { Email = email });
+
+                if (user != null)
+                {
+                    _logger.LogInformation("✅ Found user: {UserId}, HasPassword: {HasPassword}", 
+                        user.Id, !string.IsNullOrEmpty(user.PasswordHash));
+                }
+                else
+                {
+                    _logger.LogWarning("⚠️ User not found: {Email}", email);
+                }
 
                 return user;
             }
@@ -38,9 +63,24 @@ namespace Home4Paws.API.DataManager
                 using var connection = new NpgsqlConnection(_connectionString);
                 await connection.OpenAsync();
 
-                var user = await connection.QueryFirstOrDefaultAsync<User>(
-                    AuthQueries.GetUserById(),
-                    new { UserId = userId });
+                // ✅ FIX: Use explicit column mapping
+                var sql = @"
+                    SELECT 
+                        id as Id,
+                        first_name as FirstName,
+                        last_name as LastName,
+                        email as Email,
+                        password_hash as PasswordHash,
+                        role as Role,
+                        is_active as IsActive,
+                        email_verified as EmailVerified,
+                        created_at as CreatedAt,
+                        updated_at as UpdatedAt,
+                        last_login_at as LastLoginAt
+                    FROM development.users 
+                    WHERE id = @UserId AND is_active = true";
+
+                var user = await connection.QueryFirstOrDefaultAsync<User>(sql, new { UserId = userId });
 
                 return user;
             }
@@ -91,15 +131,22 @@ namespace Home4Paws.API.DataManager
                 await connection.OpenAsync();
 
                 var rowsAffected = await connection.ExecuteAsync(
-                    "UPDATE users SET last_login_at = @LastLoginAt, updated_at = @UpdatedAt WHERE id = @UserId",
+                    AuthQueries.UpdateLastLogin(),
                     new { UserId = userId, LastLoginAt = lastLoginAt, UpdatedAt = DateTime.UtcNow });
 
-                return rowsAffected > 0;
+                if (rowsAffected > 0)
+                {
+                    _logger.LogInformation("✅ Updated last login for user {UserId}", userId);
+                    return true;
+                }
+                
+                _logger.LogWarning("⚠️ No rows affected when updating last login for user {UserId}", userId);
+                return false;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error updating last login for user: {UserId}", userId);
-                return false;
+                throw;
             }
         }
 
@@ -111,15 +158,53 @@ namespace Home4Paws.API.DataManager
                 await connection.OpenAsync();
 
                 var rowsAffected = await connection.ExecuteAsync(
-                    "UPDATE users SET password_hash = @PasswordHash, updated_at = @UpdatedAt WHERE id = @UserId",
+                    @"UPDATE development.users 
+                      SET password_hash = @PasswordHash, updated_at = @UpdatedAt 
+                      WHERE id = @UserId",
                     new { UserId = userId, PasswordHash = passwordHash, UpdatedAt = DateTime.UtcNow });
 
-                return rowsAffected > 0;
+                if (rowsAffected > 0)
+                {
+                    _logger.LogInformation("✅ Password updated for user {UserId}", userId);
+                    return true;
+                }
+                
+                _logger.LogWarning("⚠️ No rows affected when updating password for user {UserId}", userId);
+                return false;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error updating password hash for user: {UserId}", userId);
+                _logger.LogError(ex, "❌ Error updating password hash for user: {UserId}", userId);
                 throw;
+            }
+        }
+
+        public async Task<bool> UpdateUserRoleAsync(int userId, string role)
+        {
+            try
+            {
+                using var connection = new NpgsqlConnection(_connectionString);
+                await connection.OpenAsync();
+
+                var rowsAffected = await connection.ExecuteAsync(
+                    @"UPDATE development.users 
+                      SET role = @Role, updated_at = @UpdatedAt 
+                      WHERE id = @UserId",
+                    new { UserId = userId, Role = role, UpdatedAt = DateTime.UtcNow });
+
+                if (rowsAffected > 0)
+                {
+                    _logger.LogInformation("✅ Updated role for user {UserId} to {Role}", userId, role);
+                    return true;
+                }
+                
+                _logger.LogWarning("⚠️ No rows affected when updating role for user {UserId}", userId);
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error updating role for user: {UserId}", userId);
+                return false;
             }
         }
 
@@ -144,12 +229,11 @@ namespace Home4Paws.API.DataManager
                         session.IpAddress
                     });
 
-                _logger.LogInformation("User session created successfully with ID: {SessionId}", sessionId);
                 return sessionId;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error creating user session for user: {UserId}", session.UserId);
+                _logger.LogError(ex, "Error creating user session");
                 throw;
             }
         }
@@ -161,21 +245,15 @@ namespace Home4Paws.API.DataManager
                 using var connection = new NpgsqlConnection(_connectionString);
                 await connection.OpenAsync();
 
-                var result = await connection.QueryAsync<UserSession, User, UserSession>(
+                var session = await connection.QueryFirstOrDefaultAsync<UserSession>(
                     AuthQueries.GetUserSession(),
-                    (session, user) =>
-                    {
-                        session.User = user;
-                        return session;
-                    },
-                    new { RefreshToken = refreshToken, CurrentTime = DateTime.UtcNow },
-                    splitOn: "user_id");
+                    new { RefreshToken = refreshToken });
 
-                return result.FirstOrDefault();
+                return session;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting user session by refresh token");
+                _logger.LogError(ex, "Error getting user session");
                 throw;
             }
         }
@@ -215,7 +293,7 @@ namespace Home4Paws.API.DataManager
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error deactivating all user sessions for user: {UserId}", userId);
+                _logger.LogError(ex, "Error deactivating all user sessions");
                 throw;
             }
         }
@@ -231,12 +309,42 @@ namespace Home4Paws.API.DataManager
                     AuthQueries.CleanupExpiredSessions(),
                     new { CurrentTime = DateTime.UtcNow });
 
-                _logger.LogInformation("Cleaned up {Count} expired sessions", rowsAffected);
                 return true;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error during session cleanup");
+                _logger.LogError(ex, "Error cleaning up expired sessions");
+                throw;
+            }
+        }
+
+        public async Task<List<User>> GetAllUsersAsync()
+        {
+            try
+            {
+                using var connection = new NpgsqlConnection(_connectionString);
+                await connection.OpenAsync();
+
+                var users = await connection.QueryAsync<User>(
+                    @"SELECT 
+                        id as Id,
+                        first_name as FirstName,
+                        last_name as LastName,
+                        email as Email,
+                        role as Role,
+                        is_active as IsActive,
+                        email_verified as EmailVerified,
+                        created_at as CreatedAt,
+                        updated_at as UpdatedAt,
+                        last_login_at as LastLoginAt
+                    FROM development.users 
+                    ORDER BY created_at DESC");
+
+                return users.ToList();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting all users");
                 throw;
             }
         }

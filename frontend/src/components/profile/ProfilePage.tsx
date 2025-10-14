@@ -85,6 +85,19 @@ const mockOrders: Order[] = [
   }
 ]
 
+// ✅ Add LKR conversion helper
+const USD_TO_LKR = 300;
+
+const formatLKR = (amountInUSD: number) => {
+  const lkrAmount = amountInUSD * USD_TO_LKR;
+  return new Intl.NumberFormat('si-LK', {
+    style: 'currency',
+    currency: 'LKR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(lkrAmount);
+};
+
 export default function ProfilePage() {
   const [user] = React.useState<UserProfile>(mockUser)
   const [orders] = React.useState<Order[]>(mockOrders)
@@ -158,7 +171,7 @@ export default function ProfilePage() {
                 <PackageIcon className="size-6 text-green-600 dark:text-green-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold">${user.totalSpent.toLocaleString()}</p>
+                <p className="text-2xl font-bold">{formatLKR(user.totalSpent)}</p>
                 <p className="text-sm text-muted-foreground">Total Spent</p>
               </div>
             </div>
@@ -277,7 +290,7 @@ export default function ProfilePage() {
                       <Badge className={getStatusColor(order.status)}>
                         {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                       </Badge>
-                      <p className="font-semibold">${order.total}</p>
+                      <p className="font-semibold">{formatLKR(order.total)}</p>
                       <Button variant="outline" size="sm">
                         View Details
                       </Button>

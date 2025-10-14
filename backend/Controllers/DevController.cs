@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Home4Paws.API.DataManager;
 using Home4Paws.API.Services.Auth;
 using Home4Paws.API.Models.Auth;
+using Home4Paws.API.Data;
 
 namespace Home4Paws.API.Controllers
 {
@@ -13,17 +15,20 @@ namespace Home4Paws.API.Controllers
         private readonly IAuthService _authService;
         private readonly ILogger<DevController> _logger;
         private readonly IWebHostEnvironment _environment;
+        private readonly ApplicationDbContext _context;
 
         public DevController(
             IUserRepository userRepository, 
             IAuthService authService,
             ILogger<DevController> logger, 
-            IWebHostEnvironment environment)
+            IWebHostEnvironment environment,
+            ApplicationDbContext context)
         {
             _userRepository = userRepository;
             _authService = authService;
             _logger = logger;
             _environment = environment;
+            _context = context;
         }
 
         /// <summary>
@@ -52,14 +57,8 @@ namespace Home4Paws.API.Controllers
                 // Update password hash in database
                 await _userRepository.UpdatePasswordHashAsync(user.Id, newPasswordHash);
 
-                _logger.LogInformation("Password reset for user: {Email}", request.Email);
-
-                return Ok(new { 
-                    success = true, 
-                    message = "Password reset successfully",
-                    userId = user.Id,
-                    hashLength = newPasswordHash.Length
-                });
+                _logger.LogInformation("Password reset successfully for user: {Email}", request.Email);
+                return Ok(new { success = true, message = "Password reset successfully" });
             }
             catch (Exception ex)
             {
@@ -69,20 +68,32 @@ namespace Home4Paws.API.Controllers
         }
 
         /// <summary>
-        /// List all users (Development only)
+        /// List all users (Development only or Admin in production)
         /// </summary>
         [HttpGet("users")]
         public async Task<IActionResult> GetUsers()
         {
-            if (!_environment.IsDevelopment())
-            {
-                return NotFound();
-            }
-
             try
             {
-                // This would require adding a GetAllUsers method to IUserRepository
-                return Ok(new { message = "Development endpoint - user listing would go here" });
+                // Get all users from database using Entity Framework
+                var users = await _context.Users
+                    .OrderByDescending(u => u.CreatedAt)
+                    .Select(u => new
+                    {
+                        u.Id,
+                        u.FirstName,
+                        u.LastName,
+                        u.Email,
+                        u.Role,
+                        u.IsActive,
+                        u.EmailVerified,
+                        u.CreatedAt,
+                        u.LastLoginAt
+                    })
+                    .ToListAsync();
+
+                _logger.LogInformation("Retrieved {Count} users", users.Count);
+                return Ok(users);
             }
             catch (Exception ex)
             {
@@ -166,6 +177,53 @@ namespace Home4Paws.API.Controllers
                 });
             }
         }
+
+        /// <summary>
+        /// Make a user admin (Development only)
+        /// </summary>
+        [HttpPost("make-admin")]
+        public async Task<IActionResult> MakeUserAdmin([FromBody] MakeAdminRequest request)
+        {
+            // Only allow in development
+            if (!_environment.IsDevelopment())
+            {
+                return NotFound();
+            }
+
+            try
+            {
+                _logger.LogInformation("👑 Making user admin: {Email}", request.Email);
+
+                var user = await _userRepository.GetUserByEmailAsync(request.Email);
+                if (user == null)
+                {
+                    return BadRequest(new { success = false, message = "User not found" });
+                }
+
+                var result = await _userRepository.UpdateUserRoleAsync(user.Id, "Admin");
+                
+                if (result)
+                {
+                    _logger.LogInformation("✅ User {Email} is now an admin", request.Email);
+                    return Ok(new { 
+                        success = true, 
+                        message = "User promoted to admin successfully",
+                        userId = user.Id,
+                        email = user.Email,
+                        role = "Admin"
+                    });
+                }
+                else
+                {
+                    return BadRequest(new { success = false, message = "Failed to update user role" });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error making user admin: {Email}", request.Email);
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+        }
     }
 
     public class CreateTestUserRequest
@@ -180,5 +238,10 @@ namespace Home4Paws.API.Controllers
     {
         public string Email { get; set; } = string.Empty;
         public string NewPassword { get; set; } = string.Empty;
+    }
+
+    public class MakeAdminRequest
+    {
+        public string Email { get; set; } = string.Empty;
     }
 }

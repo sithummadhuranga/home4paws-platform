@@ -1,13 +1,9 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { useState, useEffect, memo, useCallback } from "react"
-import { usePathname } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { ThemeToggle } from "@/components/common/ThemeToggle"
-import { Menu, X, Search, User, LogOut, ShoppingCart } from "lucide-react"
-import { useAuth } from "@/contexts/AuthContext"
-import { useCart } from "@/contexts/CartContext"
+import { useState, useEffect, useCallback, memo } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,29 +11,33 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+} from "@/components/ui/dropdown-menu";
+import { Menu, X, ShoppingCart, User, LogOut } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useCart } from "@/contexts/CartContext";
+import { ThemeToggle } from "@/components/common/ThemeToggle";
 
 interface UserData {
-  id: string
-  firstName: string
-  lastName: string
-  email: string
-  role: string
-  emailVerified: boolean
-  createdAt: string
-  lastLoginAt?: string
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: string;
+  emailVerified: boolean;
+  createdAt: string;
+  lastLoginAt?: string;
 }
 
-// Navigation item with pill-shaped design
-const NavItem = memo(({ href, children, className = "", onClick }: {
-  href: string
-  children: React.ReactNode
-  className?: string
-  onClick?: () => void
+// Optimized nav item component
+const NavItem = memo(({ href, children, onClick, className = "" }: {
+  href: string;
+  children: React.ReactNode;
+  onClick?: () => void;
+  className?: string;
 }) => {
-  const pathname = usePathname()
-  const isActive = pathname === href || 
+  const pathname = usePathname();
+  const isActive = 
+    (href === "/" && pathname === "/") || 
     (href !== "/" && pathname?.startsWith(href))
   
   return (
@@ -59,21 +59,6 @@ const NavItem = memo(({ href, children, className = "", onClick }: {
   )
 })
 NavItem.displayName = "NavItem"
-
-// Optimized user avatar
-const UserAvatar = memo(({ user }: { user: UserData }) => (
-  <Avatar className="w-9 h-9 ring-2 ring-purple-500/20 transition-all duration-200 hover:ring-purple-500/40">
-    <AvatarImage 
-      src={`https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=64&h=64&fit=crop&crop=face`}
-      alt={`${user.firstName} ${user.lastName}`}
-      className="object-cover"
-    />
-    <AvatarFallback className="bg-gradient-to-br from-purple-500 to-purple-600 text-white text-sm font-urbanist">
-      {user.firstName[0]}{user.lastName[0]}
-    </AvatarFallback>
-  </Avatar>
-))
-UserAvatar.displayName = "UserAvatar"
 
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false)
@@ -195,9 +180,14 @@ export default function Header() {
                       
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <button className="flex items-center p-1 rounded-full hover:bg-purple-500/10 transition-colors duration-200">
-                            <UserAvatar user={user} />
-                          </button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            className="w-9 h-9 p-0 rounded-full hover:bg-purple-500/10 text-purple-200 transition-colors duration-200"
+                          >
+                            <User className="w-5 h-5" />
+                            <span className="sr-only">User menu</span>
+                          </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent 
                           align="end" 
@@ -320,7 +310,9 @@ export default function Header() {
                   <div className="space-y-4">
                     {/* User Info Card */}
                     <div className="flex items-center space-x-4 p-4 bg-neutral-800 rounded-xl border border-purple-400/20">
-                      <UserAvatar user={user} />
+                      <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center">
+                        <User className="w-5 h-5 text-white" />
+                      </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-semibold text-purple-200 truncate font-urbanist">
                           {user.firstName} {user.lastName}

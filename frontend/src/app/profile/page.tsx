@@ -1,37 +1,35 @@
 "use client"
 
 import * as React from "react"
+import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/AuthContext"
 import { getUserAddresses, getDefaultAddress } from "@/services/addressService"
 import { getUserOrders, getUserStats, cancelOrder } from "@/services/orderService"
+import { SavedAddress, Order, UserStats } from "@/types"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
+import { 
+  ShoppingBagIcon,
+  CreditCardIcon,
+  HeartIcon,
+  CalendarIcon,
+  MapPinIcon,
+  EditIcon,
+  SettingsIcon,
+  PackageIcon,
+  Loader2,
+  AlertCircle,
+  ShieldIcon,
+  BellIcon,
+  UserIcon,
+  XCircle
+} from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import Header from "@/components/layout/Header"
 import Footer from "@/components/layout/Footer"
-import { 
-  UserIcon, 
-  MapPinIcon, 
-  CalendarIcon,
-  ShoppingBagIcon,
-  HeartIcon,
-  SettingsIcon,
-  EditIcon,
-  PackageIcon,
-  CreditCardIcon,
-  ShieldIcon,
-  BellIcon,
-  Loader2,
-  AlertCircle,
-  Eye,
-  XCircle
-} from "lucide-react"
-import { SavedAddress, Order, UserStats } from "@/types"
-import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
 export default function ProfilePage() {
@@ -162,12 +160,17 @@ export default function ProfilePage() {
     }
   }
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
+  // ✅ UPDATED: Convert USD to LKR
+  const USD_TO_LKR = 300;
+  
+  const formatCurrency = (amountInUSD: number) => {
+    const lkrAmount = amountInUSD * USD_TO_LKR;
+    return new Intl.NumberFormat('si-LK', {
       style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2,
-    }).format(amount)
+      currency: 'LKR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(lkrAmount);
   }
 
   const formatDate = (dateString: string) => {
@@ -397,7 +400,7 @@ export default function ProfilePage() {
                             <div className="flex-1">
                               <p className="text-sm font-medium">Order #{order.id}</p>
                               <p className="text-xs text-muted-foreground">
-                                {new Date(order.orderDate).toLocaleDateString()} • {formatCurrency(order.totalAmount)}
+                                {formatDate(order.orderDate)} • {formatCurrency(order.totalAmount)}
                               </p>
                             </div>
                             <Badge className={getStatusColor(order.status)}>
@@ -407,9 +410,10 @@ export default function ProfilePage() {
                         ))}
                       </div>
                     ) : (
-                      <p className="text-sm text-muted-foreground text-center py-8">
-                        No orders yet. Start shopping to see your orders here!
-                      </p>
+                      <div className="text-center py-8">
+                        <PackageIcon className="size-12 text-muted-foreground mx-auto mb-2" />
+                        <p className="text-sm text-muted-foreground">No orders yet</p>
+                      </div>
                     )}
                   </CardContent>
                 </Card>
@@ -445,33 +449,28 @@ export default function ProfilePage() {
                                 </p>
                               </div>
                             </div>
-                            <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-3">
                               <Badge className={getStatusColor(order.status)}>
-                                {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                                {order.status}
                               </Badge>
-                              <p className="font-semibold">{formatCurrency(order.totalAmount)}</p>
-                              <div className="flex gap-2">
-                                <Button variant="outline" size="sm">
-                                  <Eye className="size-4" />
-                                  View Details
+                              {order.status.toLowerCase() === 'pending' && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleCancelOrder(order.id)}
+                                  disabled={cancellingOrder === order.id}
+                                  className="text-red-600 hover:text-red-700"
+                                >
+                                  {cancellingOrder === order.id ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                  ) : (
+                                    <>
+                                      <XCircle className="w-4 h-4 mr-1" />
+                                      Cancel
+                                    </>
+                                  )}
                                 </Button>
-                                {(order.status.toLowerCase() === 'pending' || order.status.toLowerCase() === 'processing') && (
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm"
-                                    onClick={() => handleCancelOrder(order.id)}
-                                    disabled={cancellingOrder === order.id}
-                                    className="text-red-600 hover:text-red-700"
-                                  >
-                                    {cancellingOrder === order.id ? (
-                                      <Loader2 className="size-4 animate-spin" />
-                                    ) : (
-                                      <XCircle className="size-4" />
-                                    )}
-                                    Cancel
-                                  </Button>
-                                )}
-                              </div>
+                              )}
                             </div>
                           </div>
 
@@ -496,12 +495,12 @@ export default function ProfilePage() {
                           <div className="pt-4 border-t space-y-2">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                               <div>
-                                <p className="text-muted-foreground">Payment Method:</p>
+                                <p className="text-muted-foreground">Payment Method</p>
                                 <p className="font-medium">{order.paymentMethod}</p>
                               </div>
                               <div>
-                                <p className="text-muted-foreground">Shipping Address:</p>
-                                <p className="font-medium">{order.shippingAddress}</p>
+                                <p className="text-muted-foreground">Order Total</p>
+                                <p className="font-bold text-lg">{formatCurrency(order.totalAmount)}</p>
                               </div>
                             </div>
                           </div>
@@ -511,12 +510,12 @@ export default function ProfilePage() {
                   ) : (
                     <div className="text-center py-12">
                       <PackageIcon className="size-12 text-muted-foreground mx-auto mb-4" />
-                      <p className="text-muted-foreground">No orders found</p>
+                      <p className="text-muted-foreground">No orders yet</p>
                       <p className="text-sm text-muted-foreground mb-4">
                         Start shopping to see your orders here
                       </p>
-                      <Button asChild>
-                        <a href="/store">Start Shopping</a>
+                      <Button onClick={() => router.push('/store')}>
+                        Browse Products
                       </Button>
                     </div>
                   )}
@@ -551,14 +550,14 @@ export default function ProfilePage() {
                               <p className="text-sm text-muted-foreground">
                                 {address.address}
                               </p>
-                              <p className="text-sm text-muted-foreground">
-                                {address.city}, {address.province} {address.postalCode}
-                              </p>
-                              {address.phone && (
-                                <p className="text-sm text-muted-foreground">
-                                  {address.phone}
-                                </p>
+                              {address.apartment && (
+                                <p className="text-sm text-muted-foreground">{address.apartment}</p>
                               )}
+                              <p className="text-sm text-muted-foreground">
+                                {address.city}, {address.district}, {address.province}
+                              </p>
+                              <p className="text-sm text-muted-foreground">{address.postalCode}</p>
+                              <p className="text-sm text-muted-foreground">{address.phone}</p>
                             </div>
                             <Button variant="outline" size="sm">
                               Edit
@@ -602,7 +601,7 @@ export default function ProfilePage() {
                       </div>
                       <Button variant="outline" size="sm">Configure</Button>
                     </div>
-                    <Separator />
+                    <div className="border-t" />
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <ShieldIcon className="size-5 text-muted-foreground" />
@@ -613,7 +612,7 @@ export default function ProfilePage() {
                       </div>
                       <Button variant="outline" size="sm">Manage</Button>
                     </div>
-                    <Separator />
+                    <div className="border-t" />
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <UserIcon className="size-5 text-muted-foreground" />

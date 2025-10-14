@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react"
 import Link from "next/link"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -14,8 +14,6 @@ import { toast } from "sonner"
 
 export default function LoginPage() {
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const redirectUrl = searchParams.get('redirect') || '/'
   
   const { login, isLoading } = useAuth()
   const [showPassword, setShowPassword] = useState(false)
@@ -38,15 +36,14 @@ export default function LoginPage() {
     try {
       await login(formData.email, formData.password)
       
-      // Success - AuthContext will handle the redirect
+      // ✅ AuthContext now handles the redirect based on user role
       toast.success("Welcome back!")
-      router.push(redirectUrl)
       
     } catch (error: any) {
       console.error("Login error:", error)
       setError(error?.message || "Invalid email or password. Please try again.")
     }
-  }, [formData, login, router, redirectUrl])
+  }, [formData, login])
 
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target
@@ -67,7 +64,7 @@ export default function LoginPage() {
           {/* Fallback gradient background */}
           <div className="absolute inset-0 bg-gradient-to-br from-purple-600/10 via-blue-600/10 to-indigo-600/10" />
           
-          {/* Optional: Try to load the image, but have fallback */}
+          {/* Content overlay */}
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center text-white/80 max-w-md px-8">
               <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center">
@@ -124,68 +121,62 @@ export default function LoginPage() {
 
               {/* Form */}
               <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Email Field */}
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-purple-200 font-semibold">
+                  <Label htmlFor="email" className="text-purple-200 font-semibold flex items-center gap-2">
+                    <Mail className="w-4 h-4 text-purple-400" />
                     Email Address
                   </Label>
-                  <div className="relative group">
-                    <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-purple-400 w-5 h-5 transition-colors group-focus-within:text-purple-300" />
-                    <Input
-                      id="email"
-                      name="email"
-                      type="email"
-                      placeholder="Enter your email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      className="pl-12 h-14 border-2 border-purple-500/30 focus:border-purple-500 focus:ring-4 focus:ring-purple-500/20 bg-black/30 text-purple-200 placeholder:text-purple-400/70 transition-all duration-200 rounded-xl font-medium"
-                      required
-                      disabled={isLoading}
-                      autoComplete="email"
-                    />
-                  </div>
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    placeholder="your.email@example.com"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    className="h-12 bg-neutral-800/50 border-purple-400/30 text-purple-200 placeholder:text-purple-400/50 focus:border-purple-400 focus:ring-purple-400/20 rounded-xl transition-all duration-200"
+                    required
+                  />
                 </div>
 
+                {/* Password Field */}
                 <div className="space-y-2">
-                  <Label htmlFor="password" className="text-purple-200 font-semibold">
+                  <Label htmlFor="password" className="text-purple-200 font-semibold flex items-center gap-2">
+                    <Lock className="w-4 h-4 text-purple-400" />
                     Password
                   </Label>
-                  <div className="relative group">
-                    <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-purple-400 w-5 h-5 transition-colors group-focus-within:text-purple-300" />
+                  <div className="relative">
                     <Input
                       id="password"
                       name="password"
                       type={showPassword ? "text" : "password"}
-                      placeholder="Enter your password"
+                      placeholder="••••••••"
                       value={formData.password}
                       onChange={handleInputChange}
-                      className="pl-12 pr-14 h-14 border-2 border-purple-500/30 focus:border-purple-500 focus:ring-4 focus:ring-purple-500/20 bg-black/30 text-purple-200 placeholder:text-purple-400/70 transition-all duration-200 rounded-xl font-medium"
+                      className="h-12 bg-neutral-800/50 border-purple-400/30 text-purple-200 placeholder:text-purple-400/50 focus:border-purple-400 focus:ring-purple-400/20 rounded-xl pr-12 transition-all duration-200"
                       required
-                      disabled={isLoading}
-                      autoComplete="current-password"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-1/2 transform -translate-y-1/2 text-purple-400 hover:text-purple-300 transition-colors duration-200 p-1"
-                      disabled={isLoading}
-                      tabIndex={-1}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-purple-400 hover:text-purple-300 transition-colors duration-200 p-1 rounded-lg hover:bg-purple-500/10"
                     >
                       {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
                   </div>
                 </div>
 
+                {/* Remember Me & Forgot Password */}
                 <div className="flex items-center justify-between">
-                  <label className="flex items-center group cursor-pointer">
-                    <input 
-                      type="checkbox" 
+                  <label className="flex items-center gap-2 cursor-pointer group">
+                    <input
+                      type="checkbox"
                       name="rememberMe"
                       checked={formData.rememberMe}
                       onChange={handleInputChange}
-                      className="rounded border-purple-500/30 text-purple-600 focus:ring-purple-500 bg-black/30 w-4 h-4" 
-                      disabled={isLoading}
+                      className="w-4 h-4 rounded border-purple-400/30 bg-neutral-800/50 text-purple-600 focus:ring-purple-400/20 focus:ring-offset-0 transition-all duration-200"
                     />
-                    <span className="ml-3 text-sm text-purple-300 font-medium group-hover:text-purple-200 transition-colors duration-200">
+                    <span className="text-sm text-purple-300 group-hover:text-purple-200 transition-colors duration-200">
                       Remember me for 30 days
                     </span>
                   </label>
@@ -232,7 +223,7 @@ export default function LoginPage() {
                     href="/auth/signup" 
                     className="text-purple-400 hover:text-purple-300 font-bold transition-colors duration-200 hover:underline"
                   >
-                    Sign up for free →
+                    Sign up here →
                   </Link>
                 </p>
               </div>

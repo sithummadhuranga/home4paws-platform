@@ -7,6 +7,7 @@ import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { useAuth } from '@/contexts/AuthContext';
 import { Order } from '@/types';
+import { useCart } from '@/contexts/CartContext';
 
 interface OrderReceiptProps {
   orderId: string;
@@ -30,6 +31,7 @@ export function OrderReceipt({ orderId, orderDate = new Date().toISOString() }: 
   const [order, setOrder] = useState<Order | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { token, user } = useAuth();
+  const { cartItems, orderSummary, shippingAddress } = useCart();
 
   // Convert USD to LKR
   const USD_TO_LKR = 300;
@@ -39,8 +41,8 @@ export function OrderReceipt({ orderId, orderDate = new Date().toISOString() }: 
     return new Intl.NumberFormat('si-LK', {
       style: 'currency',
       currency: 'LKR',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
     }).format(lkrAmount);
   };
 
