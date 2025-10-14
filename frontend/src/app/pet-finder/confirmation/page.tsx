@@ -1,17 +1,57 @@
 "use client"
 
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from 'next/link'
+import { useEffect } from 'react'
+import { submitPetReport } from './submit-handler'
 
 export default function ConfirmationPage() {
   const searchParams = useSearchParams()
+  const router = useRouter()
+
   // Extract photo data from URL parameters
   const photoCount = parseInt(searchParams.get('photoCount') || '0')
   const photoUrls = Array.from({ length: photoCount }, (_, i) => 
     searchParams.get(`photo${i + 1}`) || ''
   )
+  
+  useEffect(() => {
+    const reportType = searchParams.get('type')
+    if (!reportType || (reportType !== 'lost' && reportType !== 'found')) {
+      router.replace('/pet-finder')
+      return
+    }
+
+    const formData = {
+      petName: searchParams.get('petName') || '',
+      petType: searchParams.get('petType') || '',
+      breed: searchParams.get('breed') || '',
+      age: searchParams.get('age') || '',
+      gender: searchParams.get('gender') || '',
+      colorMarkings: searchParams.get('colorMarkings') || '',
+      dateLost: searchParams.get('dateLost') || '',
+      locationLost: searchParams.get('locationLost') || '',
+      lastSeenNotes: searchParams.get('lastSeenNotes') || '',
+      ownerName: searchParams.get('ownerName') || '',
+      phoneNumber: searchParams.get('phoneNumber') || '',
+      email: searchParams.get('email') || '',
+      photoUrls: photoUrls.filter(url => url !== ''),
+      reportType: reportType as 'lost' | 'found',
+      status: 'pending' as const
+    }
+
+    // Submit the report to temporary storage
+    const reportId = submitPetReport(formData)
+    
+    if (!searchParams.get('reportId')) {
+      // Append reportId to URL if not present
+      const newParams = new URLSearchParams(searchParams.toString())
+      newParams.set('reportId', reportId)
+      router.replace(`/pet-finder/confirmation?${newParams.toString()}`)
+    }
+  }, [searchParams, router, photoUrls])
 
   const formData = {
     petName: searchParams.get('petName') || '',
@@ -122,8 +162,9 @@ export default function ConfirmationPage() {
                 </div>
 
                 <div className="mt-6 text-center text-sm text-gray-500">
-                  <p>A confirmation email has been sent to {formData.email}</p>
+                  <p>You will receive a confirmation email once your report is reviewed</p>
                   <p className="mt-1">Reference ID: {searchParams.get('reportId') || 'Not available'}</p>
+                  <p className="mt-2">Status: <span className="font-medium">Pending Review</span></p>
                 </div>
               </div>
             </div>

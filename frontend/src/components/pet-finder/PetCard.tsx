@@ -2,8 +2,10 @@
 
 import Image from "next/image"
 import { StatusBadge } from "./StatusBadge"
+import { useRouter } from "next/navigation"
 
 interface PetCardProps {
+  id: number
   photo: string
   status: 'lost' | 'found'
   type: string
@@ -18,6 +20,7 @@ interface PetCardProps {
 }
 
 export function PetCard({ 
+  id,
   photo, 
   status, 
   type, 
@@ -30,8 +33,12 @@ export function PetCard({
   lastSeen,
   foundArea
 }: PetCardProps) {
+  const router = useRouter()
   return (
-    <div className="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 hover:shadow-lg transition-shadow duration-300">
+    <div 
+      onClick={() => router.push(`/pet-finder/card-info/${id}`)}
+      className="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 hover:shadow-lg transition-shadow duration-300 cursor-pointer"
+    >
       <div className="relative h-48 w-full bg-gray-100 dark:bg-gray-800">
         <Image
           src={photo}

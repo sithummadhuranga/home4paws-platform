@@ -1,5 +1,23 @@
 import { toast } from "sonner";
 
+interface PetReport {
+  petName: string;
+  petType: string;
+  breed: string;
+  age: string;
+  gender: string;
+  colorMarkings: string;
+  dateLost: string;
+  locationLost: string;
+  lastSeenNotes: string;
+  ownerName: string;
+  phoneNumber: string;
+  email: string;
+  photoUrls: string[];
+  reportType: 'lost' | 'found';
+  status: 'pending' | 'approved' | 'rejected';
+}
+
 interface LostPetFormData {
   petName: string;
   petType: string;
@@ -16,8 +34,61 @@ interface LostPetFormData {
   email: string;
 }
 
+const STORAGE_KEY = 'pet_reports';
+
+export function generateReportId(): string {
+  return `RPT${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+}
+
+export function submitPetReport(reportData: PetReport): string {
+  const reportId = generateReportId();
+  const reports = getPetReports();
+  
+  reports[reportId] = {
+    ...reportData,
+    submittedAt: new Date().toISOString()
+  };
+  
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(reports));
+  return reportId;
+}
+
+export function getPetReports(): Record<string, PetReport & { submittedAt: string }> {
+  const reportsJson = localStorage.getItem(STORAGE_KEY);
+  return reportsJson ? JSON.parse(reportsJson) : {};
+}
+
+export function getPetReport(reportId: string): (PetReport & { submittedAt: string }) | null {
+  const reports = getPetReports();
+  return reports[reportId] || null;
+}
+
+export function updateReportStatus(reportId: string, status: 'pending' | 'approved' | 'rejected'): boolean {
+  const reports = getPetReports();
+  
+  if (!reports[reportId]) {
+    return false;
+  }
+  
+  reports[reportId].status = status;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(reports));
+  return true;
+}
+
+export function deletePetReport(reportId: string): boolean {
+  const reports = getPetReports();
+  
+  if (!reports[reportId]) {
+    return false;
+  }
+  
+  delete reports[reportId];
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(reports));
+  return true;
+}
+
 // Function to handle form submission
-export async function handleSubmit(e: React.FormEvent, formData: LostPetFormData) {
+export async function handleSubmit(e: React.FormEvent, formData: LostPetFormData, reportType: 'lost' | 'found' = 'lost') {
   e.preventDefault();
   
   // Show loading toast
@@ -39,12 +110,8 @@ export async function handleSubmit(e: React.FormEvent, formData: LostPetFormData
       }
     }
 
-    // Create search parameters for navigation
-    const searchParams = new URLSearchParams();
-    
-    // Add all form data
-    const formEntries = {
-      reportId: `RPT${Date.now()}`,
+    // Create the report data
+    const reportData: PetReport = {
       petName: formData.petName,
       petType: formData.petType,
       breed: formData.breed || '',
@@ -57,26 +124,45 @@ export async function handleSubmit(e: React.FormEvent, formData: LostPetFormData
       ownerName: formData.ownerName,
       phoneNumber: formData.phoneNumber,
       email: formData.email,
-      photoCount: processedPhotos.length.toString()
+      photoUrls: processedPhotos,
+      reportType,
+      status: 'pending'
+    };
+
+    // Submit to storage and get report ID
+    const reportId = submitPetReport(reportData);
+
+    // Create search parameters for navigation
+    const searchParams = new URLSearchParams();
+    
+    // Add all form data
+    const formEntries = {
+      ...reportData,
+      reportId,
+      photoCount: processedPhotos.length.toString(),
+      type: reportType
     };
 
     // Add form data to search params
     Object.entries(formEntries).forEach(([key, value]) => {
-      searchParams.append(key, value);
-    });
-
-    // Add photos to search params
-    processedPhotos.forEach((photo, index) => {
-      searchParams.append(`photo${index + 1}`, photo);
+      if (Array.isArray(value)) {
+        value.forEach((item, index) => {
+          searchParams.append(`${key}${index + 1}`, item);
+        });
+      } else {
+        searchParams.append(key, value);
+      }
     });
 
     // Navigate to confirmation page
-    const url = `/pet-finder/report-lost/confirmation?${searchParams.toString()}`;
+    const url = `/pet-finder/confirmation?${searchParams.toString()}`;
     window.location.href = url;
 
   } catch (error) {
     console.error('Submission error:', error);
     toast.dismiss(loadingToast);
     toast.error('Failed to submit report. Please try again.');
+  } finally {
+    toast.dismiss(loadingToast);
   }
 }
