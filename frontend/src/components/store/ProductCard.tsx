@@ -14,6 +14,19 @@ interface ProductCardProps {
   product: Product;
 }
 
+// ✅ LKR conversion helper
+const USD_TO_LKR = 300;
+
+const formatLKR = (amount: number) => {
+  const lkrAmount = amount * USD_TO_LKR;
+  return new Intl.NumberFormat('si-LK', {
+    style: 'currency',
+    currency: 'LKR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(lkrAmount);
+};
+
 export function ProductCard({ product }: ProductCardProps) {
   const [imageError, setImageError] = useState(false);
   const [isWishlisted, setIsWishlisted] = useState(false);
@@ -141,22 +154,20 @@ export function ProductCard({ product }: ProductCardProps) {
               variant="secondary"
               className="text-xs font-medium bg-purple-900/30 text-purple-200 rounded-lg border border-purple-400/30"
             >
-              {product.categoryName || "Uncategorized"}
+              {product.categoryName}
             </Badge>
 
             <div className="flex items-center gap-1">
-              <div className="flex items-center">
-                {[...Array(5)].map((_, i) => (
-                  <Star
-                    key={i}
-                    className={`w-3.5 h-3.5 ${
-                      i < 4
-                        ? "fill-yellow-400 text-yellow-400"
-                        : "fill-gray-200 dark:fill-gray-600 text-gray-200 dark:text-gray-600"
-                    }`}
-                  />
-                ))}
-              </div>
+              {[...Array(5)].map((_, i) => (
+                <Star
+                  key={i}
+                  className={`w-3 h-3 ${
+                    i < 4
+                      ? "fill-yellow-400 text-yellow-400"
+                      : "fill-gray-200 dark:fill-gray-600 text-gray-200 dark:text-gray-600"
+                  }`}
+                />
+              ))}
               <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">
                 (4.0)
               </span>
@@ -173,12 +184,12 @@ export function ProductCard({ product }: ProductCardProps) {
             {product.description || "Premium quality product for your beloved pet"}
           </p>
 
-          {/* Price */}
+          {/* Price - ✅ NOW IN LKR */}
           <div className="flex items-center justify-between pt-2 border-t border-purple-400/20">
             <div>
               <div className="flex items-baseline gap-2 mb-1">
                 <span className="text-2xl font-bold text-purple-200 font-urbanist">
-                  ${product.price?.toFixed(2) || "0.00"}
+                  {formatLKR(product.price)}
                 </span>
               </div>
               <p

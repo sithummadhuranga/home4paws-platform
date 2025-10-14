@@ -91,7 +91,7 @@ namespace Home4Paws.API.DataManager
                 await connection.OpenAsync();
 
                 var rowsAffected = await connection.ExecuteAsync(
-                    AuthQueries.UpdateLastLogin(),
+                    "UPDATE users SET last_login_at = @LastLoginAt, updated_at = @UpdatedAt WHERE id = @UserId",
                     new { UserId = userId, LastLoginAt = lastLoginAt, UpdatedAt = DateTime.UtcNow });
 
                 return rowsAffected > 0;
@@ -99,7 +99,7 @@ namespace Home4Paws.API.DataManager
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error updating last login for user: {UserId}", userId);
-                throw;
+                return false;
             }
         }
 

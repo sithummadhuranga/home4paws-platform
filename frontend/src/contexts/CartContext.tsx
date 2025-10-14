@@ -1,8 +1,10 @@
 "use client";
 
-import { createContext, useContext, useReducer, useEffect } from 'react';
+import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { Product } from '@/types';
 import { toast } from 'sonner';
+import { useAuth } from './AuthContext';
+import { createOrder } from '@/services/orderService';
 
 export interface CartItem extends Product {
   quantity: number;
@@ -63,7 +65,7 @@ type CartAction =
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'CALCULATE_TOTALS' };
 
-const TAX_RATE = 0.08; // 8% tax
+const TAX_RATE = 0.15; // 15% VAT for Sri Lanka
 const FREE_SHIPPING_THRESHOLD = 50;
 const SHIPPING_COST = 4.99;
 
@@ -89,74 +91,114 @@ function cartReducer(state: CartState, action: CartAction): CartState {
     case 'ADD_ITEM': {
       const existingItem = state.items.find(item => item.id === action.payload.product.id);
       
-      let newItems: CartItem[];
+      let newItems;
       if (existingItem) {
         newItems = state.items.map(item =>
           item.id === action.payload.product.id
-            ? { ...item, quantity: Math.min(item.quantity + action.payload.quantity, item.stockQuantity) }
+            ? { ...item, quantity: item.quantity + action.payload.quantity }
             : item
         );
       } else {
         newItems = [...state.items, {
           ...action.payload.product,
-          quantity: Math.min(action.payload.quantity, action.payload.product.stockQuantity),
+          quantity: action.payload.quantity,
           addedAt: new Date()
         }];
       }
       
-      const orderSummary = calculateOrderSummary(newItems, state.promoCode);
-      return { ...state, items: newItems, orderSummary };
+      const newOrderSummary = calculateOrderSummary(newItems, state.promoCode);
+      
+      return {
+        ...state,
+        items: newItems,
+        orderSummary: newOrderSummary
+      };
     }
     
     case 'REMOVE_ITEM': {
       const newItems = state.items.filter(item => item.id !== action.payload.id);
-      const orderSummary = calculateOrderSummary(newItems, state.promoCode);
-      return { ...state, items: newItems, orderSummary };
+      const newOrderSummary = calculateOrderSummary(newItems, state.promoCode);
+      
+      return {
+        ...state,
+        items: newItems,
+        orderSummary: newOrderSummary
+      };
     }
     
     case 'UPDATE_QUANTITY': {
       const newItems = state.items.map(item =>
         item.id === action.payload.id
-          ? { ...item, quantity: Math.max(1, Math.min(action.payload.quantity, item.stockQuantity)) }
+          ? { ...item, quantity: Math.max(0, action.payload.quantity) }
           : item
-      );
-      const orderSummary = calculateOrderSummary(newItems, state.promoCode);
-      return { ...state, items: newItems, orderSummary };
+      ).filter(item => item.quantity > 0);
+      
+      const newOrderSummary = calculateOrderSummary(newItems, state.promoCode);
+      
+      return {
+        ...state,
+        items: newItems,
+        orderSummary: newOrderSummary
+      };
     }
     
-    case 'CLEAR_CART':
+    case 'CLEAR_CART': {
       return {
         ...state,
         items: [],
-        orderSummary: calculateOrderSummary([], null),
+        orderSummary: { subtotal: 0, shipping: 0, tax: 0, discount: 0, total: 0 },
         promoCode: null
       };
+    }
     
     case 'SET_SHIPPING_ADDRESS':
-      return { ...state, shippingAddress: action.payload };
-    
+      return {
+        ...state,
+        shippingAddress: action.payload
+      };
+      
     case 'SET_BILLING_ADDRESS':
-      return { ...state, billingAddress: action.payload };
-    
+      return {
+        ...state,
+        billingAddress: action.payload
+      };
+      
     case 'SET_PAYMENT_METHOD':
-      return { ...state, paymentMethod: action.payload };
-    
+      return {
+        ...state,
+        paymentMethod: action.payload
+      };
+      
     case 'APPLY_PROMO_CODE': {
-      const orderSummary = calculateOrderSummary(state.items, action.payload);
-      return { ...state, promoCode: action.payload, orderSummary };
+      const newOrderSummary = calculateOrderSummary(state.items, action.payload);
+      return {
+        ...state,
+        promoCode: action.payload,
+        orderSummary: newOrderSummary
+      };
     }
     
     case 'REMOVE_PROMO_CODE': {
-      const orderSummary = calculateOrderSummary(state.items, null);
-      return { ...state, promoCode: null, orderSummary };
+      const newOrderSummary = calculateOrderSummary(state.items, null);
+      return {
+        ...state,
+        promoCode: null,
+        orderSummary: newOrderSummary
+      };
     }
     
     case 'SET_LOADING':
-      return { ...state, isLoading: action.payload };
-    
+      return {
+        ...state,
+        isLoading: action.payload
+      };
+      
     case 'CALCULATE_TOTALS': {
-      const orderSummary = calculateOrderSummary(state.items, state.promoCode);
-      return { ...state, orderSummary };
+      const newOrderSummary = calculateOrderSummary(state.items, state.promoCode);
+      return {
+        ...state,
+        orderSummary: newOrderSummary
+      };
     }
     
     default:
@@ -184,115 +226,202 @@ interface CartContextType extends CartState {
   setPaymentMethod: (method: PaymentMethod) => void;
   applyPromoCode: (code: string) => void;
   removePromoCode: () => void;
+  processOrder: () => Promise<string>; // Returns order ID
   cartCount: number;
   cartTotal: number;
   cartItems: CartItem[];
-  isInCart: (productId: number) => boolean; // Add this line
-  getCartItemQuantity: (productId: number) => number; // Add this line too
+  isInCart: (productId: number) => boolean;
+  getCartItemQuantity: (productId: number) => number;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(cartReducer, initialState);
+  const { token, user } = useAuth();
 
   // Load cart from localStorage on mount
   useEffect(() => {
-    const savedCart = localStorage.getItem('cart');
-    if (savedCart) {
-      try {
-        const parsedCart = JSON.parse(savedCart);
-        parsedCart.items.forEach((item: CartItem) => {
-          dispatch({ type: 'ADD_ITEM', payload: { product: item, quantity: item.quantity } });
-        });
-      } catch (error) {
-        console.error('Error loading cart from localStorage:', error);
+    if (typeof window !== 'undefined') {
+      const savedCart = localStorage.getItem('cart');
+      if (savedCart) {
+        try {
+          const parsedCart = JSON.parse(savedCart);
+          if (Array.isArray(parsedCart.items)) {
+            parsedCart.items.forEach((item: any) => {
+              dispatch({ 
+                type: 'ADD_ITEM', 
+                payload: { 
+                  product: item, 
+                  quantity: item.quantity 
+                }
+              });
+            });
+          }
+        } catch (error) {
+          console.error('❌ Error loading cart from localStorage:', error);
+        }
       }
     }
   }, []);
 
   // Save cart to localStorage whenever it changes
   useEffect(() => {
-    localStorage.setItem('cart', JSON.stringify({ items: state.items }));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('cart', JSON.stringify({ items: state.items }));
+    }
   }, [state.items]);
 
   const addToCart = (product: Product, quantity = 1) => {
+    console.log('🛒 Adding to cart:', product.name, 'x', quantity);
     dispatch({ type: 'ADD_ITEM', payload: { product, quantity } });
-    toast.success(`${product.name} added to cart!`, {
-      description: `Quantity: ${quantity}`,
-    });
+    toast.success(`Added ${product.name} to cart! 🛒`);
   };
 
   const removeFromCart = (id: number) => {
-    const item = state.items.find(item => item.id === id);
+    console.log('🗑️ Removing from cart:', id);
     dispatch({ type: 'REMOVE_ITEM', payload: { id } });
-    if (item) {
-      toast.success(`${item.name} removed from cart`);
-    }
+    toast.success('Item removed from cart');
   };
 
   const updateQuantity = (id: number, quantity: number) => {
+    console.log('📝 Updating quantity:', id, 'to', quantity);
     dispatch({ type: 'UPDATE_QUANTITY', payload: { id, quantity } });
   };
 
   const clearCart = () => {
+    console.log('🧹 Clearing cart');
     dispatch({ type: 'CLEAR_CART' });
-    toast.success('Cart cleared');
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('cart');
+    }
   };
 
   const setShippingAddress = (address: ShippingAddress) => {
+    console.log('🚚 Setting shipping address');
     dispatch({ type: 'SET_SHIPPING_ADDRESS', payload: address });
   };
 
   const setBillingAddress = (address: ShippingAddress) => {
+    console.log('💳 Setting billing address');
     dispatch({ type: 'SET_BILLING_ADDRESS', payload: address });
   };
 
   const setPaymentMethod = (method: PaymentMethod) => {
+    console.log('💰 Setting payment method:', method.type);
     dispatch({ type: 'SET_PAYMENT_METHOD', payload: method });
   };
 
   const applyPromoCode = (code: string) => {
+    console.log('🎫 Applying promo code:', code);
     dispatch({ type: 'APPLY_PROMO_CODE', payload: code });
     toast.success(`Promo code "${code}" applied!`);
   };
 
   const removePromoCode = () => {
+    console.log('❌ Removing promo code');
     dispatch({ type: 'REMOVE_PROMO_CODE' });
     toast.success('Promo code removed');
   };
 
-  // Add these new functions
+  const processOrder = async (): Promise<string> => {
+    if (!token) {
+      throw new Error('Please log in to place an order');
+    }
+
+    if (!state.shippingAddress || !state.paymentMethod) {
+      throw new Error('Please complete shipping and payment information');
+    }
+
+    dispatch({ type: 'SET_LOADING', payload: true });
+
+    try {
+      console.log('🛍️ Processing order...');
+
+      // Prepare order data for API
+      const orderData = {
+        shippingAddress: `${state.shippingAddress.address}${state.shippingAddress.apartment ? ', ' + state.shippingAddress.apartment : ''}, ${state.shippingAddress.city}, ${state.shippingAddress.state} ${state.shippingAddress.zipCode}, ${state.shippingAddress.country}`,
+        billingAddress: state.billingAddress ? 
+          `${state.billingAddress.address}${state.billingAddress.apartment ? ', ' + state.billingAddress.apartment : ''}, ${state.billingAddress.city}, ${state.billingAddress.state} ${state.billingAddress.zipCode}, ${state.billingAddress.country}` :
+          `${state.shippingAddress.address}${state.shippingAddress.apartment ? ', ' + state.shippingAddress.apartment : ''}, ${state.shippingAddress.city}, ${state.shippingAddress.state} ${state.shippingAddress.zipCode}, ${state.shippingAddress.country}`,
+        paymentMethod: state.paymentMethod.type === 'card' 
+          ? `Card ending in ${state.paymentMethod.last4}` 
+          : state.paymentMethod.type.replace('_', ' ').toUpperCase(),
+        orderItems: state.items.map(item => ({
+          productId: item.id,
+          quantity: item.quantity,
+          unitPrice: item.price
+        }))
+      };
+
+      console.log('📦 Order data:', orderData);
+
+      // Call backend API to create order
+      const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5185/api';
+      const response = await fetch(`${API_BASE_URL}/orders`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(orderData)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('❌ Order creation failed:', errorData);
+        throw new Error(errorData.message || 'Failed to create order');
+      }
+
+      const orderResult = await response.json();
+      console.log('✅ Order created successfully:', orderResult);
+
+      // Clear cart after successful order
+      dispatch({ type: 'CLEAR_CART' });
+
+      // Return order ID
+      return orderResult.id?.toString() || `ORD-${Date.now()}`;
+    } catch (error) {
+      console.error('💥 Error processing order:', error);
+      throw error;
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
+    }
+  };
+
   const isInCart = (productId: number): boolean => {
     return state.items.some(item => item.id === productId);
   };
 
   const getCartItemQuantity = (productId: number): number => {
     const item = state.items.find(item => item.id === productId);
-    return item ? item.quantity : 0;
+    return item?.quantity || 0;
   };
 
   const cartCount = state.items.reduce((total, item) => total + item.quantity, 0);
   const cartTotal = state.orderSummary.subtotal;
 
   return (
-    <CartContext.Provider value={{
-      ...state,
-      addToCart,
-      removeFromCart,
-      updateQuantity,
-      clearCart,
-      setShippingAddress,
-      setBillingAddress,
-      setPaymentMethod,
-      applyPromoCode,
-      removePromoCode,
-      cartCount,
-      cartTotal,
-      cartItems: state.items,
-      isInCart, // Add this
-      getCartItemQuantity, // Add this
-    }}>
+    <CartContext.Provider
+      value={{
+        ...state,
+        addToCart,
+        removeFromCart,
+        updateQuantity,
+        clearCart,
+        setShippingAddress,
+        setBillingAddress,
+        setPaymentMethod,
+        applyPromoCode,
+        removePromoCode,
+        processOrder,
+        cartCount,
+        cartTotal,
+        cartItems: state.items,
+        isInCart,
+        getCartItemQuantity,
+      }}
+    >
       {children}
     </CartContext.Provider>
   );

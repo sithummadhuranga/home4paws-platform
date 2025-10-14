@@ -3,7 +3,8 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import Link from 'next/link';
-import { CheckCircle, Package, Truck, CreditCard, Download } from 'lucide-react';
+import { CheckCircle, Package, Truck } from 'lucide-react';
+import { OrderReceipt } from './OrderReceipt';
 
 interface OrderConfirmationProps {
   orderId: string;
@@ -43,12 +44,10 @@ export function OrderConfirmation({ orderId }: OrderConfirmationProps) {
               </div>
               <div className="text-left flex-1">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="font-semibold text-gray-900 dark:text-white">Order Confirmed</p>
-                  <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-2 py-1 rounded-full font-medium">
-                    Completed
-                  </span>
+                  <p className="font-semibold text-purple-200 font-urbanist">Order Confirmed</p>
+                  <span className="text-xs px-2 py-1 bg-green-900/30 text-green-300 rounded-full font-inter">Completed</span>
                 </div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm text-purple-300 font-inter">
                   We've received your order and payment confirmation
                 </p>
               </div>
@@ -60,12 +59,10 @@ export function OrderConfirmation({ orderId }: OrderConfirmationProps) {
               </div>
               <div className="text-left flex-1">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="font-semibold text-gray-900 dark:text-white">Processing</p>
-                  <span className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-1 rounded-full font-medium">
-                    In Progress
-                  </span>
+                  <p className="font-semibold text-purple-200 font-urbanist">Processing</p>
+                  <span className="text-xs px-2 py-1 bg-blue-900/30 text-blue-300 rounded-full font-inter">In Progress</span>
                 </div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm text-purple-300 font-inter">
                   We're carefully preparing your items for shipment
                 </p>
               </div>
@@ -77,12 +74,10 @@ export function OrderConfirmation({ orderId }: OrderConfirmationProps) {
               </div>
               <div className="text-left flex-1">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="font-semibold text-gray-900 dark:text-white">Shipped</p>
-                  <span className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-2 py-1 rounded-full font-medium">
-                    Pending
-                  </span>
+                  <p className="font-semibold text-purple-200 font-urbanist">Delivery</p>
+                  <span className="text-xs px-2 py-1 bg-purple-900/30 text-purple-300 rounded-full font-inter">Upcoming</span>
                 </div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm text-purple-300 font-inter">
                   Your order will be shipped within 2-3 business days
                 </p>
               </div>
@@ -100,11 +95,15 @@ export function OrderConfirmation({ orderId }: OrderConfirmationProps) {
             </Link>
           </Button>
           
-          <Button variant="outline" size="lg" className="h-12 rounded-xl border-2 border-purple-400/30 hover:bg-purple-500/10 transition-all duration-200 text-purple-200 hover:text-purple-300 font-urbanist">
-            <Download className="w-4 h-4 mr-2" />
-            Download Receipt
-          </Button>
+          {/* ✅ Use the new OrderReceipt component */}
+          <OrderReceipt orderId={orderId} />
         </div>
+
+        <Button asChild variant="ghost" size="sm" className="text-purple-300 hover:text-purple-200 font-inter">
+          <Link href="/profile">
+            View Order History
+          </Link>
+        </Button>
       </div>
     </div>
   );

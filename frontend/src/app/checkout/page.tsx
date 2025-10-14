@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
@@ -15,6 +15,7 @@ import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Shield, Clock, Award, Heart } from 'lucide-react';
 import Link from 'next/link';
+import { toast } from 'sonner'; // ✅ Changed from 'react-toastify' to 'sonner'
 
 const checkoutSteps = [
   { id: 1, name: 'Shipping', description: 'Delivery details' },
@@ -26,21 +27,29 @@ export default function CheckoutPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderId, setOrderId] = useState<string | null>(null);
-  const { cartItems, cartCount, clearCart } = useCart();
-  const { isAuthenticated } = useAuth();
+  const [isClient, setIsClient] = useState(false);
+  const { cartItems, cartCount, clearCart, processOrder } = useCart();
+  const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
 
-  // Redirect if not authenticated
-  if (!isAuthenticated) {
-    router.push('/auth/login?redirect=/checkout');
-    return null;
-  }
+  // Ensure this only runs on the client
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
-  // Redirect if cart is empty (unless order is completed)
-  if (cartCount === 0 && !orderId) {
-    router.push('/cart');
-    return null;
-  }
+  // Handle authentication redirect
+  useEffect(() => {
+    if (isClient && !isLoading && !isAuthenticated) {
+      router.push('/auth/login?redirect=/checkout');
+    }
+  }, [isClient, isAuthenticated, isLoading, router]);
+
+  // Handle empty cart redirect
+  useEffect(() => {
+    if (isClient && !isLoading && isAuthenticated && cartCount === 0 && !orderId) {
+      router.push('/cart');
+    }
+  }, [isClient, isAuthenticated, isLoading, cartCount, orderId, router]);
 
   const handleStepComplete = () => {
     if (currentStep < 3) {
@@ -58,24 +67,46 @@ export default function CheckoutPage() {
     setIsProcessing(true);
     
     try {
-      // Simulate order processing
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      console.log('🛍️ Confirming order...');
       
-      // Generate order ID
-      const newOrderId = `ORD-${Date.now()}`;
+      // Call the processOrder function which now calls the backend
+      const newOrderId = await processOrder();
+      
+      console.log('✅ Order confirmed with ID:', newOrderId);
       setOrderId(newOrderId);
       
-      // Clear cart
-      clearCart();
-      
-      // Reset to confirmation view
+      // Move to confirmation view
       setCurrentStep(4);
+      
+      toast.success('🎉 Order placed successfully!');
     } catch (error) {
-      console.error('Error processing order:', error);
+      console.error('💥 Error processing order:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to place order');
     } finally {
       setIsProcessing(false);
     }
   };
+
+  // Show loading while checking authentication
+  if (!isClient || isLoading) {
+    return (
+      <>
+        <Header />
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-8 h-8 border-2 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+            <p className="text-gray-600 dark:text-gray-400">Loading checkout...</p>
+          </div>
+        </div>
+        <Footer />
+      </>
+    );
+  }
+
+  // Return null while redirecting
+  if (!isAuthenticated || (cartCount === 0 && !orderId)) {
+    return null;
+  }
 
   // Show order confirmation
   if (currentStep === 4 && orderId) {

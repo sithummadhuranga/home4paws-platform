@@ -33,41 +33,63 @@ export default function SignupPage() {
     { text: "Number", met: /\d/.test(formData.password) }
   ]
 
-  const isPasswordValid = passwordRequirements.every(req => req.met)
+  const isPasswordValid = passwordRequirements.every(req => req.met) && formData.password.length > 0
   const passwordsMatch = formData.password === formData.confirmPassword && formData.confirmPassword.length > 0
-  const isFormValid = isPasswordValid && passwordsMatch && formData.agreeToTerms
+  const isFormValid = formData.firstName.trim() && 
+                     formData.lastName.trim() && 
+                     formData.email.trim() && 
+                     isPasswordValid && 
+                     passwordsMatch && 
+                     formData.agreeToTerms
 
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
 
-    if (!isPasswordValid) {
-      setError("Please ensure your password meets all requirements.")
+    // Client-side validation
+    if (!formData.firstName.trim()) {
+      setError("First name is required")
       return
     }
-
+    if (!formData.lastName.trim()) {
+      setError("Last name is required")
+      return
+    }
+    if (!formData.email.trim()) {
+      setError("Email is required")
+      return
+    }
+    if (!isPasswordValid) {
+      setError("Please ensure your password meets all requirements")
+      return
+    }
     if (!passwordsMatch) {
-      setError("Passwords do not match.")
+      setError("Passwords do not match")
+      return
+    }
+    if (!formData.agreeToTerms) {
+      setError("You must agree to the terms and conditions")
       return
     }
 
     try {
       const result = await signup({
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        email: formData.email.trim().toLowerCase(),
         password: formData.password,
         confirmPassword: formData.confirmPassword,
         agreeToTerms: formData.agreeToTerms
       })
       
       if (result.success) {
+        // Success - redirect to home
         router.push("/")
-        router.refresh()
       } else {
         setError(result.message)
       }
-    } catch {
+    } catch (error) {
+      console.error('Signup error:', error)
       setError("An unexpected error occurred. Please try again.")
     }
   }, [formData, signup, router, isPasswordValid, passwordsMatch])
@@ -78,7 +100,10 @@ export default function SignupPage() {
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }))
-  }, [])
+    
+    // Clear error when user starts typing
+    if (error) setError("")
+  }, [error])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-neutral-900 to-purple-900/10 flex">
@@ -108,7 +133,7 @@ export default function SignupPage() {
 
               {/* Error Alert */}
               {error && (
-                <Alert className="mb-6 border-red-300/20 bg-red-900/10 animate-fadeIn">
+                <Alert className="mb-6 border-red-300/20 bg-red-900/20 animate-in fade-in-0 slide-in-from-top-1 duration-300">
                   <AlertDescription className="text-red-300 font-medium">
                     {error}
                   </AlertDescription>
@@ -193,6 +218,7 @@ export default function SignupPage() {
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-4 top-1/2 transform -translate-y-1/2 text-purple-400 hover:text-purple-300 transition-colors duration-200"
                       disabled={isLoading}
+                      tabIndex={-1}
                     >
                       {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
@@ -234,6 +260,7 @@ export default function SignupPage() {
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                       className="absolute right-4 top-1/2 transform -translate-y-1/2 text-purple-400 hover:text-purple-300 transition-colors duration-200"
                       disabled={isLoading}
+                      tabIndex={-1}
                     >
                       {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
@@ -282,12 +309,12 @@ export default function SignupPage() {
                 <Button 
                   type="submit" 
                   disabled={isLoading || !isFormValid}
-                  className="w-full h-14 bg-gradient-to-r from-purple-600 via-purple-500 to-purple-400 hover:from-purple-700 hover:via-purple-600 hover:to-purple-500 text-white font-bold text-lg shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 rounded-[32px] disabled:opacity-50 disabled:cursor-not-allowed animate-fadeInUp stagger-5 font-inter"
+                  className="w-full h-14 bg-gradient-to-r from-purple-600 via-purple-500 to-purple-400 hover:from-purple-700 hover:via-purple-600 hover:to-purple-500 text-white font-bold text-lg shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300 rounded-[32px] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 animate-fadeInUp stagger-5 font-inter"
                 >
                   {isLoading ? (
                     <div className="flex items-center justify-center">
                       <Loader2 className="w-5 h-5 animate-spin mr-3" />
-                      Creating magic...
+                      Creating your account...
                     </div>
                   ) : (
                     <div className="flex items-center justify-center">
@@ -303,7 +330,7 @@ export default function SignupPage() {
               <div className="text-center mt-8 pt-6 border-t border-purple-400/20 animate-fadeIn">
                 <p className="text-purple-300 font-medium font-inter">
                   Already have an account?{" "}
-                  <Link href="/auth/login" className="text-purple-400 hover:text-purple-300 font-bold transition-colors duration-200">
+                  <Link href="/auth/login" className="text-purple-400 hover:text-purple-300 font-bold transition-colors duration-200 hover:underline">
                     Sign in here →
                   </Link>
                 </p>
@@ -313,21 +340,28 @@ export default function SignupPage() {
         </div>
       </div>
 
-      {/* Right Side - Fixed Image Display */}
-      <div className="hidden lg:flex lg:w-1/2 items-center justify-center bg-black">
-        <div className="relative w-full h-screen max-h-screen">
-          <Image
-            src="/images/auth/signup-background.svg" // Changed from .svg to .jpg for your custom image
-            alt="Happy pets and families"
-            fill
-            sizes="50vw"
-            className="object-contain object-center"
-            priority
-            style={{
-              objectFit: 'contain',
-              objectPosition: 'center center'
-            }}
-          />
+      {/* Right Side - Background */}
+      <div className="hidden lg:flex lg:w-1/2 relative min-h-screen">
+        <div className="relative w-full h-full bg-gradient-to-br from-purple-900/20 to-blue-900/20">
+          {/* Fallback gradient background */}
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-600/10 via-blue-600/10 to-indigo-600/10" />
+          
+          {/* Content overlay */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="text-center text-white/80 max-w-md px-8">
+              <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center">
+                <Crown className="w-12 h-12 text-white" />
+              </div>
+              <h2 className="text-3xl font-bold mb-4">Join Our Community</h2>
+              <p className="text-lg text-white/70">
+                Start your journey to find the perfect pet companion and become part of our loving community
+              </p>
+            </div>
+          </div>
+          
+          {/* Decorative elements */}
+          <div className="absolute top-20 left-20 w-32 h-32 bg-purple-500/10 rounded-full blur-xl" />
+          <div className="absolute bottom-20 right-20 w-40 h-40 bg-blue-500/10 rounded-full blur-xl" />
         </div>
       </div>
     </div>

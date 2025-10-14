@@ -72,3 +72,36 @@ export interface CreateUpdateAddressDto {
   country: string;
   isDefault: boolean;
 }
+
+// Order related types
+export interface OrderItem {
+  id: number;
+  productId: number;
+  productName: string;
+  productImageUrl: string;
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+}
+
+export interface Order {
+  id: number;
+  userId: number;
+  orderDate: string;
+  status: string;
+  totalAmount: number;
+  shippingAddress: string;
+  billingAddress: string;
+  paymentMethod: string;
+  createdAt: string;
+  updatedAt: string;
+  orderItems: OrderItem[];
+}
+
+export interface UserStats {
+  totalOrders: number;
+  totalSpent: number;
+  averageOrderValue: number;
+  favoriteProducts: number;
+  memberSince: string;
+}

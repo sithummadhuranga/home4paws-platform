@@ -273,6 +273,49 @@ export function ShippingForm({ onComplete }: ShippingFormProps) {
     await trigger('district');
   };
 
+  // ✅ NEW: Handler for using selected address
+  const handleUseSelectedAddress = async () => {
+    if (!selectedAddressId) return;
+    
+    setIsSubmitting(true);
+    try {
+      const selectedAddress = savedAddresses.find(a => a.id === selectedAddressId);
+      if (!selectedAddress) {
+        toast.error('Please select an address');
+        return;
+      }
+
+      const mappedShippingData: ShippingAddress = {
+        firstName: selectedAddress.firstName,
+        lastName: selectedAddress.lastName,
+        email: selectedAddress.email,
+        phone: selectedAddress.phone,
+        address: selectedAddress.address,
+        apartment: selectedAddress.apartment,
+        city: selectedAddress.city,
+        state: selectedAddress.province,
+        zipCode: selectedAddress.postalCode,
+        country: selectedAddress.country,
+        district: selectedAddress.district,
+      } as ShippingAddress & { district: string };
+      
+      setShippingAddress(mappedShippingData);
+      
+      if (billingAddressSame) {
+        setBillingAddress(mappedShippingData);
+      }
+
+      toast.success('Address selected successfully');
+      await new Promise(resolve => setTimeout(resolve, 500));
+      onComplete();
+    } catch (error) {
+      console.error('Error using selected address:', error);
+      toast.error('Failed to use selected address');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   if (isLoadingAddresses) {
     return (
       <div className="flex items-center justify-center p-12">
@@ -381,6 +424,29 @@ export function ShippingForm({ onComplete }: ShippingFormProps) {
               </Card>
             ))}
           </div>
+
+          {/* ✅ NEW: Continue button when address is selected */}
+          {selectedAddressId && (
+            <div className="flex justify-end pt-6">
+              <Button 
+                onClick={handleUseSelectedAddress}
+                disabled={isSubmitting}
+                className="px-8 py-4 text-lg rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+              >
+                {isSubmitting ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Processing...</span>
+                  </div>
+                ) : (
+                  <>
+                    Continue to Payment
+                    <Check className="w-5 h-5 ml-2" />
+                  </>
+                )}
+              </Button>
+            </div>
+          )}
         </div>
       )}
 
@@ -414,6 +480,7 @@ export function ShippingForm({ onComplete }: ShippingFormProps) {
               <Input
                 id="firstName"
                 {...register('firstName')}
+                placeholder="John"
                 className={cn(
                   "h-12 rounded-xl border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 transition-all duration-200",
                   errors.firstName ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'
@@ -431,6 +498,7 @@ export function ShippingForm({ onComplete }: ShippingFormProps) {
               <Input
                 id="lastName"
                 {...register('lastName')}
+                placeholder="Doe"
                 className={cn(
                   "h-12 rounded-xl border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 transition-all duration-200",
                   errors.lastName ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'
@@ -444,25 +512,6 @@ export function ShippingForm({ onComplete }: ShippingFormProps) {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <Label htmlFor="phone" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Mobile Number *
-              </Label>
-              <Input
-                id="phone"
-                type="tel"
-                {...register('phone')}
-                placeholder="077 123 4567"
-                className={cn(
-                  "h-12 rounded-xl border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 transition-all duration-200",
-                  errors.phone ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'
-                )}
-              />
-              {errors.phone && (
-                <p className="text-sm text-red-600 dark:text-red-400 mt-1">{errors.phone.message}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
               <Label htmlFor="email" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Email Address *
               </Label>
@@ -470,6 +519,7 @@ export function ShippingForm({ onComplete }: ShippingFormProps) {
                 id="email"
                 type="email"
                 {...register('email')}
+                placeholder="john@example.com"
                 className={cn(
                   "h-12 rounded-xl border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 transition-all duration-200",
                   errors.email ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'
@@ -477,6 +527,25 @@ export function ShippingForm({ onComplete }: ShippingFormProps) {
               />
               {errors.email && (
                 <p className="text-sm text-red-600 dark:text-red-400 mt-1">{errors.email.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="phone" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Phone Number *
+              </Label>
+              <Input
+                id="phone"
+                type="tel"
+                {...register('phone')}
+                placeholder="0771234567"
+                className={cn(
+                  "h-12 rounded-xl border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 transition-all duration-200",
+                  errors.phone ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'focus:border-blue-500 focus:ring-blue-500'
+                )}
+              />
+              {errors.phone && (
+                <p className="text-sm text-red-600 dark:text-red-400 mt-1">{errors.phone.message}</p>
               )}
             </div>
           </div>
