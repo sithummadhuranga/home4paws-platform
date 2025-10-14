@@ -81,8 +81,27 @@ export default function PetFinderPage() {
   }, [])
 
   return (
-    <main className="container mx-auto px-4 py-8">
-      {/* Header with navigation buttons */}
+    <div className="min-h-screen relative">
+      {/* Fixed background */}
+      <div 
+        className="fixed inset-0 z-0"
+        style={{
+          backgroundImage: 'url("https://images.unsplash.com/photo-1450778869180-41d0601e046e?auto=format&fit=crop&q=80")',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+          backgroundAttachment: 'fixed',
+          filter: 'blur(3px)',
+          transform: 'scale(1.1)'
+        }}
+      />
+
+      {/* Dark overlay for better readability */}
+      <div className="fixed inset-0 bg-black/40 z-[1]" />
+
+      {/* Main content */}
+      <main className="relative z-10 container mx-auto px-4 py-8">
+        {/* Header with navigation buttons */}
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Pet Finder</h1>
         <div className="space-x-4">
@@ -146,5 +165,6 @@ export default function PetFinderPage() {
         </div>
       </div>
     </main>
+    </div>
   )
 }
