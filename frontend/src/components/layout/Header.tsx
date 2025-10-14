@@ -29,7 +29,7 @@ interface UserData {
   lastLoginAt?: string
 }
 
-// Navigation item with pill-shaped design
+// Navigation item with pill-shaped design and updated font
 const NavItem = memo(({ href, children, className = "", onClick }: {
   href: string
   children: React.ReactNode
@@ -47,8 +47,8 @@ const NavItem = memo(({ href, children, className = "", onClick }: {
       className={`
         inline-block rounded-full px-4 py-2
         ${isActive 
-          ? "bg-purple-500/20 text-purple-300 font-medium" 
-          : "text-purple-200 hover:bg-purple-500/10 hover:text-purple-300"
+          ? "bg-purple-500/20 text-purple-300 font-semibold" 
+          : "text-purple-200 hover:bg-purple-500/10 hover:text-purple-300 font-medium"
         }
         transition-all duration-200 text-sm font-urbanist
         ${className}
@@ -151,7 +151,7 @@ export default function Header() {
             <div className="flex-1 flex justify-start">
               <Link href="/" className="inline-block">
                 <span className="text-lg sm:text-xl font-bold text-purple-200 font-urbanist">
-                  Home4Paws
+                  Home<span className="text-pink-500">4</span>Paws
                 </span>
               </Link>
             </div>
@@ -206,18 +206,18 @@ export default function Header() {
                           <DropdownMenuLabel>
                             <div>
                               <p className="font-semibold text-purple-200 font-urbanist">{user.firstName} {user.lastName}</p>
-                              <p className="text-xs text-purple-300 truncate">{user.email}</p>
+                              <p className="text-xs text-purple-300 truncate font-inter">{user.email}</p>
                             </div>
                           </DropdownMenuLabel>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem className="cursor-pointer hover:bg-purple-900/20 text-purple-200">
+                          <DropdownMenuItem className="cursor-pointer hover:bg-purple-900/20 text-purple-200 font-inter">
                             <User className="w-4 h-4 mr-3 text-purple-300" />
                             Profile Settings
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem 
                             onClick={handleLogout} 
-                            className="text-red-400 cursor-pointer hover:bg-red-900/20"
+                            className="text-red-400 cursor-pointer hover:bg-red-900/20 font-inter"
                           >
                             <LogOut className="w-4 h-4 mr-3" />
                             Sign Out
@@ -247,12 +247,12 @@ export default function Header() {
                         </Button>
                       )}
                       <Link href="/auth/login">
-                        <Button variant="ghost" size="sm" className="h-9 px-4 font-medium text-purple-200 hover:bg-purple-500/10 rounded-full font-urbanist">
+                        <Button variant="ghost" size="sm" className="h-9 px-4 font-semibold text-purple-200 hover:bg-purple-500/10 rounded-full font-urbanist">
                           Sign In
                         </Button>
                       </Link>
                       <Link href="/auth/signup">
-                        <Button size="sm" className="h-9 px-4 font-medium bg-gradient-to-r from-purple-900 to-purple-800 hover:from-purple-950 hover:to-purple-900 rounded-full text-white font-urbanist">
+                        <Button size="sm" className="h-9 px-4 font-semibold bg-gradient-to-r from-pink-600 to-pink-500 hover:from-pink-700 hover:to-pink-600 rounded-full text-white shadow-none border-0 font-urbanist">
                           Sign Up
                         </Button>
                       </Link>
@@ -323,7 +323,7 @@ export default function Header() {
                         <p className="font-semibold text-purple-200 truncate font-urbanist">
                           {user.firstName} {user.lastName}
                         </p>
-                        <p className="text-sm text-purple-300 truncate">
+                        <p className="text-sm text-purple-300 truncate font-inter">
                           {user.email}
                         </p>
                       </div>
@@ -334,7 +334,7 @@ export default function Header() {
                       <Link 
                         href="/profile" 
                         onClick={closeMenu}
-                        className="flex items-center justify-center px-4 py-2 bg-neutral-800 text-purple-200 hover:bg-purple-900/40 rounded-xl transition-colors duration-200"
+                        className="flex items-center justify-center px-4 py-2 bg-neutral-800 text-purple-200 hover:bg-purple-900/40 rounded-xl transition-colors duration-200 font-urbanist font-medium"
                       >
                         <User className="w-4 h-4 mr-2 text-purple-300" />
                         Profile
@@ -342,7 +342,7 @@ export default function Header() {
                       
                       <button 
                         onClick={handleLogout}
-                        className="flex items-center justify-center px-4 py-2 bg-neutral-800 text-red-400 hover:bg-red-900/20 rounded-xl transition-colors duration-200"
+                        className="flex items-center justify-center px-4 py-2 bg-neutral-800 text-red-400 hover:bg-red-900/20 rounded-xl transition-colors duration-200 font-urbanist font-medium"
                       >
                         <LogOut className="w-4 h-4 mr-2" />
                         Sign Out
@@ -352,12 +352,12 @@ export default function Header() {
                 ) : (
                   <div className="flex flex-col sm:flex-row gap-3">
                     <Link href="/auth/login" onClick={closeMenu} className="flex-1">
-                      <Button variant="outline" className="w-full h-10 font-medium text-purple-200 rounded-xl font-urbanist">
+                      <Button variant="outline" className="w-full h-10 font-semibold text-purple-200 rounded-xl border-purple-400/30 hover:bg-purple-500/10 hover:border-purple-400 font-urbanist">
                         Sign In
                       </Button>
                     </Link>
                     <Link href="/auth/signup" onClick={closeMenu} className="flex-1">
-                      <Button className="w-full h-10 font-medium bg-gradient-to-r from-purple-900 to-purple-800 hover:from-purple-950 hover:to-purple-900 rounded-xl text-white font-urbanist">
+                      <Button className="w-full h-10 font-semibold bg-gradient-to-r from-pink-600 to-pink-500 hover:from-pink-700 hover:to-pink-600 rounded-xl text-white shadow-none border-0 font-urbanist">
                         Sign Up
                       </Button>
                     </Link>
