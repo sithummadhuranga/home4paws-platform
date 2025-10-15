@@ -17,7 +17,6 @@ import {
   HeartIcon,
   SettingsIcon,
   EditIcon,
-  StarIcon,
   PackageIcon
 } from "lucide-react"
 

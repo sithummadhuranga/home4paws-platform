@@ -17,17 +17,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/contexts/CartContext";
 import { ThemeToggle } from "@/components/common/ThemeToggle";
 
-interface UserData {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  role: string;
-  emailVerified: boolean;
-  createdAt: string;
-  lastLoginAt?: string;
-}
-
 // Optimized nav item component
 const NavItem = memo(({ href, children, onClick, className = "" }: {
   href: string;
@@ -143,11 +132,12 @@ export default function Header() {
             
             {/* Desktop Navigation - Center */}
             <nav className="hidden md:flex items-center justify-center flex-1">
+              <NavItem href="/about">About</NavItem>
               <NavItem href="/adopt">Adopt</NavItem>
               <NavItem href="/shelters">Shelters</NavItem>
               <NavItem href="/store">Store</NavItem>
               <NavItem href="/resources">Resources</NavItem>
-              <NavItem href="/about">About</NavItem>
+              <NavItem href="/feedbacks">Feedback</NavItem>
             </nav>
 
             {/* Actions - Right Side */}
@@ -300,6 +290,9 @@ export default function Header() {
               </NavItem>
               <NavItem href="/about" onClick={closeMenu} className="block w-full">
                 About
+              </NavItem>
+              <NavItem href="/feedbacks" onClick={closeMenu}>
+                Feedbacks
               </NavItem>
             </div>
             

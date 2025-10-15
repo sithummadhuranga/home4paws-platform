@@ -84,7 +84,11 @@ if (!string.IsNullOrEmpty(connectionString))
     {
         options.UseNpgsql(connectionString, npgsqlOptions =>
         {
-            npgsqlOptions.EnableRetryOnFailure(maxRetryCount: 3);
+            npgsqlOptions.EnableRetryOnFailure(
+                maxRetryCount: 5,  // ✅ Increased from 3 to 5
+                maxRetryDelay: TimeSpan.FromSeconds(10),  // ✅ Added max delay
+                errorCodesToAdd: null);
+            npgsqlOptions.CommandTimeout(30);  // ✅ Added command timeout
         });
 
         // Add detailed logging in development

@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/AuthContext"
 import { getUserAddresses, getDefaultAddress } from "@/services/addressService"
 import { getUserOrders, getUserStats, cancelOrder } from "@/services/orderService"
-import { SavedAddress, Order, UserStats } from "@/types"
+import { getMyFeedbacks, deleteFeedback } from "@/services/feedbackService"
+import { SavedAddress, Order, UserStats, Feedback } from "@/types"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -25,12 +26,17 @@ import {
   ShieldIcon,
   BellIcon,
   UserIcon,
-  XCircle
+  XCircle,
+  Star,
+  MessageSquare,
+  Trash2,
+  Edit
 } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import Header from "@/components/layout/Header"
 import Footer from "@/components/layout/Footer"
 import { toast } from "sonner"
+import Link from "next/link"
 
 export default function ProfilePage() {
   const { user, isAuthenticated, isLoading, token } = useAuth()
@@ -38,11 +44,14 @@ export default function ProfilePage() {
   const [defaultAddress, setDefaultAddress] = React.useState<SavedAddress | null>(null)
   const [orders, setOrders] = React.useState<Order[]>([])
   const [stats, setStats] = React.useState<UserStats | null>(null)
+  const [feedbacks, setFeedbacks] = React.useState<Feedback[]>([])
   const [loadingAddresses, setLoadingAddresses] = React.useState(false)
   const [loadingOrders, setLoadingOrders] = React.useState(false)
   const [loadingStats, setLoadingStats] = React.useState(false)
+  const [loadingFeedbacks, setLoadingFeedbacks] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
   const [cancellingOrder, setCancellingOrder] = React.useState<number | null>(null)
+  const [deletingFeedback, setDeletingFeedback] = React.useState<number | null>(null)
   const router = useRouter()
 
   React.useEffect(() => {
@@ -52,6 +61,7 @@ export default function ProfilePage() {
         setLoadingAddresses(false)
         setLoadingOrders(false)
         setLoadingStats(false)
+        setLoadingFeedbacks(false)
         return
       }
 
@@ -107,6 +117,17 @@ export default function ProfilePage() {
           console.error('Error loading stats:', err)
         }
         setLoadingStats(false)
+
+        // Load feedbacks
+        setLoadingFeedbacks(true)
+        try {
+          const feedbacksData = await getMyFeedbacks(token)
+          setFeedbacks(feedbacksData)
+          console.log('Loaded feedbacks:', feedbacksData.length);
+        } catch (err) {
+          console.error('Error loading feedbacks:', err)
+        }
+        setLoadingFeedbacks(false)
         
       } catch (err) {
         console.error('Error loading profile data:', err)
@@ -114,6 +135,7 @@ export default function ProfilePage() {
         setLoadingAddresses(false)
         setLoadingOrders(false)
         setLoadingStats(false)
+        setLoadingFeedbacks(false)
       }
     }
 
@@ -142,6 +164,27 @@ export default function ProfilePage() {
       toast.error('Failed to cancel order')
     } finally {
       setCancellingOrder(null)
+    }
+  }
+
+  const handleDeleteFeedback = async (feedbackId: number) => {
+    if (!token) return
+
+    if (!confirm('Are you sure you want to delete this review? This action cannot be undone.')) return
+
+    try {
+      setDeletingFeedback(feedbackId)
+      await deleteFeedback(token, feedbackId)
+      
+      // Update feedbacks list
+      setFeedbacks(prev => prev.filter(feedback => feedback.id !== feedbackId))
+      
+      toast.success('Review deleted successfully')
+    } catch (error) {
+      console.error('Error deleting feedback:', error)
+      toast.error('Failed to delete review')
+    } finally {
+      setDeletingFeedback(null)
     }
   }
 
@@ -179,6 +222,23 @@ export default function ProfilePage() {
       month: 'long',
       day: 'numeric'
     });
+  }
+
+  const renderStars = (rating: number) => {
+    return (
+      <div className="flex gap-1">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <Star
+            key={star}
+            className={`w-4 h-4 ${
+              star <= rating
+                ? 'fill-yellow-400 text-yellow-400'
+                : 'text-gray-300 dark:text-gray-600'
+            }`}
+          />
+        ))}
+      </div>
+    );
   }
 
   if (isLoading) {
@@ -336,13 +396,15 @@ export default function ProfilePage() {
 
           {/* Main Content Tabs */}
           <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="orders">Orders ({orders.length})</TabsTrigger>
               <TabsTrigger value="addresses">Addresses ({addresses.length})</TabsTrigger>
+              <TabsTrigger value="reviews">Reviews ({feedbacks.length})</TabsTrigger>
               <TabsTrigger value="settings">Settings</TabsTrigger>
             </TabsList>
 
+            {/* Overview Tab */}
             <TabsContent value="overview" className="space-y-6">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Personal Information */}
@@ -420,6 +482,7 @@ export default function ProfilePage() {
               </div>
             </TabsContent>
 
+            {/* Orders Tab */}
             <TabsContent value="orders" className="space-y-6">
               <Card>
                 <CardHeader>
@@ -523,6 +586,7 @@ export default function ProfilePage() {
               </Card>
             </TabsContent>
 
+            {/* Addresses Tab */}
             <TabsContent value="addresses" className="space-y-6">
               <Card>
                 <CardHeader>
@@ -583,6 +647,106 @@ export default function ProfilePage() {
               </Card>
             </TabsContent>
 
+            {/* Reviews Tab - NEW */}
+            <TabsContent value="reviews" className="space-y-6">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h3 className="text-lg font-semibold">My Reviews</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Manage your feedback and reviews
+                  </p>
+                </div>
+                <Button asChild>
+                  <Link href="/feedbacks">
+                    <MessageSquare className="w-4 h-4 mr-2" />
+                    Write New Review
+                  </Link>
+                </Button>
+              </div>
+
+              {loadingFeedbacks ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="w-8 h-8 animate-spin" />
+                  <span className="ml-2 text-sm text-muted-foreground">Loading reviews...</span>
+                </div>
+              ) : feedbacks.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {feedbacks.map((feedback) => (
+                    <Card key={feedback.id} className="relative">
+                      <CardContent className="p-6 space-y-4">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            {renderStars(feedback.rating)}
+                            <h4 className="text-lg font-bold mt-2">{feedback.title}</h4>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              disabled
+                              className="text-muted-foreground"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteFeedback(feedback.id)}
+                              disabled={deletingFeedback === feedback.id}
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            >
+                              {deletingFeedback === feedback.id ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <Trash2 className="w-4 h-4" />
+                              )}
+                            </Button>
+                          </div>
+                        </div>
+                        
+                        <p className="text-sm text-muted-foreground line-clamp-3">
+                          {feedback.comment}
+                        </p>
+                        
+                        <div className="flex items-center gap-3 pt-3 border-t">
+                          <Badge 
+                            variant={feedback.isApproved ? "default" : "secondary"}
+                            className={feedback.isApproved ? "bg-green-600" : "bg-yellow-600"}
+                          >
+                            {feedback.isApproved ? 'Approved' : 'Pending Review'}
+                          </Badge>
+                          {feedback.isFeatured && (
+                            <Badge variant="outline" className="border-purple-600 text-purple-600">
+                              Featured
+                            </Badge>
+                          )}
+                          <span className="text-xs text-muted-foreground ml-auto">
+                            {formatDate(feedback.createdAt)}
+                          </span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <Card>
+                  <CardContent className="p-12 text-center">
+                    <MessageSquare className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-xl font-bold mb-2">No reviews yet</h3>
+                    <p className="text-muted-foreground mb-6">
+                      Share your experience with Home4Paws!
+                    </p>
+                    <Button asChild>
+                      <Link href="/feedbacks">
+                        Write Your First Review
+                      </Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+            </TabsContent>
+
+            {/* Settings Tab */}
             <TabsContent value="settings" className="space-y-6">
               <Card>
                 <CardHeader>

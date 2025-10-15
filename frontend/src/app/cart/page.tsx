@@ -4,16 +4,12 @@
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { 
   ArrowLeft, 
-  Info, 
-  MinusCircle, 
-  PlusCircle, 
   ShoppingBag, 
   Trash2, 
   Truck,
@@ -23,7 +19,6 @@ import {
   Star,
   Plus,
   Minus,
-  Gift,
   Sparkles
 } from "lucide-react";
 import Header from "@/components/layout/Header";
@@ -196,11 +191,11 @@ export default function CartPage() {
                                   
                                   {/* Rating */}
                                   <div className="flex items-center gap-1">
-                                    {[...Array(5)].map((_, i) => (
+                                    {[...Array(5)].map((_, _index) => (
                                       <Star
-                                        key={i}
+                                        key={_index}
                                         className={`w-3 h-3 ${
-                                          i < 4 
+                                          _index < 4 
                                             ? "fill-yellow-400 text-yellow-400" 
                                             : "fill-purple-600 text-purple-600"
                                         }`}

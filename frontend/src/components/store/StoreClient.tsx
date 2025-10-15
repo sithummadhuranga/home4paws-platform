@@ -17,11 +17,9 @@ import {
   Shield,
   Clock,
   Award,
-  ArrowRight,
   X
 } from "lucide-react";
 import { ProductCard } from "@/components/store/ProductCard";
-import Link from "next/link";
 
 interface StoreClientProps {
   initialProducts: Product[];
@@ -109,6 +107,14 @@ export function StoreClient({ initialProducts, initialCategories, error: initial
   const handleCategoryClick = (categoryId: number) => {
     setSelectedCategory(categoryId === selectedCategory ? null : categoryId);
     setSearchQuery(''); // Clear search when selecting category
+  };
+
+  const safeJSONParse = (jsonString: string, fallback: unknown = {}) => {
+    try {
+      return JSON.parse(jsonString);
+    } catch {
+      return fallback;
+    }
   };
 
   return (

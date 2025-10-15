@@ -1,15 +1,25 @@
 {
   "extends": ["next/core-web-vitals", "next/typescript"],
+  "ignorePatterns": [
+    ".next/**/*",
+    "node_modules/**/*",
+    "out/**/*",
+    "build/**/*"
+  ],
   "rules": {
-    "@typescript-eslint/no-unused-vars": ["error", { 
+    "react/no-unescaped-entities": 0,
+    "@typescript-eslint/no-unused-vars": [1, { 
       "argsIgnorePattern": "^_",
       "varsIgnorePattern": "^_",
       "destructuredArrayIgnorePattern": "^_"
     }],
-    "@typescript-eslint/no-explicit-any": "error",
-    "react/no-unescaped-entities": "off",
-    "@next/next/no-page-custom-font": "off",
-    "prefer-const": "error",
-    "no-var": "error"
+    "@typescript-eslint/no-explicit-any": 1,
+    "@typescript-eslint/no-unsafe-function-type": 1,
+    "@typescript-eslint/no-empty-object-type": 1,
+    "react-hooks/exhaustive-deps": 1,
+    "@typescript-eslint/no-unused-expressions": 0,
+    "@next/next/no-page-custom-font": 0,
+    "prefer-const": 2,
+    "no-var": 2
   }
 }

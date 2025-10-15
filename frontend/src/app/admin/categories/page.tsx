@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -39,7 +39,6 @@ import {
   Trash2, 
   MoreVertical,
   Loader2,
-  AlertCircle,
   Package
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -69,9 +68,9 @@ export default function CategoriesPage() {
 
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5185/api';
 
-  const fetchCategories = async () => {
+  const fetchCategories = useCallback(async () => {
     if (!token) return;
-
+    
     try {
       setIsLoading(true);
       const response = await fetch(`${API_BASE_URL}/categories`, {
@@ -80,58 +79,37 @@ export default function CategoriesPage() {
           'Content-Type': 'application/json',
         },
       });
-
+      
       if (!response.ok) {
         throw new Error('Failed to fetch categories');
       }
-
-      const data = await response.json();
       
-      // Fetch products to get product count per category
-      const productsResponse = await fetch(`${API_BASE_URL}/products`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (productsResponse.ok) {
-        const products = await productsResponse.json();
-        const categoriesWithCount = data.map((cat: Category) => ({
-          ...cat,
-          productCount: products.filter((p: any) => p.categoryId === cat.id).length
-        }));
-        setCategories(categoriesWithCount);
-      } else {
-        setCategories(data);
-      }
+      const data = await response.json();
+      setCategories(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error fetching categories:', error);
       toast.error('Failed to load categories');
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [token, API_BASE_URL]);
 
   useEffect(() => {
     fetchCategories();
-  }, [token]);
+  }, [fetchCategories]);
 
   const handleOpenDialog = (category?: Category) => {
     if (category) {
-      setIsEditing(true);
       setSelectedCategory(category);
+      setIsEditing(true); // ✅ Add this to indicate we're editing
       setFormData({
         name: category.name,
-        description: category.description || ''
+        description: category.description || '',
       });
     } else {
-      setIsEditing(false);
       setSelectedCategory(null);
-      setFormData({
-        name: '',
-        description: ''
-      });
+      setIsEditing(false); // ✅ Add this to indicate we're creating new
+      setFormData({ name: '', description: '' });
     }
     setIsDialogOpen(true);
   };
@@ -347,11 +325,9 @@ export default function CategoriesPage() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Avg Products/Category</CardDescription>
+            <CardDescription>Empty Categories</CardDescription>
             <CardTitle className="text-2xl">
-              {categories.length > 0 
-                ? Math.round(categories.reduce((sum, cat) => sum + (cat.productCount || 0), 0) / categories.length)
-                : 0}
+              {categories.filter(cat => !cat.productCount || cat.productCount === 0).length}
             </CardTitle>
           </CardHeader>
         </Card>
@@ -359,13 +335,19 @@ export default function CategoriesPage() {
 
       {/* Categories Table */}
       <Card>
-        <CardContent className="pt-6">
+        <CardHeader>
+          <CardTitle>All Categories</CardTitle>
+          <CardDescription>
+            Manage your product categories and their assignments
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
           {categories.length > 0 ? (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Category Name</TableHead>
+                    <TableHead>Name</TableHead>
                     <TableHead>Description</TableHead>
                     <TableHead className="text-center">Products</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
@@ -381,13 +363,12 @@ export default function CategoriesPage() {
                           </div>
                           <div>
                             <p className="font-semibold">{category.name}</p>
-                            <p className="text-xs text-gray-500">ID: {category.id}</p>
                           </div>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 max-w-md truncate">
-                          {category.description || <span className="italic text-gray-400">No description</span>}
+                        <p className="text-sm text-gray-600 dark:text-gray-400 max-w-md line-clamp-2">
+                          {category.description || 'No description'}
                         </p>
                       </TableCell>
                       <TableCell className="text-center">
@@ -439,26 +420,6 @@ export default function CategoriesPage() {
               </Button>
             </div>
           )}
-        </CardContent>
-      </Card>
-
-      {/* Info Card */}
-      <Card className="border-blue-200 dark:border-blue-900 bg-blue-50 dark:bg-blue-900/10">
-        <CardContent className="pt-6">
-          <div className="flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
-            <div className="space-y-1">
-              <p className="font-semibold text-blue-900 dark:text-blue-100">
-                Category Management Tips
-              </p>
-              <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1 list-disc list-inside">
-                <li>Categories help organize products and improve navigation</li>
-                <li>You cannot delete categories that contain products</li>
-                <li>Each product must be assigned to exactly one category</li>
-                <li>Use clear, descriptive names for better user experience</li>
-              </ul>
-            </div>
-          </div>
         </CardContent>
       </Card>
     </div>

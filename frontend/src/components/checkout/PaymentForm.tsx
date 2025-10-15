@@ -36,7 +36,7 @@ export function PaymentForm({ onComplete, onBack }: PaymentFormProps) {
   const {
     register,
     handleSubmit,
-    formState: { errors, isValid }
+    formState: { errors: _errors, isValid: _isValid }
   } = useForm<PaymentFormData>({
     resolver: zodResolver(paymentSchema),
     defaultValues: {

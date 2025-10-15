@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Product, Category, productFormSchema, ProductFormData } from "@/types";
+import { Product, Category, productFormSchema } from "@/types";
 import { createProduct, updateProduct } from "@/services/apiService";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ArrowLeft, Loader2, Save } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
+import Image from "next/image";
 
 interface ProductFormProps {
   categories: Category[];
@@ -35,23 +36,25 @@ export function ProductForm({ categories, existingProduct }: ProductFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isEditMode = !!existingProduct;
 
+  // ✅ FIX: Remove the explicit type parameter to let TypeScript infer it
   const {
     register,
     handleSubmit,
     formState: { errors },
     setValue,
     watch,
-  } = useForm<ProductFormData>({
+  } = useForm({
     resolver: zodResolver(productFormSchema),
     defaultValues: existingProduct
       ? {
           name: existingProduct.name,
           sku: existingProduct.sku,
           description: existingProduct.description,
-          price: existingProduct.price,
-          stockQuantity: existingProduct.stockQuantity,
+          // ✅ Convert numbers to strings for form inputs
+          price: existingProduct.price.toString(),
+          stockQuantity: existingProduct.stockQuantity.toString(),
           imageUrl: existingProduct.imageUrl,
-          categoryId: existingProduct.categoryId,
+          categoryId: existingProduct.categoryId.toString(),
           isFeatured: existingProduct.isFeatured,
           isActive: existingProduct.isActive,
         }
@@ -59,10 +62,11 @@ export function ProductForm({ categories, existingProduct }: ProductFormProps) {
           name: "",
           sku: "",
           description: "",
-          price: 0,
-          stockQuantity: 0,
+          // ✅ Use strings for new products
+          price: "",
+          stockQuantity: "",
           imageUrl: "",
-          categoryId: 1,
+          categoryId: "",
           isFeatured: false,
           isActive: true,
         },
@@ -71,7 +75,7 @@ export function ProductForm({ categories, existingProduct }: ProductFormProps) {
   const isFeatured = watch("isFeatured");
   const isActive = watch("isActive");
 
-  const onSubmit = async (data: ProductFormData) => {
+  const onSubmit = async (data: any) => {
     if (!token) {
       toast.error("You must be logged in to perform this action");
       return;
@@ -133,7 +137,7 @@ export function ProductForm({ categories, existingProduct }: ProductFormProps) {
                 className={errors.name ? "border-red-500" : ""}
               />
               {errors.name && (
-                <p className="text-sm text-red-500">{errors.name.message}</p>
+                <p className="text-sm text-red-500">{errors.name.message as string}</p>
               )}
             </div>
 
@@ -149,7 +153,7 @@ export function ProductForm({ categories, existingProduct }: ProductFormProps) {
                 className={errors.sku ? "border-red-500" : ""}
               />
               {errors.sku && (
-                <p className="text-sm text-red-500">{errors.sku.message}</p>
+                <p className="text-sm text-red-500">{errors.sku.message as string}</p>
               )}
             </div>
 
@@ -167,7 +171,7 @@ export function ProductForm({ categories, existingProduct }: ProductFormProps) {
               />
               {errors.description && (
                 <p className="text-sm text-red-500">
-                  {errors.description.message}
+                  {errors.description.message as string}
                 </p>
               )}
             </div>
@@ -179,7 +183,7 @@ export function ProductForm({ categories, existingProduct }: ProductFormProps) {
               </Label>
               <Select
                 value={watch("categoryId")?.toString()}
-                onValueChange={(value) => setValue("categoryId", parseInt(value))}
+                onValueChange={(value) => setValue("categoryId", value)}
               >
                 <SelectTrigger
                   className={errors.categoryId ? "border-red-500" : ""}
@@ -196,7 +200,7 @@ export function ProductForm({ categories, existingProduct }: ProductFormProps) {
               </Select>
               {errors.categoryId && (
                 <p className="text-sm text-red-500">
-                  {errors.categoryId.message}
+                  {errors.categoryId.message as string}
                 </p>
               )}
             </div>
@@ -227,7 +231,7 @@ export function ProductForm({ categories, existingProduct }: ProductFormProps) {
                   className={errors.price ? "border-red-500" : ""}
                 />
                 {errors.price && (
-                  <p className="text-sm text-red-500">{errors.price.message}</p>
+                  <p className="text-sm text-red-500">{errors.price.message as string}</p>
                 )}
               </div>
 
@@ -245,7 +249,7 @@ export function ProductForm({ categories, existingProduct }: ProductFormProps) {
                 />
                 {errors.stockQuantity && (
                   <p className="text-sm text-red-500">
-                    {errors.stockQuantity.message}
+                    {errors.stockQuantity.message as string}
                   </p>
                 )}
               </div>
@@ -272,18 +276,18 @@ export function ProductForm({ categories, existingProduct }: ProductFormProps) {
               />
               {errors.imageUrl && (
                 <p className="text-sm text-red-500">
-                  {errors.imageUrl.message}
+                  {errors.imageUrl.message as string}
                 </p>
               )}
               {watch("imageUrl") && (
-                <div className="mt-4">
-                  <img
+                <div className="relative w-full h-48 bg-gray-50 dark:bg-gray-800 rounded-lg overflow-hidden">
+                  <Image
                     src={watch("imageUrl")}
-                    alt="Preview"
-                    className="max-w-xs rounded-lg border"
+                    alt="Product preview"
+                    fill
+                    className="object-contain"
                     onError={(e) => {
-                      e.currentTarget.src =
-                        "https://via.placeholder.com/300x300?text=Invalid+Image";
+                      e.currentTarget.style.display = 'none';
                     }}
                   />
                 </div>

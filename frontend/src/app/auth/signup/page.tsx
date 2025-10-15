@@ -9,7 +9,6 @@ import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Eye, EyeOff, ArrowLeft, Check, Loader2, Mail, Lock, User, Sparkles, Crown, Rocket } from "lucide-react"
 import { useAuth } from "@/contexts/AuthContext"
-import Image from "next/image"
 
 export default function SignupPage() {
   const router = useRouter()

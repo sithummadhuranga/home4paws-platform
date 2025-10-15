@@ -21,7 +21,6 @@ import {
   CreditCard,
   Loader2,
   Calendar,
-  Phone,
   Mail,
   Truck,
   CheckCircle

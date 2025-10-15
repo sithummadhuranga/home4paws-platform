@@ -65,7 +65,7 @@ export const getUserStats = async (token: string): Promise<UserStats> => {
   }
 };
 
-export const createOrder = async (token: string, orderData: any): Promise<Order> => {
+export const createOrder = async (token: string, orderData: unknown): Promise<Order> => {
   const response = await fetch(`${API_BASE_URL}/orders`, {
     method: 'POST',
     headers: getAuthHeaders(token),

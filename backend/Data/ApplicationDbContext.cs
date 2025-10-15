@@ -21,6 +21,7 @@ namespace Home4Paws.API.Data
         public DbSet<Order> Orders { get; set; } = null!;
         public DbSet<OrderItem> OrderItems { get; set; } = null!;
         public DbSet<UserAddress> UserAddresses { get; set; } = null!;
+        public DbSet<Feedback> Feedbacks { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -217,6 +218,33 @@ namespace Home4Paws.API.Data
                 .WithOne(a => a.User)
                 .HasForeignKey(a => a.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // Configure Feedback entity
+            modelBuilder.Entity<Feedback>(entity =>
+            {
+                entity.ToTable("feedbacks");
+                
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).HasColumnName("id");
+                entity.Property(e => e.UserId).HasColumnName("user_id").IsRequired();
+                entity.Property(e => e.Rating).HasColumnName("rating").IsRequired();
+                entity.Property(e => e.Title).HasColumnName("title").HasMaxLength(200).IsRequired();
+                entity.Property(e => e.Comment).HasColumnName("comment").IsRequired();
+                entity.Property(e => e.IsApproved).HasColumnName("is_approved").HasDefaultValue(false);
+                entity.Property(e => e.IsFeatured).HasColumnName("is_featured").HasDefaultValue(false);
+                entity.Property(e => e.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("NOW()");
+                entity.Property(e => e.UpdatedAt).HasColumnName("updated_at").HasDefaultValueSql("NOW()");
+
+                entity.HasOne(f => f.User)
+                    .WithMany()
+                    .HasForeignKey(f => f.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                
+                // Add indexes for better performance
+                entity.HasIndex(e => e.UserId);
+                entity.HasIndex(e => e.IsApproved);
+                entity.HasIndex(e => e.IsFeatured);
+            });
         }
     }
 }

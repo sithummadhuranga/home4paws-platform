@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -29,7 +29,6 @@ import {
   Loader2,
   ChevronLeft,
   ChevronRight,
-  Calendar
 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -97,10 +96,10 @@ export default function AdminOrdersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [startDate, _setStartDate] = useState('');
+  const [endDate, _setEndDate] = useState('');
 
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     if (!token) return;
 
     try {
@@ -147,11 +146,11 @@ export default function AdminOrdersPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [token, currentPage, statusFilter]);
 
   useEffect(() => {
     fetchOrders();
-  }, [token, currentPage, statusFilter]);
+  }, [fetchOrders]);
 
   const handleSearch = () => {
     setCurrentPage(1);

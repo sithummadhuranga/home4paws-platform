@@ -2,7 +2,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Product } from "@/types";
 import { useAuth } from "@/contexts/AuthContext"; // Use your actual auth context
 import { useToast } from "@/hooks/use-toast"; // Using your toast hook
@@ -12,9 +11,8 @@ import Link from "next/link";
 
 export function ProductClient({ initialProducts }: { initialProducts: Product[] }) {
   const [products, setProducts] = useState(initialProducts);
-  const { user, token } = useAuth(); // Assuming your context provides the token
+  const { token } = useAuth();
   const { toast } = useToast();
-  const router = useRouter();
 
   const handleDelete = async (id: number) => {
     if (!confirm("Are you sure you want to delete this product?")) return;
@@ -28,7 +26,7 @@ export function ProductClient({ initialProducts }: { initialProducts: Product[] 
       await deleteProduct(id, token);
       setProducts(products.filter(p => p.id !== id));
       toast({ title: "Success", description: "Product deleted successfully." });
-    } catch (error) {
+    } catch (_error) {
       toast({ title: "Error", description: "Failed to delete product.", variant: "destructive" });
     }
   };

@@ -24,7 +24,7 @@ interface AuthContextType {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
-  register: (userData: RegisterData) => Promise<void>;
+  register: (userData: RegisterData) => Promise<{ success: boolean; message: string }>; // ✅ Fixed return type
   signup: (userData: SignupData) => Promise<{ success: boolean; message: string }>;
 }
 
@@ -269,7 +269,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [token, router]);
 
-  const register = useCallback(async (userData: RegisterData) => {
+  const register = useCallback(async (userData: RegisterData): Promise<{ success: boolean; message: string }> => {
     return signup({
       ...userData,
       confirmPassword: userData.password,

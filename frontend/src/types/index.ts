@@ -25,11 +25,35 @@ export interface Category {
 export const productFormSchema = z.object({
   name: z.string().min(3, "Name must be at least 3 characters long"),
   sku: z.string().min(1, "SKU is required"),
-  description: z.string().min(1, "Description is required"),  // Make required
-  price: z.coerce.number().positive("Price must be a positive number"),
-  stockQuantity: z.coerce.number().int().min(0, "Stock cannot be negative"),
-  imageUrl: z.string().url("Must be a valid URL").min(1, "Image URL is required"),  // Make required
-  categoryId: z.coerce.number().min(1, "Please select a category"),
+  description: z.string().min(1, "Description is required"),
+  price: z.string()
+    .min(1, "Price is required")
+    .transform((val) => {
+      const num = parseFloat(val);
+      if (isNaN(num) || num <= 0) {
+        throw new Error("Price must be a positive number");
+      }
+      return num;
+    }),
+  stockQuantity: z.string()
+    .min(1, "Stock quantity is required")
+    .transform((val) => {
+      const num = parseInt(val, 10);
+      if (isNaN(num) || num < 0) {
+        throw new Error("Stock cannot be negative");
+      }
+      return num;
+    }),
+  imageUrl: z.string().url("Must be a valid URL").min(1, "Image URL is required"),
+  categoryId: z.string()
+    .min(1, "Please select a category")
+    .transform((val) => {
+      const num = parseInt(val, 10);
+      if (isNaN(num) || num < 1) {
+        throw new Error("Please select a category");
+      }
+      return num;
+    }),
   isFeatured: z.boolean().default(false),
   isActive: z.boolean().default(true),
 });
@@ -104,4 +128,22 @@ export interface UserStats {
   averageOrderValue: number;
   favoriteProducts: number;
   memberSince: string;
+}
+
+export interface Feedback {
+  id: number;
+  userId: number;
+  userName: string;
+  rating: number;
+  title: string;
+  comment: string;
+  isApproved: boolean;
+  isFeatured: boolean;
+  createdAt: string;
+}
+
+export interface CreateFeedbackDto {
+  rating: number;
+  title: string;
+  comment: string;
 }

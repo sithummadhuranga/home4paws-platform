@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCart } from '@/contexts/CartContext';
 import { Check, CreditCard, MapPin, Package, Clock, ShieldCheck, Sparkles } from 'lucide-react';
 import Image from 'next/image';
-import { cn } from '@/lib/utils';
 
 interface OrderReviewProps {
   onConfirm: () => void;
@@ -104,7 +103,7 @@ export function OrderReview({ onConfirm, onBack, isProcessing }: OrderReviewProp
                     <p className="text-purple-300 font-inter">{shippingAddress.apartment}</p>
                   )}
                   <p className="text-purple-300 font-inter">
-                    {shippingAddress.city}, {shippingAddress.state} {shippingAddress.zipCode}
+                    {shippingAddress.city}, {shippingAddress.province} {shippingAddress.postalCode}
                   </p>
                   <p className="text-purple-300 font-inter">{shippingAddress.phone}</p>
                 </div>

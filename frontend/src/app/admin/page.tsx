@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,13 +9,12 @@ import {
   ShoppingBag,
   Package,
   Users,
-  TrendingUp,
   Clock,
   DollarSign,
   AlertCircle,
   ArrowUpRight,
   ArrowDownRight,
-  Loader2
+  Loader2,
 } from 'lucide-react';
 
 interface DashboardStats {
@@ -85,38 +84,40 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [_statusFilter, _setStatusFilter] = useState<string>('all');
+  const [_searchTerm, _setSearchTerm] = useState('');
+
+  const fetchOrders = useCallback(async () => {
+    if (!token) return;
+
+    try {
+      setIsLoading(true);
+      const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5185/api';
+
+      const response = await fetch(`${API_BASE_URL}/orders/admin/dashboard-stats`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch dashboard stats');
+      }
+
+      const data = await response.json();
+      setStats(data);
+    } catch (err) {
+      console.error('Error fetching dashboard stats:', err);
+      setError('Failed to load dashboard statistics');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [token]);
 
   useEffect(() => {
-    const fetchDashboardStats = async () => {
-      if (!token) return;
-
-      try {
-        setIsLoading(true);
-        const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5185/api';
-        
-        const response = await fetch(`${API_BASE_URL}/orders/admin/dashboard-stats`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch dashboard stats');
-        }
-
-        const data = await response.json();
-        setStats(data);
-      } catch (err) {
-        console.error('Error fetching dashboard stats:', err);
-        setError('Failed to load dashboard statistics');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchDashboardStats();
-  }, [token]);
+    fetchOrders();
+  }, [fetchOrders]);
 
   if (isLoading) {
     return (

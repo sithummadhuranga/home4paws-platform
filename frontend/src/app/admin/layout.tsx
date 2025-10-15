@@ -8,13 +8,13 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
-  Package,
   ShoppingCart,
+  Package,
   Users,
   BarChart3,
+  LogOut,
   FolderTree,
-  Settings,
-  LogOut
+  MessageSquare,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -25,6 +25,7 @@ const navigation = [
   { name: 'Products', href: '/admin/products', icon: Package },
   { name: 'Categories', href: '/admin/categories', icon: FolderTree },
   { name: 'Users', href: '/admin/users', icon: Users },
+  { name: 'Feedbacks', href: '/admin/feedbacks', icon: MessageSquare }, // ✅ Add this
   { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
 ];
 

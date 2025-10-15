@@ -28,8 +28,8 @@ export default function AboutPage() {
                 <span className="text-sm font-medium text-purple-200 font-inter">Our Story</span>
               </div>
 
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-semibold text-purple-200 mb-6 leading-tight font-urbanist animate-fadeInUp stagger-1">
-                Making Pet Adoption 
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-purple-200 mb-6 leading-tight font-urbanist">
+                We&apos;re on a Mission to Save Lives
                 <span className="block bg-gradient-to-r from-purple-400 to-purple-300 bg-clip-text text-transparent mt-2">
                   Simple & Joyful
                 </span>

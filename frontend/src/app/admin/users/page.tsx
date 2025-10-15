@@ -40,7 +40,6 @@ import {
   UserX,
   Calendar,
   Loader2,
-  AlertCircle,
   Users as UsersIcon
 } from 'lucide-react';
 import { toast } from 'sonner';

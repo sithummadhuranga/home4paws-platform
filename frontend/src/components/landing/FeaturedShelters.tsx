@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react"
 import Image from "next/image"
 import { Container } from "@/components/common/Container"
 import { Button } from "@/components/ui/button"
-import { MapPin, Star, Heart, Users, Award, ChevronLeft, ChevronRight, Check } from "lucide-react"
+import { MapPin, Star, Heart, ChevronLeft, ChevronRight, Check } from "lucide-react"
 
 const shelters = [
     {

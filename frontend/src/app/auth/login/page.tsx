@@ -2,20 +2,16 @@
 
 import { useState, useCallback } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Eye, EyeOff, Heart, ArrowLeft, Loader2, Mail, Lock, Sparkles } from "lucide-react"
 import { useAuth } from "@/contexts/AuthContext"
-import Image from "next/image"
 import { toast } from "sonner"
 
 export default function LoginPage() {
-  const router = useRouter()
-  
-  const { login, isLoading } = useAuth()
+  const { login, isLoading } = useAuth() // ✅ Changed from _isLoading to isLoading
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState("")
   const [formData, setFormData] = useState({
@@ -24,7 +20,7 @@ export default function LoginPage() {
     rememberMe: false,
   })
 
-  const handleSubmit = useCallback(async (e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError("")
 
@@ -35,13 +31,11 @@ export default function LoginPage() {
 
     try {
       await login(formData.email, formData.password)
-      
-      // ✅ AuthContext now handles the redirect based on user role
       toast.success("Welcome back!")
-      
-    } catch (error: any) {
+    } catch (error) {
       console.error("Login error:", error)
-      setError(error?.message || "Invalid email or password. Please try again.")
+      const errorMessage = error instanceof Error ? error.message : "Invalid email or password. Please try again.";
+      setError(errorMessage)
     }
   }, [formData, login])
 
