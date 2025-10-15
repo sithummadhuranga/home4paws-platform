@@ -81,7 +81,7 @@ export default function PetFinderPage() {
   }, [])
 
   return (
-    <div className="min-h-screen relative">
+    <div className="min-h-screen relative font-urbanist">
       {/* Fixed background */}
       <div 
         className="fixed inset-0 z-0"
@@ -91,80 +91,86 @@ export default function PetFinderPage() {
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
           backgroundAttachment: 'fixed',
-          filter: 'blur(3px)',
+          filter: 'blur(4px)',
           transform: 'scale(1.1)'
         }}
       />
-
-      {/* Dark overlay for better readability */}
-      <div className="fixed inset-0 bg-black/40 z-[1]" />
+      {/* Glass overlay for readability */}
+      <div className="fixed inset-0 bg-gradient-to-br from-purple-900/60 via-black/50 to-blue-900/60 z-[1] backdrop-blur-[2px]" />
 
       {/* Main content */}
       <main className="relative z-10 container mx-auto px-4 py-8">
         {/* Header with navigation buttons */}
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Pet Finder</h1>
-        <div className="space-x-4">
-          <Link href="/pet-finder/how-it-works">
-            <Button variant="outline" className="font-medium">
-              📖 How It Works
-            </Button>
-          </Link>
-          <Link href="/pet-finder/report-found">
-            <Button variant="outline" className="font-medium">
-              🐶 Report a Found Pet
-            </Button>
-          </Link>
-          <Link href="/pet-finder/report-lost">
-            <Button variant="outline" className="font-medium">
-              🐾 Report a Lost Pet
-            </Button>
-          </Link>
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-purple-400 to-purple-200 bg-clip-text text-transparent drop-shadow font-urbanist animate-fadeInUp">
+            Pet Finder
+          </h1>
+          <div className="space-x-4">
+            <Link href="/pet-finder/how-it-works">
+              <Button variant="outline" className="font-medium rounded-[32px] border-purple-400/40 text-purple-200 hover:bg-purple-500/10 transition-all duration-200">
+                📖 How It Works
+              </Button>
+            </Link>
+            <Link href="/pet-finder/report-found">
+              <Button variant="outline" className="font-medium rounded-[32px] border-blue-400/40 text-blue-200 hover:bg-blue-500/10 transition-all duration-200">
+                🐶 Report a Found Pet
+              </Button>
+            </Link>
+            <Link href="/pet-finder/report-lost">
+              <Button variant="outline" className="font-medium rounded-[32px] border-purple-400/40 text-purple-200 hover:bg-purple-500/10 transition-all duration-200">
+                🐾 Report a Lost Pet
+              </Button>
+            </Link>
+          </div>
         </div>
-      </div>
 
-      {/* Quick Search Section */}
-      <div className="mb-12">
-        <h2 className="text-xl font-semibold mb-4">Quick Search</h2>
-        <SearchFilters onSearch={handleSearch} />
-      </div>
-
-      {/* Highlighted Pets Section */}
-      <div className="mb-12">
-        <h2 className="text-xl font-semibold mb-4">
-          {isFiltered ? 'Search Results' : 'Highlighted Pets'}
-          {isFiltered && filteredPets.length === 0 && (
-            <span className="text-gray-500 text-base font-normal ml-2">
-              (No pets found matching your search)
-            </span>
-          )}
-          {isFiltered && filteredPets.length > 0 && (
-            <span className="text-gray-500 text-base font-normal ml-2">
-              ({filteredPets.length} pets found)
-            </span>
-          )}
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {filteredPets.map((pet) => (
-            <PetCard
-              key={pet.id}
-              id={pet.id}
-              photo={pet.photo}
-              status={pet.status}
-              type={pet.type}
-              breed={pet.breed}
-              location={pet.location}
-              date={pet.date}
-              name={pet.name}
-              age={pet.age}
-              gender={pet.gender}
-              lastSeen={pet.lastSeen}
-              foundArea={pet.foundArea}
-            />
-          ))}
+        {/* Quick Search Section */}
+        <div className="mb-12">
+          <h2 className="text-2xl sm:text-3xl font-semibold mb-4 text-purple-200 font-urbanist animate-fadeInUp">
+            Quick Search
+          </h2>
+          <div className="glass-effect rounded-2xl p-6 border border-purple-400/10 shadow-lg animate-fadeInUp">
+            <SearchFilters onSearch={handleSearch} />
+          </div>
         </div>
-      </div>
-    </main>
+
+        {/* Highlighted Pets Section */}
+        <div className="mb-12">
+          <h2 className="text-2xl sm:text-3xl font-semibold mb-4 text-purple-200 font-urbanist animate-fadeInUp">
+            {isFiltered ? 'Search Results' : 'Highlighted Pets'}
+            {isFiltered && filteredPets.length === 0 && (
+              <span className="text-gray-400 text-base font-normal ml-2">
+                (No pets found matching your search)
+              </span>
+            )}
+            {isFiltered && filteredPets.length > 0 && (
+              <span className="text-gray-400 text-base font-normal ml-2">
+                ({filteredPets.length} pets found)
+              </span>
+            )}
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {filteredPets.map((pet) => (
+              <div key={pet.id} className="animate-fadeInUp">
+                <PetCard
+                  id={pet.id}
+                  photo={pet.photo}
+                  status={pet.status}
+                  type={pet.type}
+                  breed={pet.breed}
+                  location={pet.location}
+                  date={pet.date}
+                  name={pet.name}
+                  age={pet.age}
+                  gender={pet.gender}
+                  lastSeen={pet.lastSeen}
+                  foundArea={pet.foundArea}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      </main>
     </div>
   )
 }
