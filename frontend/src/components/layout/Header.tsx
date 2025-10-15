@@ -144,8 +144,7 @@ export default function Header() {
             {/* Desktop Navigation - Center */}
             <nav className="hidden md:flex items-center justify-center flex-1">
               <NavItem href="/about">About</NavItem>
-              <NavItem href="/adopt">Adopt</NavItem>
-              <NavItem href="/pet-finder">Pet Finder</NavItem>
+              <NavItem href="/pet-finder" className="whitespace-nowrap">Pet Finder</NavItem>
               <NavItem href="/shelters">Shelters</NavItem>
               <NavItem href="/store">Store</NavItem>
               <NavItem href="/resources">Resources</NavItem>

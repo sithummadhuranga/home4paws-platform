@@ -65,30 +65,29 @@ namespace Home4Paws.API.Services.Pets
 
             try
             {
-                // Create a point geometry for the search center
+                var radiusMeters = radiusKm * 1000;
                 var searchPoint = _geometryFactory.CreatePoint(new Coordinate(longitude, latitude));
 
-                // Convert radius from kilometers to meters for the distance calculation
-                var radiusMeters = radiusKm * 1000;
-
-                // Filter by distance and order by distance using PostGIS
-                var reports = await query
+                // Fetch candidates with coordinates
+                var candidates = await query
                     .Where(r => r.Latitude.HasValue && r.Longitude.HasValue)
-                    .Select(r => new
+                    .ToListAsync();
+
+                // Filter by distance using NetTopologySuite on the client side
+                var filtered = candidates
+                    .Select(r =>
                     {
-                        Report = r,
-                        Distance = EF.Functions.ST_Distance(
-                            _geometryFactory.CreatePoint(new Coordinate(r.Longitude.Value, r.Latitude.Value)),
-                            searchPoint
-                        )
+                        var point = _geometryFactory.CreatePoint(new Coordinate(r.Longitude.Value, r.Latitude.Value));
+                        var distance = point.Distance(searchPoint);
+                        return new { Report = r, Distance = distance };
                     })
                     .Where(x => x.Distance <= radiusMeters)
                     .OrderBy(x => x.Distance)
                     .Select(x => x.Report)
-                    .ToListAsync();
+                    .ToList();
 
                 // Map to response DTOs
-                return reports.Select(r => new PetReportResponse
+                return filtered.Select(r => new PetReportResponse
                 {
                     Id = r.Id,
                     Type = r.Type,

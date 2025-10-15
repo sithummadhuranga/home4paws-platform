@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Home4Paws.API.Data;
-using Home4Paws.API.Services.Pet; 
+using Home4Paws.API.Services.Pets; 
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -87,15 +87,13 @@ if (!string.IsNullOrEmpty(connectionString))
         options.UseNpgsql(connectionString, npgsqlOptions =>
         {
             npgsqlOptions.EnableRetryOnFailure(
-                maxRetryCount: 5,  // ✅ Increased from 3 to 5
-                maxRetryDelay: TimeSpan.FromSeconds(10),  // ✅ Added max delay
+                maxRetryCount: 5,
+                maxRetryDelay: TimeSpan.FromSeconds(10),
                 errorCodesToAdd: null);
-            npgsqlOptions.CommandTimeout(30);  // ✅ Added command timeout
-            npgsqlOptions.EnableRetryOnFailure(maxRetryCount: 3);
+            npgsqlOptions.CommandTimeout(60); // Increased timeout    // Add keepalive for Supabase
             npgsqlOptions.UseNetTopologySuite();
         });
 
-        // Add detailed logging in development
         if (builder.Environment.IsDevelopment())
         {
             options.EnableSensitiveDataLogging();
@@ -202,6 +200,9 @@ else
 {
     app.UseCors();
 }
+
+// Add this if you use controllers (MVC)
+app.UseRouting();
 
 // Configure static file serving
 app.UseStaticFiles();
