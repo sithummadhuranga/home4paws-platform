@@ -22,6 +22,7 @@ namespace Home4Paws.API.Data
         public DbSet<OrderItem> OrderItems { get; set; } = null!;
         public DbSet<UserAddress> UserAddresses { get; set; } = null!;
         public DbSet<Feedback> Feedbacks { get; set; } = null!;
+        public DbSet<PetReport> PetReports { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -244,6 +245,59 @@ namespace Home4Paws.API.Data
                 entity.HasIndex(e => e.UserId);
                 entity.HasIndex(e => e.IsApproved);
                 entity.HasIndex(e => e.IsFeatured);
+            });
+
+            // Configure PetReport entity
+            modelBuilder.Entity<PetReport>(entity =>
+            {
+                entity.ToTable("pet_reports");
+                
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).HasColumnName("id").HasDefaultValueSql("gen_random_uuid()");
+                entity.Property(e => e.Type).HasColumnName("type").HasMaxLength(50).IsRequired();
+                entity.Property(e => e.Name).HasColumnName("name").HasMaxLength(100).IsRequired();
+                entity.Property(e => e.Breed).HasColumnName("breed").HasMaxLength(100);
+                entity.Property(e => e.Color).HasColumnName("color").HasMaxLength(100).IsRequired();
+                entity.Property(e => e.Age).HasColumnName("age").HasMaxLength(20).IsRequired();
+                entity.Property(e => e.Gender).HasColumnName("gender").HasMaxLength(20).IsRequired();
+                entity.Property(e => e.Size).HasColumnName("size").HasMaxLength(100).IsRequired();
+                entity.Property(e => e.Description).HasColumnName("description").HasMaxLength(1000);
+                entity.Property(e => e.ReportType).HasColumnName("report_type").HasMaxLength(20).IsRequired();
+                entity.Property(e => e.Status).HasColumnName("status").HasMaxLength(50).IsRequired();
+                entity.Property(e => e.DateReported).HasColumnName("date_reported").HasDefaultValueSql("NOW()");
+                entity.Property(e => e.LostOrFoundDate).HasColumnName("lost_or_found_date").IsRequired();
+                entity.Property(e => e.Location).HasColumnName("location").HasMaxLength(200).IsRequired();
+                entity.Property(e => e.Latitude).HasColumnName("latitude").HasColumnType("double precision");
+                entity.Property(e => e.Longitude).HasColumnName("longitude").HasColumnType("double precision");
+                entity.Property(e => e.ContactName).HasColumnName("contact_name").HasMaxLength(100).IsRequired();
+                entity.Property(e => e.Phone).HasColumnName("phone").HasMaxLength(10).IsRequired();
+                entity.Property(e => e.Email).HasColumnName("email").HasMaxLength(255).IsRequired();
+                entity.Property(e => e.PhotoUrls).HasColumnName("photo_urls").HasColumnType("jsonb");
+                entity.Property(e => e.IdentifyingFeatures).HasColumnName("identifying_features").HasMaxLength(1000);
+                entity.Property(e => e.MedicalConditions).HasColumnName("medical_conditions").HasMaxLength(500);
+                entity.Property(e => e.IsChipped).HasColumnName("is_chipped");
+                entity.Property(e => e.ChipNumber).HasColumnName("chip_number").HasMaxLength(50);
+                entity.Property(e => e.HasReward).HasColumnName("has_reward");
+                entity.Property(e => e.RewardAmount).HasColumnName("reward_amount").HasMaxLength(20);
+                entity.Property(e => e.Views).HasColumnName("views");
+                entity.Property(e => e.IsUrgent).HasColumnName("is_urgent");
+                entity.Property(e => e.IsClosed).HasColumnName("is_closed");
+                entity.Property(e => e.ClosedAt).HasColumnName("closed_at");
+                entity.Property(e => e.ClosureReason).HasColumnName("closure_reason").HasMaxLength(100);
+                entity.Property(e => e.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("NOW()");
+                entity.Property(e => e.UpdatedAt).HasColumnName("updated_at").HasDefaultValueSql("NOW()");
+                entity.Property(e => e.AdminNotes).HasColumnName("admin_notes").HasMaxLength(500);
+
+                // Indexes for common queries
+                entity.HasIndex(e => e.Type);
+                entity.HasIndex(e => e.ReportType);
+                entity.HasIndex(e => e.Status);
+                entity.HasIndex(e => e.Location);
+                entity.HasIndex(e => e.LostOrFoundDate);
+                
+                // Create spatial index
+                entity.HasIndex(e => new { e.Latitude, e.Longitude })
+                    .HasDatabaseName("IX_PetReports_Location_Spatial");
             });
         }
     }

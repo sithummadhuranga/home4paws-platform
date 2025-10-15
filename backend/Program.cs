@@ -4,10 +4,12 @@ using Home4Paws.API.DataManager;
 using Home4Paws.API.Services.Auth;
 using Home4Paws.API.Helpers;
 using Home4Paws.API.Middleware;
+// using Home4Paws.API.Services.Pet; // Removed because the namespace 'Pet' does not exist
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Home4Paws.API.Data;
+using Home4Paws.API.Services.Pet; 
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -76,7 +78,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-// Add Entity Framework with PostgreSQL (Supabase)
+// Add Entity Framework with PostgreSQL (Supabase) and PostGIS
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 if (!string.IsNullOrEmpty(connectionString))
 {
@@ -89,6 +91,8 @@ if (!string.IsNullOrEmpty(connectionString))
                 maxRetryDelay: TimeSpan.FromSeconds(10),  // ✅ Added max delay
                 errorCodesToAdd: null);
             npgsqlOptions.CommandTimeout(30);  // ✅ Added command timeout
+            npgsqlOptions.EnableRetryOnFailure(maxRetryCount: 3);
+            npgsqlOptions.UseNetTopologySuite();
         });
 
         // Add detailed logging in development
@@ -100,8 +104,9 @@ if (!string.IsNullOrEmpty(connectionString))
     });
 }
 
-// Register Dapper for lightweight queries
+// Register Repositories
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IPetReportRepository, PetReportRepository>();
 
 // Register Services
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -109,6 +114,20 @@ builder.Services.AddScoped<JwtHelper>();
 
 // Register AutoMapper
 builder.Services.AddAutoMapper(typeof(MappingProfiles));
+// Register Pet Services
+builder.Services.AddScoped<IPetReportService, PetReportService>();
+builder.Services.AddScoped<ILocationSearchService, LocationSearchService>();
+builder.Services.AddScoped<IImageSimilarityService, ImageSimilarityService>();
+
+// Register HTTP Client for Image Similarity Service
+builder.Services.AddHttpClient("ImageSimilarityService", client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration.GetValue<string>("ImageSimilarityService:BaseUrl") ?? "http://localhost:5000");
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
+
+// Configure static files for uploads
+builder.Services.AddDirectoryBrowser();
 
 // Add health checks
 builder.Services.AddHealthChecks()
@@ -183,6 +202,9 @@ else
 {
     app.UseCors();
 }
+
+// Configure static file serving
+app.UseStaticFiles();
 
 // Add Authentication & Authorization (AFTER CORS)
 app.UseAuthentication();
