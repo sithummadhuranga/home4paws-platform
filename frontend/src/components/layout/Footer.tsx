@@ -2,6 +2,7 @@
 
 import React, { useState } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { Container } from "@/components/common/Container"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -18,7 +19,7 @@ export default function Footer() {
 
     setIsSubscribing(true)
     await new Promise(resolve => setTimeout(resolve, 1000))
-    toast.success("Successfully subscribed! Welcome to the PawsHome family 🐾")
+    toast.success("Successfully subscribed! Welcome to the Home4Paws family 🐾")
     setEmail("")
     setIsSubscribing(false)
   }
@@ -114,15 +115,19 @@ export default function Footer() {
               {/* Brand Section - Mobile Optimized */}
               <div className="col-span-2 sm:col-span-4 lg:col-span-2 text-center sm:text-left">
                 <Link href="/" className="inline-flex items-center space-x-3 mb-4 group">
-                  <div className="relative">
-                    <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-                      <Heart className="w-5 h-5 text-white" />
-                    </div>
-                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-black dark:border-black"></div>
-                  </div>
+                  {/* Logo Image - Add your logo.svg here */}
+                  <Image 
+                    src="/images/Logo.svg" 
+                    alt="Home4Paws Logo" 
+                    width={40} 
+                    height={40}
+                    className="h-10 w-auto" 
+                  />
+                  {/* Brand Text matching header */}
                   <div>
-                    <h4 className="text-xl font-bold text-purple-200 dark:text-purple-200 font-urbanist">PawsHome</h4>
-                    <p className="text-xs text-purple-300 dark:text-purple-300 font-medium font-inter">Find • Adopt • Love</p>
+                    <span className="text-xl font-bold text-purple-200 font-urbanist">
+                      Home<span className="text-pink-500">4</span>Paws
+                    </span>
                   </div>
                 </Link>
                 
@@ -193,7 +198,7 @@ export default function Footer() {
           <Container>
             <div className="py-4 flex flex-col sm:flex-row justify-between items-center gap-3">
               <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-xs sm:text-sm text-purple-300 dark:text-purple-300 font-inter">
-                <p>© {new Date().getFullYear()} PawsHome. All rights reserved.</p>
+                <p>© {new Date().getFullYear()} Home4Paws. All rights reserved.</p>
                 <div className="flex items-center gap-3">
                   <Link href="/privacy" className="hover:text-purple-400 dark:hover:text-purple-400 transition-colors duration-300">Privacy</Link>
                   <span className="text-purple-500/40 dark:text-purple-500/40">•</span>
