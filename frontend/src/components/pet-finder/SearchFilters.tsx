@@ -120,14 +120,14 @@ export function SearchFilters({ onSearch }: SearchFiltersProps) {
   }
 
   return (
-    <div className="w-full bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
+    <div className="w-full bg-neutral-800/60 backdrop-blur-sm rounded-2xl border-2 border-purple-400/20 p-6 shadow-lg">
       <div className="flex flex-col gap-4">
         {/* Search Input */}
         <div className="relative">
-          <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+          <Search className="absolute left-3 top-2.5 h-5 w-5 text-purple-400" />
           <Input
             placeholder="Search for pets..."
-            className="pl-10"
+            className="pl-10 bg-neutral-900/60 border-purple-400/20 text-purple-200 placeholder-purple-400/50 focus:border-purple-400/50 h-10 rounded-xl font-inter"
             value={filters.query}
             onChange={(e) => setFilters(prev => ({ ...prev, query: e.target.value }))}
           />
@@ -136,42 +136,42 @@ export function SearchFilters({ onSearch }: SearchFiltersProps) {
         {/* Filters */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
           <Select value={filters.age} onValueChange={(value: string) => setFilters(prev => ({ ...prev, age: value }))}>
-            <SelectTrigger>
+            <SelectTrigger className="bg-neutral-900/60 border-purple-400/20 text-purple-200 focus:border-purple-400/50 h-10 rounded-xl font-inter">
               <SelectValue placeholder="Age" />
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">🐾 All Ages</SelectItem>
-              <SelectItem value="young">🐣 Young</SelectItem>
-              <SelectItem value="adult">🦮 Adult</SelectItem>
-              <SelectItem value="senior">👴 Senior</SelectItem>
+            <SelectContent className="bg-neutral-900 border-purple-400/20 text-purple-200">
+              <SelectItem value="all" className="focus:bg-purple-500/10 focus:text-purple-200">🐾 All Ages</SelectItem>
+              <SelectItem value="young" className="focus:bg-purple-500/10 focus:text-purple-200">🐣 Young</SelectItem>
+              <SelectItem value="adult" className="focus:bg-purple-500/10 focus:text-purple-200">🦮 Adult</SelectItem>
+              <SelectItem value="senior" className="focus:bg-purple-500/10 focus:text-purple-200">👴 Senior</SelectItem>
             </SelectContent>
           </Select>
 
           <Select value={filters.species} onValueChange={handleSpeciesChange}>
-            <SelectTrigger>
+            <SelectTrigger className="bg-neutral-900/60 border-purple-400/20 text-purple-200 focus:border-purple-400/50 h-10 rounded-xl font-inter">
               <SelectValue placeholder="Species" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-neutral-900 border-purple-400/20 text-purple-200">
               {/* Common Pets */}
-              <SelectItem value="dog">🐕 Dog</SelectItem>
-              <SelectItem value="cat">🐱 Cat</SelectItem>
-              <SelectItem value="rabbit">🐰 Rabbit</SelectItem>
-              <SelectItem value="hamster">🐹 Hamster</SelectItem>
+              <SelectItem value="dog" className="focus:bg-purple-500/10 focus:text-purple-200">🐕 Dog</SelectItem>
+              <SelectItem value="cat" className="focus:bg-purple-500/10 focus:text-purple-200">🐱 Cat</SelectItem>
+              <SelectItem value="rabbit" className="focus:bg-purple-500/10 focus:text-purple-200">🐰 Rabbit</SelectItem>
+              <SelectItem value="hamster" className="focus:bg-purple-500/10 focus:text-purple-200">🐹 Hamster</SelectItem>
               
               {/* Birds */}
-              <SelectItem value="bird">🦜 Bird</SelectItem>
-              <SelectItem value="duck">🦆 Duck</SelectItem>
+              <SelectItem value="bird" className="focus:bg-purple-500/10 focus:text-purple-200">🦜 Bird</SelectItem>
+              <SelectItem value="duck" className="focus:bg-purple-500/10 focus:text-purple-200">🦆 Duck</SelectItem>
               
               {/* Reptiles */}
-              <SelectItem value="turtle">🐢 Turtle</SelectItem>
+              <SelectItem value="turtle" className="focus:bg-purple-500/10 focus:text-purple-200">🐢 Turtle</SelectItem>
               
               {/* Farm Animals */}
-              <SelectItem value="pig">🐷 Pig</SelectItem>
-              <SelectItem value="goat">🐐 Goat</SelectItem>
-              <SelectItem value="horse">🐎 Horse</SelectItem>
+              <SelectItem value="pig" className="focus:bg-purple-500/10 focus:text-purple-200">🐷 Pig</SelectItem>
+              <SelectItem value="goat" className="focus:bg-purple-500/10 focus:text-purple-200">🐐 Goat</SelectItem>
+              <SelectItem value="horse" className="focus:bg-purple-500/10 focus:text-purple-200">🐎 Horse</SelectItem>
               
               {/* Other */}
-              <SelectItem value="other">🐾 Other</SelectItem>
+              <SelectItem value="other" className="focus:bg-purple-500/10 focus:text-purple-200">🐾 Other</SelectItem>
             </SelectContent>
           </Select>
 
@@ -180,43 +180,43 @@ export function SearchFilters({ onSearch }: SearchFiltersProps) {
             onValueChange={(value: string) => setFilters(prev => ({ ...prev, breed: value }))}
             disabled={!filters.species || !BREED_OPTIONS[filters.species as keyof typeof BREED_OPTIONS]}
           >
-            <SelectTrigger>
+            <SelectTrigger className="bg-neutral-900/60 border-purple-400/20 text-purple-200 focus:border-purple-400/50 h-10 rounded-xl font-inter disabled:opacity-50">
               <SelectValue placeholder={!filters.species ? "Select species first" : "Select breed"} />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-neutral-900 border-purple-400/20 text-purple-200">
               {availableBreeds.map(breed => (
-                <SelectItem key={breed.value} value={breed.value}>
+                <SelectItem key={breed.value} value={breed.value} className="focus:bg-purple-500/10 focus:text-purple-200">
                   {breed.label}
                 </SelectItem>
               ))}
               {filters.species && filters.species !== 'other' && (
-                <SelectItem value="other">Other</SelectItem>
+                <SelectItem value="other" className="focus:bg-purple-500/10 focus:text-purple-200">Other</SelectItem>
               )}
             </SelectContent>
           </Select>
 
           <Select value={filters.location} onValueChange={(value: string) => setFilters(prev => ({ ...prev, location: value }))}>
-            <SelectTrigger>
+            <SelectTrigger className="bg-neutral-900/60 border-purple-400/20 text-purple-200 focus:border-purple-400/50 h-10 rounded-xl font-inter">
               <SelectValue placeholder="Location" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-neutral-900 border-purple-400/20 text-purple-200">
               {/* Colombo District */}
-              <SelectItem value="colombo">📍 Colombo</SelectItem>
-              <SelectItem value="nugegoda">📍 Nugegoda</SelectItem>
-              <SelectItem value="mount-lavinia">📍 Mount Lavinia</SelectItem>
-              <SelectItem value="rajagiriya">📍 Rajagiriya</SelectItem>
-              <SelectItem value="malabe">📍 Malabe</SelectItem>
+              <SelectItem value="colombo" className="focus:bg-purple-500/10 focus:text-purple-200">📍 Colombo</SelectItem>
+              <SelectItem value="nugegoda" className="focus:bg-purple-500/10 focus:text-purple-200">📍 Nugegoda</SelectItem>
+              <SelectItem value="mount-lavinia" className="focus:bg-purple-500/10 focus:text-purple-200">📍 Mount Lavinia</SelectItem>
+              <SelectItem value="rajagiriya" className="focus:bg-purple-500/10 focus:text-purple-200">📍 Rajagiriya</SelectItem>
+              <SelectItem value="malabe" className="focus:bg-purple-500/10 focus:text-purple-200">📍 Malabe</SelectItem>
               
               {/* Other Districts */}
-              <SelectItem value="negombo">📍 Negombo</SelectItem>
-              <SelectItem value="chilaw">📍 Chilaw</SelectItem>
-              <SelectItem value="kandy">📍 Kandy</SelectItem>
+              <SelectItem value="negombo" className="focus:bg-purple-500/10 focus:text-purple-200">📍 Negombo</SelectItem>
+              <SelectItem value="chilaw" className="focus:bg-purple-500/10 focus:text-purple-200">📍 Chilaw</SelectItem>
+              <SelectItem value="kandy" className="focus:bg-purple-500/10 focus:text-purple-200">📍 Kandy</SelectItem>
             </SelectContent>
           </Select>
 
           <Input
             type="date"
-            className="h-10"
+            className="h-10 bg-neutral-900/60 border-purple-400/20 text-purple-200 focus:border-purple-400/50 rounded-xl font-inter [&::-webkit-calendar-picker-indicator]:filter [&::-webkit-calendar-picker-indicator]:invert"
             value={filters.date}
             onChange={(e) => setFilters(prev => ({ ...prev, date: e.target.value }))}
           />
@@ -225,14 +225,14 @@ export function SearchFilters({ onSearch }: SearchFiltersProps) {
         {/* Search Buttons */}
         <div className="flex gap-4 flex-col sm:flex-row">
           <Button 
-            className="flex-1 sm:flex-none sm:min-w-[120px]"
+            className="flex-1 sm:flex-none sm:min-w-[120px] bg-gradient-to-r from-purple-600 via-purple-500 to-purple-400 hover:from-purple-700 hover:via-purple-600 hover:to-purple-500 rounded-[32px] text-white font-inter font-medium shadow-lg shadow-purple-500/20 hover:shadow-xl hover:shadow-purple-500/30 transition-all duration-300"
             onClick={handleSearch}
           >
             Search Pets
           </Button>
           <Button 
             variant="outline"
-            className="flex-1 sm:flex-none sm:min-w-[120px]"
+            className="flex-1 sm:flex-none sm:min-w-[120px] border-2 border-purple-400/50 bg-neutral-900/40 backdrop-blur-sm text-purple-200 hover:bg-purple-500/10 hover:border-purple-400 rounded-[32px] font-inter font-medium transition-all duration-300"
             onClick={() => {
               const emptyFilters = {
                 query: "",

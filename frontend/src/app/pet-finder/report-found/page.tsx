@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { toast } from "sonner"
-import dynamic from "next/dynamic"
+import { Sparkles, Camera, MapPin, Clock, User } from 'lucide-react'
 
 // Define the form data type
 type FormErrors = {
@@ -448,446 +448,438 @@ export default function ReportFoundPetPage() {
     }
   }
 
-  // What happens when Confirm button is clicked:
-  // 1. Simulates an API call to save the found pet report (2 seconds)
-  // 2. Shows a success toast message in the bottom right corner (3 seconds duration)
-  // 3. After 1 second delay, navigates to the pet-finder page
-  // 4. Resets the form data in the background
-  // 5. If any error occurs, shows error message in bottom right
-  const handleConfirm = async () => {
-    try {
-      // Step 1: Simulated API call (would actually save data to backend)
-      await new Promise(resolve => setTimeout(resolve, 2000))
-
-      // Step 2: Show success message
-      toast.success('Processing your report...')
-
-      // Convert photos to URLs
-      const imageUrls = formData.photos 
-        ? Array.from(formData.photos).map(file => URL.createObjectURL(file))
-        : []
-
-      // Step 3: Create the URL with all the form data
-      const ticketId = Date.now().toString().slice(-6) // Generate a simple ticket ID
-      const params = new URLSearchParams({
-        ticketId,
-        petType: formData.petType,
-        breed: formData.breed || '',
-        color: formData.color,
-        size: formData.size,
-        gender: formData.gender || '',
-        uniqueFeatures: formData.uniqueFeatures || '',
-        dateFound: formData.dateFound,
-        timeFound: formData.timeFound,
-        locationFound: formData.locationFound,
-        finderName: formData.finderName,
-        contactNumber: formData.contactNumber || '',
-        email: formData.email || '',
-        preferredContact: formData.preferredContact,
-        imageUrls: imageUrls.join(',')
-      })
-
-      // Navigate to the ticket page with the data
-      router.push(`/pet-finder/report-found/ticket?${params.toString()}`)
-
-    } catch (error) {
-      // Show error if something fails
-      toast.error('Failed to submit report. Please try again.')
-    }
-  }
-
   return (
-    <div className="min-h-screen relative">
-      {/* Fixed background */}
-      <div 
-        className="fixed top-0 left-0 w-full h-full z-0"
-        style={{
-          backgroundImage: 'url("https://images.unsplash.com/photo-1444212477490-ca407925329e?auto=format&fit=crop&q=80")',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundAttachment: 'fixed',
-          filter: 'blur(4px)',
-          transform: 'scale(1.1)',
-          pointerEvents: 'none' // Ensures clicks go through to content
-        }}
-      />
-      
-      {/* Main content */}
-      <div className="relative z-10">
-          <div className="container mx-auto px-4 py-16 md:py-24">
-            <div className="max-w-3xl mx-auto bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden">
-              <div className="p-6 sm:p-8 md:p-10">
-                <h1 className="text-3xl font-bold mb-8 text-center">Report a Found Pet</h1>
-              
-              <form onSubmit={handleSubmit} className="space-y-8">
-                {/* Pet Details Section */}
-                <div className="space-y-6 bg-gray-50 dark:bg-gray-800/50 p-6 rounded-xl border border-gray-100 dark:border-gray-700">
-                  <h2 className="text-xl font-semibold flex items-center gap-2">
-                    <span className="w-8 h-8 bg-blue-100 dark:bg-blue-900/50 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-400">1</span>
-                    Pet Details
-                  </h2>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <Label htmlFor="petType">Pet Type</Label>
-                      <Select
-                        name="petType"
-                        onValueChange={(value: string) => {
-                          handleSelectChange(value, "petType");
-                          // Clear the error when a value is selected
-                          if (value) {
-                            setErrors(prev => ({ ...prev, petType: '' }));
-                          }
-                        }}
-                        value={formData.petType}
-                      >
-                        <SelectTrigger className={errors.petType && touched.petType ? 'border-red-500' : ''}>
-                          <SelectValue placeholder="Select pet type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Dog">Dog</SelectItem>
-                          <SelectItem value="Cat">Cat</SelectItem>
-                          <SelectItem value="Bird">Bird</SelectItem>
-                          <SelectItem value="Rabbit">Rabbit</SelectItem>
-                          <SelectItem value="Turtle">Turtle</SelectItem>
-                          <SelectItem value="Hamster">Hamster</SelectItem>
-                          <SelectItem value="Horse">Horse</SelectItem>
-                          <SelectItem value="Other">Other</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      {errors.petType && touched.petType && (
-                        <p className="text-sm text-red-500 mt-1">{errors.petType}</p>
-                      )}
-                    </div>
+    <main className="min-h-screen bg-black">
+      {/* Hero Section with Background Effects */}
+      <section className="relative py-12 sm:py-16 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-black via-neutral-900 to-black" />
+        <div className="absolute inset-0 bg-gradient-to-t from-purple-900/5 via-transparent to-transparent" />
+        <div className="absolute -top-20 -left-20 w-60 h-60 bg-purple-500/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute -bottom-20 -right-20 w-80 h-80 bg-purple-400/8 rounded-full blur-3xl animate-pulse" />
 
-                    <div>
-                      <Label htmlFor="breed">Breed (if known)</Label>
-                      <Input
-                        id="breed"
-                        name="breed"
-                        value={formData.breed}
-                        onChange={handleInputChange}
-                      />
-                    </div>
+        <div className="relative z-10 container mx-auto px-4">
+          {/* Header Badge */}
+          <div className="max-w-4xl mx-auto mb-8 text-center animate-fadeInUp">
+            <div className="inline-flex items-center px-4 py-2 rounded-full bg-neutral-900/80 backdrop-blur-sm border border-purple-400/20 mb-6">
+              <Sparkles className="w-4 h-4 text-purple-400 mr-2" />
+              <span className="text-sm font-medium text-purple-200 font-inter">Report Found Pet</span>
+            </div>
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 text-purple-200 font-urbanist">
+              Help Reunite a Pet with Their Family
+            </h1>
+            <p className="text-purple-300 font-inter text-lg max-w-2xl mx-auto">
+              Thank you for caring! Please provide as many details as possible to help us reunite this pet with their owner.
+            </p>
+          </div>
 
-                    <div>
-                      <Label htmlFor="color">Color & Markings</Label>
-                      <Input
-                        id="color"
-                        name="color"
-                        value={formData.color}
-                        onChange={handleInputChange}
-                        placeholder="e.g., black with white patch"
-                        className={errors.color && touched.color ? 'border-red-500' : ''}
-                        required
-                      />
-                      {errors.color && touched.color && (
-                        <p className="text-sm text-red-500 mt-1">{errors.color}</p>
-                      )}
-                    </div>
+          {/* Form Container */}
+          <div className="max-w-4xl mx-auto bg-neutral-900/60 backdrop-blur-sm rounded-2xl shadow-xl p-6 sm:p-8 md:p-10 border-2 border-purple-400/20 animate-fadeInUp">
+            <form onSubmit={handleSubmit} className="space-y-8">
+              {/* Pet Details Section */}
+              <div className="space-y-6 bg-black/30 backdrop-blur-sm p-6 rounded-xl border border-purple-400/10">
+                <h2 className="text-xl font-semibold flex items-center gap-3 text-purple-200 font-urbanist">
+                  <div className="w-10 h-10 bg-purple-900/30 rounded-full flex items-center justify-center border border-purple-400/30">
+                    <span className="font-semibold text-purple-200">1</span>
+                  </div>
+                  Pet Details
+                </h2>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <Label htmlFor="petType" className="text-purple-200 font-inter">Pet Type *</Label>
+                    <Select
+                      onValueChange={(value: string) => {
+                        handleSelectChange(value, "petType");
+                        if (value) {
+                          setErrors(prev => ({ ...prev, petType: '' }));
+                        }
+                      }}
+                      value={formData.petType}
+                    >
+                      <SelectTrigger className={`bg-neutral-900/80 border-purple-400/30 text-purple-100 ${errors.petType && touched.petType ? 'border-red-500' : ''}`}>
+                        <SelectValue placeholder="Select pet type" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-neutral-900 border-purple-400/30">
+                        <SelectItem value="Dog">Dog</SelectItem>
+                        <SelectItem value="Cat">Cat</SelectItem>
+                        <SelectItem value="Bird">Bird</SelectItem>
+                        <SelectItem value="Rabbit">Rabbit</SelectItem>
+                        <SelectItem value="Turtle">Turtle</SelectItem>
+                        <SelectItem value="Hamster">Hamster</SelectItem>
+                        <SelectItem value="Horse">Horse</SelectItem>
+                        <SelectItem value="Other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {errors.petType && touched.petType && (
+                      <p className="text-sm text-red-400 mt-1 font-inter">{errors.petType}</p>
+                    )}
+                  </div>
 
-                    <div>
-                      <Label htmlFor="size">Size</Label>
-                      <Select
-                        name="size"
-                        onValueChange={(value: string) => handleSelectChange(value, "size")}
-                        value={formData.size}
-                      >
-                        <SelectTrigger className={errors.size && touched.size ? 'border-red-500' : ''}>
-                          <SelectValue placeholder="Select size" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Small">Small</SelectItem>
-                          <SelectItem value="Medium">Medium</SelectItem>
-                          <SelectItem value="Large">Large</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      {errors.size && touched.size && (
-                        <p className="text-sm text-red-500 mt-1">{errors.size}</p>
-                      )}
-                    </div>
+                  <div>
+                    <Label htmlFor="breed" className="text-purple-200 font-inter">Breed (if known)</Label>
+                    <Input
+                      id="breed"
+                      name="breed"
+                      value={formData.breed}
+                      onChange={handleInputChange}
+                      className="bg-neutral-900/80 border-purple-400/30 text-purple-100 placeholder:text-purple-300/50"
+                      placeholder="e.g., Labrador"
+                    />
+                  </div>
 
-                    <div>
-                      <Label htmlFor="gender">Gender (if known)</Label>
-                      <Select
-                        name="gender"
-                        onValueChange={(value: string) => handleSelectChange(value, "gender")}
-                        value={formData.gender}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select gender" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="male">Male</SelectItem>
-                          <SelectItem value="female">Female</SelectItem>
-                          <SelectItem value="unknown">Unknown</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+                  <div>
+                    <Label htmlFor="color" className="text-purple-200 font-inter">Color & Markings *</Label>
+                    <Input
+                      id="color"
+                      name="color"
+                      value={formData.color}
+                      onChange={handleInputChange}
+                      placeholder="e.g., black with white patch"
+                      className={`bg-neutral-900/80 border-purple-400/30 text-purple-100 placeholder:text-purple-300/50 ${errors.color && touched.color ? 'border-red-500' : ''}`}
+                      required
+                    />
+                    {errors.color && touched.color && (
+                      <p className="text-sm text-red-400 mt-1 font-inter">{errors.color}</p>
+                    )}
+                  </div>
 
-                    <div className="md:col-span-2">
-                      <Label htmlFor="uniqueFeatures">Unique Identifiers</Label>
-                      <Textarea
-                        id="uniqueFeatures"
-                        name="uniqueFeatures"
-                        value={formData.uniqueFeatures}
-                        onChange={handleInputChange}
-                        placeholder="Describe any collar, tag, microchip, scars, or special features"
-                      />
-                    </div>
+                  <div>
+                    <Label htmlFor="size" className="text-purple-200 font-inter">Size *</Label>
+                    <Select
+                      onValueChange={(value: string) => handleSelectChange(value, "size")}
+                      value={formData.size}
+                    >
+                      <SelectTrigger className={`bg-neutral-900/80 border-purple-400/30 text-purple-100 ${errors.size && touched.size ? 'border-red-500' : ''}`}>
+                        <SelectValue placeholder="Select size" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-neutral-900 border-purple-400/30">
+                        <SelectItem value="Small">Small</SelectItem>
+                        <SelectItem value="Medium">Medium</SelectItem>
+                        <SelectItem value="Large">Large</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {errors.size && touched.size && (
+                      <p className="text-sm text-red-400 mt-1 font-inter">{errors.size}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label htmlFor="gender" className="text-purple-200 font-inter">Gender (if known)</Label>
+                    <Select
+                      onValueChange={(value: string) => handleSelectChange(value, "gender")}
+                      value={formData.gender}
+                    >
+                      <SelectTrigger className="bg-neutral-900/80 border-purple-400/30 text-purple-100">
+                        <SelectValue placeholder="Select gender" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-neutral-900 border-purple-400/30">
+                        <SelectItem value="male">Male</SelectItem>
+                        <SelectItem value="female">Female</SelectItem>
+                        <SelectItem value="unknown">Unknown</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <Label htmlFor="uniqueFeatures" className="text-purple-200 font-inter">Unique Identifiers</Label>
+                    <Textarea
+                      id="uniqueFeatures"
+                      name="uniqueFeatures"
+                      value={formData.uniqueFeatures}
+                      onChange={handleInputChange}
+                      placeholder="Describe any collar, tag, microchip, scars, or special features"
+                      className="bg-neutral-900/80 border-purple-400/30 text-purple-100 placeholder:text-purple-300/50 min-h-[100px]"
+                    />
                   </div>
                 </div>
+              </div>
 
-                {/* Location & Time Section */}
-                <div className="space-y-6 bg-gray-50 dark:bg-gray-800/50 p-6 rounded-xl border border-gray-100 dark:border-gray-700">
-                  <h2 className="text-xl font-semibold flex items-center gap-2">
-                    <span className="w-8 h-8 bg-blue-100 dark:bg-blue-900/50 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-400">2</span>
-                    Location & Time
-                  </h2>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <Label htmlFor="dateFound">Date Found</Label>
-                      <Input
-                        id="dateFound"
-                        name="dateFound"
-                        type="date"
-                        value={formData.dateFound}
-                        onChange={handleInputChange}
-                        className={errors.dateFound && touched.dateFound ? 'border-red-500' : ''}
-                        required
-                      />
-                      {errors.dateFound && touched.dateFound && (
-                        <p className="text-sm text-red-500 mt-1">{errors.dateFound}</p>
-                      )}
-                    </div>
+              {/* Location & Time Section */}
+              <div className="space-y-6 bg-black/30 backdrop-blur-sm p-6 rounded-xl border border-purple-400/10">
+                <h2 className="text-xl font-semibold flex items-center gap-3 text-purple-200 font-urbanist">
+                  <div className="w-10 h-10 bg-purple-900/30 rounded-full flex items-center justify-center border border-purple-400/30">
+                    <MapPin className="w-5 h-5 text-purple-400" />
+                  </div>
+                  Location & Time
+                </h2>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <Label htmlFor="dateFound" className="text-purple-200 font-inter flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-purple-400" />
+                      Date Found *
+                    </Label>
+                    <Input
+                      id="dateFound"
+                      name="dateFound"
+                      type="date"
+                      value={formData.dateFound}
+                      onChange={handleInputChange}
+                      className={`bg-neutral-900/80 border-purple-400/30 text-purple-100 ${errors.dateFound && touched.dateFound ? 'border-red-500' : ''}`}
+                      required
+                    />
+                    {errors.dateFound && touched.dateFound && (
+                      <p className="text-sm text-red-400 mt-1 font-inter">{errors.dateFound}</p>
+                    )}
+                  </div>
 
-                    <div>
-                      <Label htmlFor="timeFound">Time Found</Label>
-                      <Input
-                        id="timeFound"
-                        name="timeFound"
-                        type="time"
-                        value={formData.timeFound}
-                        onChange={handleInputChange}
-                        className={errors.timeFound && touched.timeFound ? 'border-red-500' : ''}
-                        required
-                      />
-                      {errors.timeFound && touched.timeFound && (
-                        <p className="text-sm text-red-500 mt-1">{errors.timeFound}</p>
-                      )}
-                    </div>
+                  <div>
+                    <Label htmlFor="timeFound" className="text-purple-200 font-inter">Time Found *</Label>
+                    <Input
+                      id="timeFound"
+                      name="timeFound"
+                      type="time"
+                      value={formData.timeFound}
+                      onChange={handleInputChange}
+                      className={`bg-neutral-900/80 border-purple-400/30 text-purple-100 ${errors.timeFound && touched.timeFound ? 'border-red-500' : ''}`}
+                      required
+                    />
+                    {errors.timeFound && touched.timeFound && (
+                      <p className="text-sm text-red-400 mt-1 font-inter">{errors.timeFound}</p>
+                    )}
+                  </div>
 
-                    <div className="md:col-span-2">
-                      <Label htmlFor="locationFound">Location Found</Label>
-                      <Input
-                        id="locationFound"
-                        name="locationFound"
-                        value={formData.locationFound}
-                        onChange={handleInputChange}
-                        placeholder="Address, street, or landmark"
-                        className={errors.locationFound && touched.locationFound ? 'border-red-500' : ''}
-                        required
-                      />
-                      {errors.locationFound && touched.locationFound && (
-                        <p className="text-sm text-red-500 mt-1">{errors.locationFound}</p>
-                      )}
-                    </div>
+                  <div className="md:col-span-2">
+                    <Label htmlFor="locationFound" className="text-purple-200 font-inter">Location Found *</Label>
+                    <Input
+                      id="locationFound"
+                      name="locationFound"
+                      value={formData.locationFound}
+                      onChange={handleInputChange}
+                      placeholder="Address, street, or landmark"
+                      className={`bg-neutral-900/80 border-purple-400/30 text-purple-100 placeholder:text-purple-300/50 ${errors.locationFound && touched.locationFound ? 'border-red-500' : ''}`}
+                      required
+                    />
+                    {errors.locationFound && touched.locationFound && (
+                      <p className="text-sm text-red-400 mt-1 font-inter">{errors.locationFound}</p>
+                    )}
                   </div>
                 </div>
+              </div>
 
-                {/* Photo Upload Section */}
-                <div className="space-y-6 bg-gray-50 dark:bg-gray-800/50 p-6 rounded-xl border border-gray-100 dark:border-gray-700">
-                  <h2 className="text-xl font-semibold flex items-center gap-2">
-                    <span className="w-8 h-8 bg-blue-100 dark:bg-blue-900/50 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-400">3</span>
-                    Photos
-                  </h2>
+              {/* Photo Upload Section */}
+              <div className="space-y-6 bg-black/30 backdrop-blur-sm p-6 rounded-xl border border-purple-400/10">
+                <h2 className="text-xl font-semibold flex items-center gap-3 text-purple-200 font-urbanist">
+                  <div className="w-10 h-10 bg-purple-900/30 rounded-full flex items-center justify-center border border-purple-400/30">
+                    <Camera className="w-5 h-5 text-purple-400" />
+                  </div>
+                  Photos
+                </h2>
+                
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="photos" className="text-base text-purple-200 font-inter">Upload Photos *</Label>
+                    <span className="text-sm text-purple-300 font-medium font-inter">
+                      {formData.photos ? `${formData.photos.length}/3 photos` : '0/3 photos'}
+                    </span>
+                  </div>
                   
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="photos" className="text-base">Upload Photos</Label>
-                      <span className="text-sm text-gray-500 font-medium">
-                        {formData.photos ? `${formData.photos.length} photos uploaded` : 'No photos'}
-                      </span>
-                    </div>
-                    
-                    <div className="border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl p-8">
-                      <div className="flex flex-col items-center justify-center gap-4">
-                        <Input
-                          id="photos"
-                          name="photos"
-                          type="file"
-                          onChange={handleFileChange}
-                          accept="image/jpeg,image/png,image/webp"
-                          className="hidden"
-                          multiple
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => document.getElementById('photos')?.click()}
-                        >
-                          Add Photos
-                        </Button>
-                        <div className="flex flex-col gap-1">
-                      <p className="text-sm text-gray-500 font-medium">
-                        Add exactly 3 photos of the found pet
-                      </p>
-                      <p className="text-xs text-gray-400">
-                        • Required: 3 photos of the pet
-                      </p>
-                      <p className="text-xs text-gray-400">
-                        • Supported formats: JPG, PNG, WEBP
-                      </p>
-                      <p className="text-xs text-gray-400">
-                        • Maximum size: 5MB per photo
-                      </p>
-                    </div>
+                  <div className="border-2 border-dashed border-purple-400/30 rounded-xl p-8 bg-neutral-900/40 backdrop-blur-sm hover:border-purple-400/50 transition-all duration-300">
+                    <div className="flex flex-col items-center justify-center gap-4">
+                      <Input
+                        id="photos"
+                        name="photos"
+                        type="file"
+                        onChange={handleFileChange}
+                        accept="image/jpeg,image/png,image/webp"
+                        className="hidden"
+                        multiple
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => document.getElementById('photos')?.click()}
+                        className="border-2 border-purple-400/50 bg-neutral-900/40 backdrop-blur-sm text-purple-200 hover:bg-purple-500/10 hover:border-purple-400 rounded-[32px] font-inter font-medium transition-all duration-300"
+                      >
+                        <Camera className="w-4 h-4 mr-2" />
+                        Add Photos
+                      </Button>
+                      <div className="flex flex-col gap-1 text-center">
+                        <p className="text-sm text-purple-300 font-medium font-inter">
+                          Add exactly 3 photos of the found pet
+                        </p>
+                        <p className="text-xs text-purple-400/70 font-inter">
+                          • Required: 3 photos of the pet
+                        </p>
+                        <p className="text-xs text-purple-400/70 font-inter">
+                          • Supported formats: JPG, PNG, WEBP
+                        </p>
+                        <p className="text-xs text-purple-400/70 font-inter">
+                          • Maximum size: 5MB per photo
+                        </p>
                       </div>
                     </div>
+                  </div>
 
-                    {formData.photos && formData.photos.length > 0 && (
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
-                        {Array.from(formData.photos).map((file, index) => (
-                          <div
-                            key={index}
-                            className="relative aspect-square rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800"
-                          >
-                            <img
-                              src={URL.createObjectURL(file)}
-                              alt={`Preview ${index + 1}`}
-                              className="w-full h-full object-cover"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => {
+                  {formData.photos && formData.photos.length > 0 && (
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
+                      {Array.from(formData.photos).map((file, index) => (
+                        <div
+                          key={index}
+                          className="relative aspect-square rounded-lg overflow-hidden bg-neutral-900/80 border-2 border-purple-400/20 hover:border-purple-400/40 transition-all duration-300"
+                        >
+                          <img
+                            src={URL.createObjectURL(file)}
+                            alt={`Preview ${index + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                          <button
+                            type="button"
+                            onClick={() =>
+                            {
                                 const dt = new DataTransfer()
                                 const files = Array.from(formData.photos || [])
                                 files.splice(index, 1)
                                 files.forEach(file => dt.items.add(file))
                                 setFormData(prev => ({ ...prev, photos: dt.files }))
+                                setErrors(prev => ({
+                                  ...prev,
+                                  photos: dt.files.length === 3 ? '' : 'Please upload exactly 3 photos'
+                                }))
                               }}
-                              className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+                            className="absolute top-2 right-2 bg-red-500/90 backdrop-blur-sm text-white rounded-full p-1.5 hover:bg-red-600 transition-all duration-200 shadow-lg"
+                          >
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
                             >
-                              <svg
-                                className="w-4 h-4"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M6 18L18 6M6 6l12 12"
-                                />
-                              </svg>
-                            </button>
-                          </div>
-                        ))}
-                      </div>
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M6 18L18 6M6 6l12 12"
+                              />
+                            </svg>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {touched.photos && errors.photos && (
+                    <p className="text-sm text-red-400 mt-2 font-inter">{errors.photos}</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Finder Details Section */}
+              <div className="space-y-6 bg-black/30 backdrop-blur-sm p-6 rounded-xl border border-purple-400/10">
+                <h2 className="text-xl font-semibold flex items-center gap-3 text-purple-200 font-urbanist">
+                  <div className="w-10 h-10 bg-purple-900/30 rounded-full flex items-center justify-center border border-purple-400/30">
+                    <User className="w-5 h-5 text-purple-400" />
+                  </div>
+                  Your Contact Details
+                </h2>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <Label htmlFor="finderName" className="text-purple-200 font-inter">Your Name *</Label>
+                    <Input
+                      id="finderName"
+                      name="finderName"
+                      value={formData.finderName}
+                      onChange={handleInputChange}
+                      onBlur={handleInputBlur}
+                      className={`bg-neutral-900/80 border-purple-400/30 text-purple-100 placeholder:text-purple-300/50 ${errors.finderName && touched.finderName ? 'border-red-500' : ''}`}
+                      placeholder="Enter your full name"
+                      required
+                    />
+                    {errors.finderName && touched.finderName && (
+                      <p className="text-sm text-red-400 mt-1 font-inter">{errors.finderName}</p>
                     )}
                   </div>
-                </div>
 
-                {/* Finder Details Section */}
-                <div className="space-y-6 bg-gray-50 dark:bg-gray-800/50 p-6 rounded-xl border border-gray-100 dark:border-gray-700">
-                  <h2 className="text-xl font-semibold flex items-center gap-2">
-                    <span className="w-8 h-8 bg-blue-100 dark:bg-blue-900/50 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-400">4</span>
-                    Your Contact Details
-                  </h2>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <Label htmlFor="preferredContact" className="text-purple-200 font-inter">Preferred Contact Method *</Label>
+                    <Select
+                      onValueChange={(value: string) => handleSelectChange(value, "preferredContact")}
+                      value={formData.preferredContact}
+                    >
+                      <SelectTrigger className={`bg-neutral-900/80 border-purple-400/30 text-purple-100 ${errors.preferredContact && touched.preferredContact ? 'border-red-500' : ''}`}>
+                        <SelectValue placeholder="Select contact method" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-neutral-900 border-purple-400/30">
+                        <SelectItem value="phone">Phone</SelectItem>
+                        <SelectItem value="email">Email</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {errors.preferredContact && touched.preferredContact && (
+                      <p className="text-sm text-red-400 mt-1 font-inter">{errors.preferredContact}</p>
+                    )}
+                  </div>
+
+                  {formData.preferredContact === 'phone' && (
                     <div>
-                      <Label htmlFor="finderName">Your Name</Label>
+                      <Label htmlFor="contactNumber" className="text-purple-200 font-inter">Phone Number *</Label>
                       <Input
-                        id="finderName"
-                        name="finderName"
-                        value={formData.finderName}
+                        id="contactNumber"
+                        name="contactNumber"
+                        type="tel"
+                        value={formData.contactNumber}
                         onChange={handleInputChange}
                         onBlur={handleInputBlur}
-                        className={errors.finderName && touched.finderName ? 'border-red-500' : ''}
+                        placeholder="Enter 10-digit phone number"
+                        maxLength={10}
+                        className={`bg-neutral-900/80 border-purple-400/30 text-purple-100 placeholder:text-purple-300/50 ${errors.contactNumber && touched.contactNumber ? 'border-red-500' : ''}`}
+                        pattern="\d{10}"
                         required
                       />
-                      {errors.finderName && touched.finderName && (
-                        <p className="text-sm text-red-500 mt-1">{errors.finderName}</p>
+                      {errors.contactNumber && touched.contactNumber && (
+                        <p className="text-sm text-red-400 mt-1 font-inter">{errors.contactNumber}</p>
                       )}
                     </div>
+                  )}
 
+                  {formData.preferredContact === 'email' && (
                     <div>
-                      <Label htmlFor="preferredContact">Preferred Contact Method</Label>
-                      <Select
-                        name="preferredContact"
-                        onValueChange={(value: string) => handleSelectChange(value, "preferredContact")}
-                        value={formData.preferredContact}
-                      >
-                        <SelectTrigger className={errors.preferredContact && touched.preferredContact ? 'border-red-500' : ''}>
-                          <SelectValue placeholder="Select contact method" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="phone">Phone</SelectItem>
-                          <SelectItem value="email">Email</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      {errors.preferredContact && touched.preferredContact && (
-                        <p className="text-sm text-red-500 mt-1">{errors.preferredContact}</p>
+                      <Label htmlFor="email" className="text-purple-200 font-inter">Email Address *</Label>
+                      <Input
+                        id="email"
+                        name="email"
+                        type="email"
+                        value={formData.email}
+                        onChange={handleInputChange}
+                        onBlur={handleInputBlur}
+                        placeholder="Enter your email address"
+                        className={`bg-neutral-900/80 border-purple-400/30 text-purple-100 placeholder:text-purple-300/50 ${errors.email && touched.email ? 'border-red-500' : ''}`}
+                        required
+                      />
+                      {errors.email && touched.email && (
+                        <p className="text-sm text-red-400 mt-1 font-inter">{errors.email}</p>
                       )}
                     </div>
-
-                    {formData.preferredContact === 'phone' && (
-                      <div>
-                        <Label htmlFor="contactNumber">Phone Number</Label>
-                        <Input
-                          id="contactNumber"
-                          name="contactNumber"
-                          type="tel"
-                          value={formData.contactNumber}
-                          onChange={handleInputChange}
-                          placeholder="Enter your phone number (10 digits)"
-                          maxLength={10}
-                          className={errors.contactNumber && touched.contactNumber ? 'border-red-500' : ''}
-                          pattern="\d{10}"
-                          required
-                        />
-                        {errors.contactNumber && touched.contactNumber && (
-                          <p className="text-sm text-red-500 mt-1">{errors.contactNumber}</p>
-                        )}
-                      </div>
-                    )}
-
-                    {formData.preferredContact === 'email' && (
-                      <div>
-                        <Label htmlFor="email">Email Address</Label>
-                        <Input
-                          id="email"
-                          name="email"
-                          type="email"
-                          value={formData.email}
-                          onChange={handleInputChange}
-                          placeholder="Enter your email address"
-                          className={errors.email && touched.email ? 'border-red-500' : ''}
-                          required
-                        />
-                        {errors.email && touched.email && (
-                          <p className="text-sm text-red-500 mt-1">{errors.email}</p>
-                        )}
-                      </div>
-                    )}
-                  </div>
+                  )}
                 </div>
+              </div>
 
-                {/* Submit Button */}
+              {/* Submit Button */}
+              <div className="flex justify-center pt-4">
                 <Button 
                   type="submit" 
-                  className="w-full bg-blue-600 hover:bg-blue-700 transition-all duration-200 ease-in-out"
+                  disabled={!isFormValid()}
+                  className={`w-full sm:w-auto px-12 py-6 text-lg font-semibold rounded-[32px] font-inter transition-all duration-300 ${
+                    isFormValid()
+                      ? 'bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 hover:scale-105'
+                      : 'bg-neutral-800 text-neutral-500 cursor-not-allowed'
+                  }`}
                 >
+                  <Sparkles className="w-5 h-5 mr-2 inline" />
                   Submit Report
                 </Button>
-              </form>
-            </div>
+              </div>
+
+              {/* Helper text for disabled button */}
+              {!isFormValid() && (
+                <p className="text-center text-sm text-purple-300/70 font-inter -mt-2">
+                  Please fill in all required fields and upload exactly 3 photos
+                </p>
+              )}
+            </form>
           </div>
         </div>
-      </div>
-    </div>
+      </section>
+    </main>
   )
 }

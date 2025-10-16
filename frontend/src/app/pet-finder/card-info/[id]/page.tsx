@@ -7,6 +7,9 @@ import { StatusBadge } from "@/components/pet-finder/StatusBadge"
 import { useParams } from "next/navigation"
 import { useState, useEffect } from "react"
 import { MOCK_PETS, type Pet } from "@/lib/mock-data"
+import { ArrowLeft, Phone, Mail, MapPin, Calendar, Heart, Info, Activity, Sparkles } from "lucide-react"
+import Header from "@/components/layout/Header"
+import Footer from "@/components/layout/Footer"
 
 export default function PetDetailsPage() {
   const params = useParams()
@@ -20,134 +23,216 @@ export default function PetDetailsPage() {
 
   if (!pet) {
     return (
-      <div className="container mx-auto px-4 py-16 text-center">
-        <h1 className="text-2xl font-bold mb-4">Pet Not Found</h1>
-        <p className="mb-8">Sorry, we couldn't find the pet you're looking for.</p>
-        <Link href="/pet-finder">
-          <Button variant="outline">Back to Pet Finder</Button>
-        </Link>
-      </div>
+      <>
+        <Header />
+        <main className="min-h-screen bg-black">
+          <section className="relative py-20 overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-black via-neutral-900 to-black" />
+            <div className="absolute -top-20 -left-20 w-60 h-60 bg-purple-500/10 rounded-full blur-3xl animate-pulse" />
+            
+            <div className="relative z-10 container mx-auto px-4 text-center">
+              <div className="w-20 h-20 mx-auto mb-6 bg-purple-900/30 rounded-full flex items-center justify-center">
+                <Heart className="w-10 h-10 text-purple-400" />
+              </div>
+              <h1 className="text-3xl sm:text-4xl font-bold text-purple-200 mb-4 font-urbanist">Pet Not Found</h1>
+              <p className="text-lg text-purple-300 mb-8 font-inter">Sorry, we couldn't find the pet you're looking for.</p>
+              <Link href="/pet-finder">
+                <Button 
+                  variant="outline"
+                  size="lg"
+                  className="h-14 text-lg px-8 border-2 border-purple-400/50 bg-neutral-900/40 backdrop-blur-sm text-purple-200 hover:bg-purple-500/10 hover:border-purple-400 rounded-[32px] font-inter font-medium transition-all duration-300"
+                >
+                  <ArrowLeft className="w-5 h-5 mr-2" />
+                  Back to Pet Finder
+                </Button>
+              </Link>
+            </div>
+          </section>
+        </main>
+        <Footer />
+      </>
     )
   }
 
   return (
-    <div className="container mx-auto px-4 py-16">
-      {/* Navigation */}
-      <div className="mb-8">
-        <Link href="/pet-finder">
-          <Button variant="outline" className="mb-4">
-            ← Back to Pet Finder
-          </Button>
-        </Link>
-      </div>
+    <>
+      <Header />
+      <main className="min-h-screen bg-black">
+        {/* Hero Section */}
+        <section className="relative py-16 sm:py-20 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-black via-neutral-900 to-black" />
+          <div className="absolute inset-0 bg-gradient-to-t from-purple-900/5 via-transparent to-transparent" />
+          <div className="absolute -top-20 -left-20 w-60 h-60 bg-purple-500/10 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute -bottom-20 -right-20 w-80 h-80 bg-purple-400/8 rounded-full blur-3xl animate-pulse" />
 
-      <div className="grid md:grid-cols-2 gap-8">
-        {/* Left Column - Image */}
-        <div className="relative h-[400px] rounded-xl overflow-hidden">
-          <Image
-            src={pet.photo}
-            alt={`${pet.type} - ${pet.breed}`}
-            fill
-            className="object-cover"
-            priority
-          />
-          <div className="absolute top-4 right-4">
-            <StatusBadge status={pet.status} />
-          </div>
-        </div>
-
-        {/* Right Column - Details */}
-        <div className="space-y-6">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">{pet.name}</h1>
-            <p className="text-lg text-gray-600 dark:text-gray-300">{pet.type} - {pet.breed}</p>
-          </div>
-
-          {/* Main Details */}
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div className="space-y-2">
-              <p>
-                <span className="font-semibold">Age:</span> {pet.age}
-              </p>
-              <p>
-                <span className="font-semibold">Gender:</span> {pet.gender}
-              </p>
-              <p>
-                <span className="font-semibold">Color:</span> {pet.color}
-              </p>
-              <p>
-                <span className="font-semibold">Size:</span> {pet.size}
-              </p>
+          <div className="relative z-10 container mx-auto px-4">
+            {/* Navigation */}
+            <div className="mb-8 animate-fadeInUp">
+              <Link href="/pet-finder">
+                <Button 
+                  variant="outline"
+                  className="border-2 border-purple-400/50 bg-neutral-900/40 backdrop-blur-sm text-purple-200 hover:bg-purple-500/10 hover:border-purple-400 rounded-[32px] font-inter font-medium transition-all duration-300"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back to Pet Finder
+                </Button>
+              </Link>
             </div>
-            <div className="space-y-2">
-              <p>
-                <span className="font-semibold">Location:</span> {pet.location}
-              </p>
-              <p>
-                <span className="font-semibold">Date:</span> {pet.date}
-              </p>
-              {pet.status === 'lost' ? (
-                <p className="text-red-600 dark:text-red-400">
-                  <span className="font-semibold">Last Seen:</span> {pet.lastSeen}
+
+            <div className="text-center mb-4">
+              <div className="inline-flex items-center px-4 py-2 rounded-full bg-neutral-900/80 backdrop-blur-sm border border-purple-400/20 mb-6 animate-fadeInUp">
+                <Sparkles className="w-4 h-4 text-purple-400 mr-2" />
+                <span className="text-sm font-medium text-purple-200 font-inter">Pet Details</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Main Content */}
+        <section className="py-8 sm:py-12 bg-neutral-900">
+          <div className="container mx-auto px-4">
+            <div className="grid md:grid-cols-2 gap-8">
+              {/* Left Column - Image */}
+              <div className="animate-fadeInUp">
+                <div className="relative h-[400px] rounded-2xl overflow-hidden border-2 border-purple-400/20 shadow-lg">
+                  <Image
+                    src={pet.photo}
+                    alt={`${pet.type} - ${pet.breed}`}
+                    fill
+                    className="object-cover"
+                    priority
+                  />
+                  <div className="absolute top-4 right-4">
+                    <StatusBadge status={pet.status} />
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column - Details */}
+              <div className="space-y-6 animate-fadeInUp">
+                <div>
+                  <h1 className="text-3xl sm:text-4xl font-bold text-purple-200 mb-2 font-urbanist">{pet.name}</h1>
+                  <p className="text-lg text-purple-300 font-inter">{pet.type} - {pet.breed}</p>
+                </div>
+
+                {/* Main Details */}
+                <div className="bg-neutral-800/60 backdrop-blur-sm rounded-2xl p-6 border border-purple-400/20">
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="space-y-2">
+                      <p className="text-purple-300 font-inter">
+                        <span className="font-semibold text-purple-200">Age:</span> {pet.age}
+                      </p>
+                      <p className="text-purple-300 font-inter">
+                        <span className="font-semibold text-purple-200">Gender:</span> {pet.gender}
+                      </p>
+                      <p className="text-purple-300 font-inter">
+                        <span className="font-semibold text-purple-200">Color:</span> {pet.color}
+                      </p>
+                      <p className="text-purple-300 font-inter">
+                        <span className="font-semibold text-purple-200">Size:</span> {pet.size}
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-purple-300 font-inter">
+                        <span className="font-semibold text-purple-200">Location:</span> {pet.location}
+                      </p>
+                      <p className="text-purple-300 font-inter">
+                        <span className="font-semibold text-purple-200">Date:</span> {pet.date}
+                      </p>
+                      {pet.status === 'lost' ? (
+                        <p className="text-red-400 font-inter">
+                          <span className="font-semibold text-red-300">Last Seen:</span> {pet.lastSeen}
+                        </p>
+                      ) : (
+                        <p className="text-green-400 font-inter">
+                          <span className="font-semibold text-green-300">Found At:</span> {pet.foundArea}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Description */}
+                <div className="bg-neutral-800/60 backdrop-blur-sm rounded-2xl p-6 border border-purple-400/20">
+                  <h2 className="text-xl font-semibold text-purple-200 mb-2 font-urbanist">Description</h2>
+                  <p className="text-purple-300 font-inter">{pet.description}</p>
+                </div>
+
+                {/* Additional Details */}
+                <div className="bg-neutral-800/60 backdrop-blur-sm rounded-2xl p-6 border border-purple-400/20">
+                  <h2 className="text-xl font-semibold text-purple-200 mb-2 font-urbanist">Additional Details</h2>
+                  <div className="space-y-2 text-purple-300 font-inter">
+                    {pet.markings && (
+                      <p><span className="font-semibold text-purple-200">Distinctive Markings:</span> {pet.markings}</p>
+                    )}
+                    {pet.behavior && (
+                      <p><span className="font-semibold text-purple-200">Behavior:</span> {pet.behavior}</p>
+                    )}
+                    {pet.health && (
+                      <p><span className="font-semibold text-purple-200">Health Status:</span> {pet.health}</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Contact Information */}
+                <div className="bg-neutral-800/60 backdrop-blur-sm rounded-2xl p-6 border border-purple-400/20">
+                  <h2 className="text-xl font-semibold text-purple-200 mb-4 font-urbanist">Contact Information</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Button
+                      variant="outline"
+                      className="w-full border-2 border-purple-400/50 bg-neutral-900/40 backdrop-blur-sm text-purple-200 hover:bg-purple-500/10 hover:border-purple-400 rounded-[32px] font-inter font-medium transition-all duration-300"
+                      onClick={() => window.location.href = `tel:${pet.contactNumber}`}
+                    >
+                      <span className="flex items-center gap-2">
+                        <Phone className="w-4 h-4" />
+                        Call {pet.contactName}
+                      </span>
+                    </Button>
+                    <Button
+                      className="w-full bg-gradient-to-r from-purple-600 via-purple-500 to-purple-400 hover:from-purple-700 hover:via-purple-600 hover:to-purple-500 rounded-[32px] text-white font-inter font-medium shadow-lg shadow-purple-500/20 hover:shadow-xl hover:shadow-purple-500/30 transition-all duration-300"
+                      onClick={() => window.location.href = 'mailto:support@home4paws.com'}
+                    >
+                      <span className="flex items-center gap-2">
+                        <Mail className="w-4 h-4" />
+                        Email Support
+                      </span>
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* CTA Section */}
+        <section className="py-20 bg-black">
+          <div className="container mx-auto px-4">
+            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-black via-neutral-900 to-purple-900/20 border border-purple-400/20">
+              <div className="absolute -top-24 -right-24 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl animate-pulse" />
+              <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl animate-pulse" />
+              
+              <div className="relative p-8 sm:p-12 text-center">
+                <h2 className="text-2xl sm:text-3xl font-semibold text-purple-200 mb-4 leading-tight font-urbanist">
+                  Want to Help More Pets?
+                </h2>
+                <p className="text-base sm:text-lg text-purple-300 max-w-2xl mx-auto mb-6 font-inter">
+                  Browse more lost and found pets or report one you've seen
                 </p>
-              ) : (
-                <p className="text-green-600 dark:text-green-400">
-                  <span className="font-semibold">Found At:</span> {pet.foundArea}
-                </p>
-              )}
+                <Link href="/pet-finder">
+                  <Button 
+                    size="lg" 
+                    className="h-14 text-lg px-8 bg-gradient-to-r from-purple-600 via-purple-500 to-purple-400 hover:from-purple-700 hover:via-purple-600 hover:to-purple-500 rounded-[32px] text-white font-inter font-medium shadow-lg shadow-purple-500/20 hover:shadow-xl hover:shadow-purple-500/30 transition-all duration-300 hover:scale-105"
+                  >
+                    <Heart className="w-5 h-5 mr-2" />
+                    View All Pets
+                  </Button>
+                </Link>
+              </div>
             </div>
           </div>
-
-          {/* Description */}
-          <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-            <h2 className="text-xl font-semibold mb-2">Description</h2>
-            <p className="text-gray-600 dark:text-gray-300">{pet.description}</p>
-          </div>
-
-          {/* Additional Details */}
-          <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-            <h2 className="text-xl font-semibold mb-2">Additional Details</h2>
-            <div className="space-y-2 text-gray-600 dark:text-gray-300">
-              {pet.markings && (
-                <p><span className="font-semibold">Distinctive Markings:</span> {pet.markings}</p>
-              )}
-              {pet.behavior && (
-                <p><span className="font-semibold">Behavior:</span> {pet.behavior}</p>
-              )}
-              {pet.health && (
-                <p><span className="font-semibold">Health Status:</span> {pet.health}</p>
-              )}
-            </div>
-          </div>
-
-          {/* Contact Information */}
-          <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-            <h2 className="text-xl font-semibold mb-4">Contact Information</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => window.location.href = `tel:${pet.contactNumber}`}
-              >
-                <span className="flex items-center gap-2">
-                  <span>📞</span>
-                  Call {pet.contactName}
-                </span>
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full bg-blue-600 text-white hover:bg-blue-700"
-                onClick={() => window.location.href = 'mailto:support@home4paws.com'}
-              >
-                <span className="flex items-center gap-2">
-                  <span>✉️</span>
-                  Email Support
-                </span>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+        </section>
+      </main>
+      <Footer />
+    </>
   )
 }
