@@ -23,6 +23,9 @@ namespace Home4Paws.API.Data
         public DbSet<UserAddress> UserAddresses { get; set; } = null!;
         public DbSet<Feedback> Feedbacks { get; set; } = null!;
         public DbSet<PetReport> PetReports { get; set; } = null!;
+        public DbSet<AdoptionListing> AdoptionListings { get; set; } = null!;
+        public DbSet<AdoptionApplication> AdoptionApplications { get; set; } = null!;
+        public DbSet<AdoptionFavorite> AdoptionFavorites { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -298,6 +301,165 @@ namespace Home4Paws.API.Data
                 // Create spatial index
                 entity.HasIndex(e => new { e.Latitude, e.Longitude })
                     .HasDatabaseName("IX_PetReports_Location_Spatial");
+            });
+
+            // Configure AdoptionListing entity
+            modelBuilder.Entity<AdoptionListing>(entity =>
+            {
+                entity.ToTable("adoption_listings");
+
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).HasColumnName("id");
+                entity.Property(e => e.UserId).HasColumnName("user_id").IsRequired();
+
+                // Pet Info
+                entity.Property(e => e.PetName).HasColumnName("pet_name").HasMaxLength(100).IsRequired();
+                entity.Property(e => e.PetType).HasColumnName("pet_type").HasMaxLength(50).IsRequired();
+                entity.Property(e => e.Breed).HasColumnName("breed").HasMaxLength(100);
+                entity.Property(e => e.AgeYears).HasColumnName("age_years");
+                entity.Property(e => e.AgeMonths).HasColumnName("age_months");
+                entity.Property(e => e.Gender).HasColumnName("gender").HasMaxLength(20).IsRequired();
+                entity.Property(e => e.Size).HasColumnName("size").HasMaxLength(50).IsRequired();
+                entity.Property(e => e.Color).HasColumnName("color").HasMaxLength(100).IsRequired();
+                entity.Property(e => e.Description).HasColumnName("description");
+
+                // Health & Behavior
+                entity.Property(e => e.HealthStatus).HasColumnName("health_status").HasMaxLength(100);
+                entity.Property(e => e.VaccinationStatus).HasColumnName("vaccination_status").HasMaxLength(200);
+                entity.Property(e => e.IsSpayedNeutered).HasColumnName("is_spayed_neutered");
+                entity.Property(e => e.IsHouseTrained).HasColumnName("is_house_trained");
+                entity.Property(e => e.GoodWithKids).HasColumnName("good_with_kids");
+                entity.Property(e => e.GoodWithPets).HasColumnName("good_with_pets");
+                entity.Property(e => e.EnergyLevel).HasColumnName("energy_level").HasMaxLength(50);
+                entity.Property(e => e.SpecialNeeds).HasColumnName("special_needs");
+
+                // Adoption terms
+                entity.Property(e => e.AdoptionType).HasColumnName("adoption_type").HasMaxLength(20).IsRequired();
+                entity.Property(e => e.AdoptionFee).HasColumnName("adoption_fee").HasColumnType("decimal(10,2)").HasDefaultValue(0);
+                entity.Property(e => e.RehomingReason).HasColumnName("rehoming_reason");
+
+                // Contact
+                entity.Property(e => e.ContactName).HasColumnName("contact_name").HasMaxLength(100).IsRequired();
+                entity.Property(e => e.ContactPhone).HasColumnName("contact_phone").HasMaxLength(20).IsRequired();
+                entity.Property(e => e.ContactEmail).HasColumnName("contact_email").HasMaxLength(255).IsRequired();
+                entity.Property(e => e.Location).HasColumnName("location").HasMaxLength(200).IsRequired();
+                entity.Property(e => e.City).HasColumnName("city").HasMaxLength(100).IsRequired();
+                entity.Property(e => e.Province).HasColumnName("province").HasMaxLength(100).IsRequired();
+                entity.Property(e => e.District).HasColumnName("district").HasMaxLength(100);
+                entity.Property(e => e.Latitude).HasColumnName("latitude").HasColumnType("double precision");
+                entity.Property(e => e.Longitude).HasColumnName("longitude").HasColumnType("double precision");
+
+                // Media
+                entity.Property(e => e.PhotoUrls)
+                    .HasColumnName("photo_urls")
+                    .HasColumnType("jsonb")
+                    .HasConversion(
+                        v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions)null!),
+                        v => System.Text.Json.JsonSerializer.Deserialize<string[]>(v, (System.Text.Json.JsonSerializerOptions)null!) ?? Array.Empty<string>()
+                    );
+                entity.Property(e => e.VideoUrl).HasColumnName("video_url");
+
+                // Moderation & Status
+                entity.Property(e => e.Status).HasColumnName("status").HasMaxLength(50).HasDefaultValue("Pending");
+                entity.Property(e => e.AdminNotes).HasColumnName("admin_notes");
+                entity.Property(e => e.RejectionReason).HasColumnName("rejection_reason");
+                entity.Property(e => e.ApprovedByAdminId).HasColumnName("approved_by_admin_id");
+                entity.Property(e => e.ApprovedAt).HasColumnName("approved_at");
+
+                // Metrics
+                entity.Property(e => e.Views).HasColumnName("views").HasDefaultValue(0);
+                entity.Property(e => e.FavoritesCount).HasColumnName("favorites_count").HasDefaultValue(0);
+                entity.Property(e => e.IsFeatured).HasColumnName("is_featured").HasDefaultValue(false);
+                entity.Property(e => e.IsUrgent).HasColumnName("is_urgent").HasDefaultValue(false);
+
+                // Timestamps
+                entity.Property(e => e.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("NOW()");
+                entity.Property(e => e.UpdatedAt).HasColumnName("updated_at").HasDefaultValueSql("NOW()");
+                entity.Property(e => e.AdoptedAt).HasColumnName("adopted_at");
+
+                // Relationships
+                entity.HasOne(e => e.User)
+                    .WithMany()
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                // Indexes
+                entity.HasIndex(e => e.Status);
+                entity.HasIndex(e => e.PetType);
+                entity.HasIndex(e => e.City);
+                entity.HasIndex(e => e.AdoptionType);
+                entity.HasIndex(e => e.CreatedAt);
+            });
+
+            // Configure AdoptionApplication entity
+            modelBuilder.Entity<AdoptionApplication>(entity =>
+            {
+                entity.ToTable("adoption_applications");
+
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).HasColumnName("id");
+                entity.Property(e => e.ListingId).HasColumnName("listing_id").IsRequired();
+                entity.Property(e => e.ApplicantId).HasColumnName("applicant_id").IsRequired();
+
+                entity.Property(e => e.ApplicantName).HasColumnName("applicant_name").HasMaxLength(100).IsRequired();
+                entity.Property(e => e.ApplicantPhone).HasColumnName("applicant_phone").HasMaxLength(20).IsRequired();
+                entity.Property(e => e.ApplicantEmail).HasColumnName("applicant_email").HasMaxLength(255).IsRequired();
+                entity.Property(e => e.ApplicantAddress).HasColumnName("applicant_address").IsRequired();
+
+                entity.Property(e => e.HousingType).HasColumnName("housing_type").HasMaxLength(50);
+                entity.Property(e => e.HasYard).HasColumnName("has_yard");
+                entity.Property(e => e.OtherPets).HasColumnName("other_pets");
+                entity.Property(e => e.HouseholdMembers).HasColumnName("household_members");
+                entity.Property(e => e.HasChildren).HasColumnName("has_children");
+
+                entity.Property(e => e.PetExperience).HasColumnName("pet_experience");
+                entity.Property(e => e.WhyAdopt).HasColumnName("why_adopt").IsRequired();
+
+                entity.Property(e => e.Status).HasColumnName("status").HasMaxLength(50).HasDefaultValue("Pending");
+                entity.Property(e => e.OwnerNotes).HasColumnName("owner_notes");
+
+                entity.Property(e => e.AppliedAt).HasColumnName("applied_at").HasDefaultValueSql("NOW()");
+                entity.Property(e => e.ReviewedAt).HasColumnName("reviewed_at");
+                entity.Property(e => e.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("NOW()");
+                entity.Property(e => e.UpdatedAt).HasColumnName("updated_at").HasDefaultValueSql("NOW()");
+
+                entity.HasIndex(e => new { e.ListingId, e.ApplicantId }).IsUnique();
+                entity.HasIndex(e => e.ListingId);
+                entity.HasIndex(e => e.ApplicantId);
+
+                entity.HasOne(e => e.Listing)
+                    .WithMany()
+                    .HasForeignKey(e => e.ListingId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.Applicant)
+                    .WithMany()
+                    .HasForeignKey(e => e.ApplicantId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Configure AdoptionFavorite entity
+            modelBuilder.Entity<AdoptionFavorite>(entity =>
+            {
+                entity.ToTable("adoption_favorites");
+
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).HasColumnName("id");
+                entity.Property(e => e.UserId).HasColumnName("user_id").IsRequired();
+                entity.Property(e => e.ListingId).HasColumnName("listing_id").IsRequired();
+                entity.Property(e => e.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("NOW()");
+
+                entity.HasIndex(e => new { e.UserId, e.ListingId }).IsUnique();
+
+                entity.HasOne(e => e.User)
+                    .WithMany()
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.Listing)
+                    .WithMany()
+                    .HasForeignKey(e => e.ListingId)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
         }
     }

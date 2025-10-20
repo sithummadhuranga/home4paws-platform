@@ -145,7 +145,7 @@ export default function Header() {
             <nav className="hidden md:flex items-center justify-center flex-1">
               <NavItem href="/about">About</NavItem>
               <NavItem href="/pet-finder" className="whitespace-nowrap">Pet Finder</NavItem>
-              <NavItem href="/shelters">Shelters</NavItem>
+              <NavItem href="/adoptions">Adoption</NavItem>
               <NavItem href="/store">Store</NavItem>
               <NavItem href="/resources">Resources</NavItem>
               <NavItem href="/feedbacks">Feedback</NavItem>
@@ -207,6 +207,17 @@ export default function Header() {
                               Profile
                             </Link>
                           </DropdownMenuItem>
+                          {user.role === 'Admin' && (
+                            <>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem className="cursor-pointer hover:bg-purple-900/20 text-purple-200" asChild>
+                                <Link href="/admin/adoptions">
+                                  <User className="w-4 h-4 mr-3 text-purple-300" />
+                                  Adoption Admin
+                                </Link>
+                              </DropdownMenuItem>
+                            </>
+                          )}
                           <DropdownMenuSeparator />
                           <DropdownMenuItem 
                             onClick={handleLogout} 
@@ -287,11 +298,14 @@ export default function Header() {
           <nav className="p-5 space-y-2">
             {/* Navigation Links */}
             <div className="space-y-2 pb-5 border-b border-purple-400/20">
-              <NavItem href="/adopt" onClick={closeMenu} className="block w-full">
-                Adopt Pets
+              <NavItem href="/about" onClick={closeMenu} className="block w-full">
+                About
               </NavItem>
-              <NavItem href="/shelters" onClick={closeMenu} className="block w-full">
-                Shelters
+              <NavItem href="/pet-finder" onClick={closeMenu} className="block w-full">
+                Pet Finder
+              </NavItem>
+              <NavItem href="/adoptions" onClick={closeMenu} className="block w-full">
+                Adoption
               </NavItem>
               <NavItem href="/store" onClick={closeMenu} className="block w-full">
                 Store
@@ -299,11 +313,8 @@ export default function Header() {
               <NavItem href="/resources" onClick={closeMenu} className="block w-full">
                 Resources
               </NavItem>
-              <NavItem href="/about" onClick={closeMenu} className="block w-full">
-                About
-              </NavItem>
-              <NavItem href="/feedbacks" onClick={closeMenu}>
-                Feedbacks
+              <NavItem href="/feedbacks" onClick={closeMenu} className="block w-full">
+                Feedback
               </NavItem>
             </div>
             

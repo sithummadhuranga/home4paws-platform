@@ -28,6 +28,14 @@ namespace Home4Paws.API.Helpers
             // Map from CreateUpdateUserAddressDto to UserAddress
             CreateMap<CreateUpdateUserAddressDto, UserAddress>()
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow));
+
+            // Adoption mappings
+            CreateMap<AdoptionListing, AdoptionListingDto>();
+            CreateMap<CreateAdoptionListingDto, AdoptionListing>();
+            CreateMap<UpdateAdoptionListingDto, AdoptionListing>();
+
+            CreateMap<AdoptionApplication, AdoptionApplicationDto>();
+            CreateMap<CreateAdoptionApplicationDto, AdoptionApplication>();
         }
     }
 }

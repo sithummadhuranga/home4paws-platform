@@ -85,10 +85,22 @@ namespace Home4Paws.API.Middleware
                     // Only show detailed error in development
                     if (_environment.IsDevelopment())
                     {
+                        var errorList = new List<string> { exception.StackTrace ?? "No stack trace available" };
+                        
+                        // Add inner exception details if present
+                        if (exception.InnerException != null)
+                        {
+                            errorList.Add($"Inner Exception: {exception.InnerException.Message}");
+                            if (exception.InnerException.StackTrace != null)
+                            {
+                                errorList.Add($"Inner Stack Trace: {exception.InnerException.StackTrace}");
+                            }
+                        }
+                        
                         response = response with 
                         { 
                             message = exception.Message,
-                            errors = [exception.StackTrace ?? "No stack trace available"]
+                            errors = errorList
                         };
                     }
                     else
