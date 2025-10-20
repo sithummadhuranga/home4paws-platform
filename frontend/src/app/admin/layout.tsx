@@ -21,12 +21,13 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const navigation = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
-  { name: 'Adoptions', href: '/admin/adoptions', icon: Package },
+  { name: 'Pending Adoptions', href: '/admin/adoptions', icon: Package },
+  { name: 'All Adoptions', href: '/admin/adoptions/all', icon: FolderTree },
   { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
   { name: 'Products', href: '/admin/products', icon: Package },
   { name: 'Categories', href: '/admin/categories', icon: FolderTree },
   { name: 'Users', href: '/admin/users', icon: Users },
-  { name: 'Feedbacks', href: '/admin/feedbacks', icon: MessageSquare }, // ✅ Add this
+  { name: 'Feedbacks', href: '/admin/feedbacks', icon: MessageSquare },
   { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
 ];
 

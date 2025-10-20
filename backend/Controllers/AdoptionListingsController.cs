@@ -90,6 +90,14 @@ namespace Home4Paws.API.Controllers
         }
 
         // Admin endpoints
+        [HttpGet("admin/all")]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult<IEnumerable<AdoptionListingDto>>> GetAllForAdmin([FromQuery] string? status, [FromQuery] int page = 1, [FromQuery] int pageSize = 50)
+        {
+            var items = await _service.GetAllForAdmin(status, page, pageSize);
+            return Ok(items);
+        }
+
         [HttpGet("admin/pending")]
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult<IEnumerable<AdoptionListingDto>>> GetPending([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
@@ -115,6 +123,15 @@ namespace Home4Paws.API.Controllers
             if (body == null || string.IsNullOrWhiteSpace(body.Reason)) return BadRequest(new { message = "Reason is required" });
             var adminId = GetCurrentUserId();
             var ok = await _service.Reject(id, adminId, body.Reason);
+            if (!ok) return NotFound();
+            return NoContent();
+        }
+
+        [HttpDelete("admin/{id}/delete")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> AdminDelete(int id)
+        {
+            var ok = await _service.AdminDelete(id);
             if (!ok) return NotFound();
             return NoContent();
         }

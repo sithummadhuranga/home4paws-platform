@@ -3,7 +3,9 @@ import type {
   CreateAdoptionListingInput,
   UpdateAdoptionListingInput,
   AdoptionApplication,
-  CreateAdoptionApplicationInput
+  CreateAdoptionApplicationInput,
+  AdoptionMessage,
+  SendAdoptionMessageInput
 } from '@/types/adoption'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5185/api'
@@ -135,5 +137,66 @@ export const adoptionService = {
       body: JSON.stringify({ rejectionReason })
     })
     if (!res.ok) throw new Error('Failed to reject listing')
+  },
+
+  // Admin - All listings
+  async allListings(status?: string): Promise<AdoptionListing[]> {
+    const url = status 
+      ? `${API_BASE_URL}/adoptions/admin/all?status=${encodeURIComponent(status)}`
+      : `${API_BASE_URL}/adoptions/admin/all`
+    const res = await fetch(url, { headers: getAuthHeaders() })
+    if (!res.ok) throw new Error('Failed to fetch all listings')
+    return res.json()
+  },
+
+  async adminDelete(id: number): Promise<void> {
+    const res = await fetch(`${API_BASE_URL}/adoptions/admin/${id}/delete`, {
+      method: 'DELETE',
+      headers: getAuthHeaders()
+    })
+    if (!res.ok) throw new Error('Failed to delete listing')
+  },
+
+  // Messaging
+  async sendMessage(input: SendAdoptionMessageInput): Promise<AdoptionMessage> {
+    const res = await fetch(`${API_BASE_URL}/adoption-messages`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(input)
+    })
+    if (!res.ok) throw new Error('Failed to send message')
+    return res.json()
+  },
+
+  async getConversation(listingId: number): Promise<AdoptionMessage[]> {
+    const res = await fetch(`${API_BASE_URL}/adoption-messages/conversation/${listingId}`, {
+      headers: getAuthHeaders()
+    })
+    if (!res.ok) throw new Error('Failed to fetch conversation')
+    return res.json()
+  },
+
+  async myMessages(): Promise<AdoptionMessage[]> {
+    const res = await fetch(`${API_BASE_URL}/adoption-messages/my-messages`, {
+      headers: getAuthHeaders()
+    })
+    if (!res.ok) throw new Error('Failed to fetch messages')
+    return res.json()
+  },
+
+  async markMessageRead(id: number): Promise<void> {
+    const res = await fetch(`${API_BASE_URL}/adoption-messages/${id}/mark-read`, {
+      method: 'PATCH',
+      headers: getAuthHeaders()
+    })
+    if (!res.ok) throw new Error('Failed to mark message as read')
+  },
+
+  async unreadCount(): Promise<number> {
+    const res = await fetch(`${API_BASE_URL}/adoption-messages/unread-count`, {
+      headers: getAuthHeaders()
+    })
+    if (!res.ok) throw new Error('Failed to fetch unread count')
+    return res.json()
   }
 }

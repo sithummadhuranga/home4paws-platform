@@ -122,3 +122,21 @@ export interface CreateAdoptionApplicationInput {
   petExperience?: string;
   whyAdopt: string;
 }
+
+export interface AdoptionMessage {
+  id: number;
+  listingId: number;
+  petName: string;
+  senderId: number;
+  senderName: string;
+  receiverId: number;
+  receiverName: string;
+  message: string;
+  isRead: boolean;
+  createdAt: string;
+}
+
+export interface SendAdoptionMessageInput {
+  listingId: number;
+  message: string;
+}

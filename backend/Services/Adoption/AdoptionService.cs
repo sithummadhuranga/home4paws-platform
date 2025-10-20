@@ -30,7 +30,7 @@ namespace Home4Paws.API.Services.Adoption
         public async Task<AdoptionListingDto?> GetById(int id)
         {
             var listing = await _listingRepo.GetByIdAsync(id);
-            if (listing == null || listing.Status != "Approved") return null;
+            if (listing == null) return null;
             return _mapper.Map<AdoptionListingDto>(listing);
         }
 
@@ -125,6 +125,12 @@ namespace Home4Paws.API.Services.Adoption
             return true;
         }
 
+        public async Task<IEnumerable<AdoptionListingDto>> GetAllForAdmin(string? status, int page, int pageSize)
+        {
+            var items = await _listingRepo.GetAllForAdminAsync(status, page, pageSize);
+            return _mapper.Map<IEnumerable<AdoptionListingDto>>(items);
+        }
+
         public async Task<IEnumerable<AdoptionListingDto>> GetPending(int page, int pageSize)
         {
             var items = await _listingRepo.GetPendingAsync(page, pageSize);
@@ -153,6 +159,14 @@ namespace Home4Paws.API.Services.Adoption
             existing.RejectionReason = reason;
             existing.UpdatedAt = DateTime.UtcNow;
             await _listingRepo.UpdateAsync(existing);
+            return true;
+        }
+
+        public async Task<bool> AdminDelete(int id)
+        {
+            var existing = await _listingRepo.GetByIdAsync(id);
+            if (existing == null) return false;
+            await _listingRepo.DeleteAsync(existing);
             return true;
         }
     }

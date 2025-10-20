@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { Heart, MapPin, Search, SlidersHorizontal, Plus, X } from "lucide-react"
 import { useAuth } from "@/contexts/AuthContext"
+import Header from "@/components/layout/Header"
 
 export default function AdoptionsPage() {
   const { isAuthenticated } = useAuth()
@@ -59,7 +60,9 @@ export default function AdoptionsPage() {
   }, [items, searchQuery])
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-black via-neutral-950 to-black">
+    <>
+      <Header />
+      <div className="min-h-screen bg-gradient-to-b from-black via-neutral-950 to-black">
       {/* Hero Section */}
       <div className="relative overflow-hidden border-b border-purple-400/20">
         <div className="absolute inset-0 bg-gradient-to-r from-purple-600/10 via-purple-500/5 to-transparent" />
@@ -328,5 +331,6 @@ export default function AdoptionsPage() {
         </div>
       )}
     </div>
+    </>
   )
 }

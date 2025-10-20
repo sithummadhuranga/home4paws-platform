@@ -26,6 +26,7 @@ namespace Home4Paws.API.Data
         public DbSet<AdoptionListing> AdoptionListings { get; set; } = null!;
         public DbSet<AdoptionApplication> AdoptionApplications { get; set; } = null!;
         public DbSet<AdoptionFavorite> AdoptionFavorites { get; set; } = null!;
+        public DbSet<AdoptionMessage> AdoptionMessages { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -460,6 +461,39 @@ namespace Home4Paws.API.Data
                     .WithMany()
                     .HasForeignKey(e => e.ListingId)
                     .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Configure AdoptionMessage entity
+            modelBuilder.Entity<AdoptionMessage>(entity =>
+            {
+                entity.ToTable("adoption_messages");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).HasColumnName("id");
+                entity.Property(e => e.ListingId).HasColumnName("listing_id").IsRequired();
+                entity.Property(e => e.SenderId).HasColumnName("sender_id").IsRequired();
+                entity.Property(e => e.ReceiverId).HasColumnName("receiver_id").IsRequired();
+                entity.Property(e => e.Message).HasColumnName("message").IsRequired();
+                entity.Property(e => e.IsRead).HasColumnName("is_read").HasDefaultValue(false);
+                entity.Property(e => e.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("NOW()");
+
+                entity.HasOne(e => e.Listing)
+                    .WithMany()
+                    .HasForeignKey(e => e.ListingId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.Sender)
+                    .WithMany()
+                    .HasForeignKey(e => e.SenderId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(e => e.Receiver)
+                    .WithMany()
+                    .HasForeignKey(e => e.ReceiverId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasIndex(e => e.ListingId);
+                entity.HasIndex(e => e.SenderId);
+                entity.HasIndex(e => e.ReceiverId);
             });
         }
     }

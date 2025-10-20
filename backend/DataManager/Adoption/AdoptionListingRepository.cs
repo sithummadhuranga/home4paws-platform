@@ -70,6 +70,22 @@ namespace Home4Paws.API.DataManager
                 .ToListAsync();
         }
 
+        public async Task<IEnumerable<AdoptionListing>> GetAllForAdminAsync(string? status, int page, int pageSize)
+        {
+            var query = _context.AdoptionListings.AsNoTracking();
+
+            if (!string.IsNullOrWhiteSpace(status))
+            {
+                query = query.Where(l => l.Status == status);
+            }
+
+            return await query
+                .OrderByDescending(l => l.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+        }
+
         public async Task<IEnumerable<AdoptionListing>> GetPendingAsync(int page, int pageSize)
         {
             return await _context.AdoptionListings

@@ -3,14 +3,16 @@
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { adoptionService } from "@/services/adoptionService"
-import type { AdoptionListing } from "@/types/adoption"
+import type { AdoptionListing, AdoptionMessage } from "@/types/adoption"
 import { Button } from "@/components/ui/button"
+import { Textarea } from "@/components/ui/textarea"
 import Link from "next/link"
 import { 
   MapPin, Heart, Share2, ArrowLeft, Check, X, Calendar,
-  Phone, Mail, Home as HomeIcon, Info, Shield
+  Phone, Mail, Home as HomeIcon, Info, Shield, Send, MessageCircle
 } from "lucide-react"
 import { useAuth } from "@/contexts/AuthContext"
+import Header from "@/components/layout/Header"
 
 export default function AdoptionDetailPage() {
   const params = useParams<{ id: string }>()
@@ -20,6 +22,10 @@ export default function AdoptionDetailPage() {
   const [item, setItem] = useState<AdoptionListing | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [selectedImage, setSelectedImage] = useState(0)
+  const [showMessaging, setShowMessaging] = useState(false)
+  const [message, setMessage] = useState("")
+  const [messages, setMessages] = useState<AdoptionMessage[]>([])
+  const [sendingMessage, setSendingMessage] = useState(false)
 
   useEffect(() => {
     if (!id) return
@@ -29,6 +35,38 @@ export default function AdoptionDetailPage() {
       .catch(() => setItem(null))
       .finally(() => setIsLoading(false))
   }, [id])
+
+  useEffect(() => {
+    if (!id || !isAuthenticated) return
+    loadMessages()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, isAuthenticated])
+
+  const loadMessages = async () => {
+    if (!id) return
+    try {
+      const msgs = await adoptionService.getConversation(id)
+      setMessages(msgs)
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  const handleSendMessage = async () => {
+    if (!message.trim() || !id) return
+    setSendingMessage(true)
+    try {
+      await adoptionService.sendMessage({ listingId: id, message: message.trim() })
+      setMessage("")
+      loadMessages()
+      setShowMessaging(false)
+    } catch (err) {
+      console.error(err)
+      alert("Failed to send message")
+    } finally {
+      setSendingMessage(false)
+    }
+  }
 
   if (!id) return null
 
@@ -73,8 +111,10 @@ export default function AdoptionDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-black via-neutral-950 to-black">
-      <div className="container mx-auto px-4 py-8">
+    <>
+      <Header />
+      <div className="min-h-screen bg-gradient-to-b from-black via-neutral-950 to-black">
+        <div className="container mx-auto px-4 py-8">
         {/* Back Button */}
         <Link href="/adoptions">
           <Button variant="ghost" className="mb-6 rounded-full text-purple-300 hover:bg-purple-500/10">
@@ -277,9 +317,53 @@ export default function AdoptionDetailPage() {
                   <div className="space-y-3">
                     {isAuthenticated ? (
                       <>
-                        <Button className="w-full h-12 rounded-full bg-gradient-to-r from-purple-600 via-purple-500 to-purple-400 hover:from-purple-700 hover:via-purple-600 hover:to-purple-500 shadow-lg shadow-purple-500/20 font-semibold">
-                          Send Application
+                        <Button 
+                          onClick={() => setShowMessaging(!showMessaging)}
+                          className="w-full h-12 rounded-full bg-gradient-to-r from-purple-600 via-purple-500 to-purple-400 hover:from-purple-700 hover:via-purple-600 hover:to-purple-500 shadow-lg shadow-purple-500/20 font-semibold"
+                        >
+                          <MessageCircle className="w-4 h-4 mr-2" />
+                          Contact Owner
                         </Button>
+                        
+                        {showMessaging && (
+                          <div className="p-4 rounded-xl bg-black/40 border border-purple-400/20 space-y-3">
+                            {messages.length > 0 && (
+                              <div className="max-h-48 overflow-y-auto space-y-2 mb-3">
+                                {messages.map((msg) => (
+                                  <div 
+                                    key={msg.id} 
+                                    className={`p-3 rounded-lg ${
+                                      msg.senderId === item.userId 
+                                        ? "bg-purple-500/10 border border-purple-400/20" 
+                                        : "bg-neutral-800/50"
+                                    }`}
+                                  >
+                                    <div className="text-xs text-purple-300/60 mb-1">{msg.senderName}</div>
+                                    <div className="text-sm text-purple-200">{msg.message}</div>
+                                    <div className="text-xs text-purple-300/40 mt-1">
+                                      {new Date(msg.createdAt).toLocaleString()}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                            <Textarea
+                              placeholder="Type your message..."
+                              value={message}
+                              onChange={(e) => setMessage(e.target.value)}
+                              className="min-h-[80px] rounded-xl bg-black/30 border-purple-400/20 text-purple-200"
+                            />
+                            <Button
+                              onClick={handleSendMessage}
+                              disabled={!message.trim() || sendingMessage}
+                              className="w-full h-10 rounded-full bg-purple-500/20 hover:bg-purple-500/30 text-purple-200 border border-purple-400/30 disabled:opacity-50"
+                            >
+                              <Send className="w-4 h-4 mr-2" />
+                              {sendingMessage ? "Sending..." : "Send Message"}
+                            </Button>
+                          </div>
+                        )}
+                        
                         <div className="flex gap-2">
                           <Button variant="outline" className="flex-1 h-10 rounded-full border-purple-400/30 text-purple-200 hover:bg-purple-500/10">
                             <Heart className="w-4 h-4 mr-2" />
@@ -314,5 +398,6 @@ export default function AdoptionDetailPage() {
         </div>
       </div>
     </div>
+    </>
   )
 }

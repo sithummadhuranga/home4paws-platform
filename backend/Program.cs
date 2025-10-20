@@ -108,12 +108,14 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IPetReportRepository, PetReportRepository>();
 builder.Services.AddScoped<IAdoptionListingRepository, AdoptionListingRepository>();
 builder.Services.AddScoped<IAdoptionApplicationRepository, AdoptionApplicationRepository>();
+builder.Services.AddScoped<IAdoptionMessageRepository, AdoptionMessageRepository>();
 
 // Register Services
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<JwtHelper>();
 builder.Services.AddScoped<IAdoptionService, AdoptionService>();
 builder.Services.AddScoped<IAdoptionApplicationService, AdoptionApplicationService>();
+builder.Services.AddScoped<IAdoptionMessageService, AdoptionMessageService>();
 
 // Register AutoMapper
 builder.Services.AddAutoMapper(typeof(MappingProfiles));

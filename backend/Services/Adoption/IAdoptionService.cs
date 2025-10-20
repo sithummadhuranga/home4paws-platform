@@ -18,8 +18,10 @@ namespace Home4Paws.API.Services.Adoption
         Task<bool> MarkAsAdopted(int id, int userId);
 
         // Admin actions
+        Task<IEnumerable<AdoptionListingDto>> GetAllForAdmin(string? status, int page, int pageSize);
         Task<IEnumerable<AdoptionListingDto>> GetPending(int page, int pageSize);
         Task<bool> Approve(int id, int adminId, string? notes);
         Task<bool> Reject(int id, int adminId, string reason);
+        Task<bool> AdminDelete(int id);
     }
 }
