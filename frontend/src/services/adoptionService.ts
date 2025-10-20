@@ -67,7 +67,7 @@ export const adoptionService = {
     if (!res.ok) throw new Error('Failed to delete listing')
   },
   async markAdopted(id: number): Promise<void> {
-    const res = await fetch(`${API_BASE_URL}/adoptions/${id}/mark-adopted`, {
+    const res = await fetch(`${API_BASE_URL}/adoptions/${id}/adopted`, {
       method: 'PATCH',
       headers: getAuthHeaders()
     })
@@ -197,6 +197,14 @@ export const adoptionService = {
       headers: getAuthHeaders()
     })
     if (!res.ok) throw new Error('Failed to fetch unread count')
+    return res.json()
+  },
+
+  async unreadCountsByListing(): Promise<Record<number, number>> {
+    const res = await fetch(`${API_BASE_URL}/adoption-messages/unread-counts-by-listing`, {
+      headers: getAuthHeaders()
+    })
+    if (!res.ok) throw new Error('Failed to fetch unread counts')
     return res.json()
   }
 }

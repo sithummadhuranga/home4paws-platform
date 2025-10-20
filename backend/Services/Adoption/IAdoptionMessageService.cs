@@ -11,6 +11,7 @@ namespace Home4Paws.API.Services.Adoption
         Task<IEnumerable<AdoptionMessageDto>> GetUserMessagesAsync(int userId);
         Task MarkAsReadAsync(int messageId, int userId);
         Task<int> GetUnreadCountAsync(int userId);
+        Task<Dictionary<int, int>> GetUnreadCountsByUserListingsAsync(int userId);
     }
 }
 

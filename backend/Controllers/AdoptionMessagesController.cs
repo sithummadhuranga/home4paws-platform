@@ -70,6 +70,16 @@ namespace Home4Paws.API.Controllers
             return Ok(count);
         }
 
+        [HttpGet("unread-counts-by-listing")]
+        public async Task<ActionResult<Dictionary<int, int>>> GetUnreadCountsByListing()
+        {
+            var userId = GetCurrentUserId();
+            if (userId == 0) return Unauthorized();
+            
+            var counts = await _service.GetUnreadCountsByUserListingsAsync(userId);
+            return Ok(counts);
+        }
+
         private int GetCurrentUserId()
         {
             var claim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

@@ -81,6 +81,31 @@ namespace Home4Paws.API.DataManager
                 .Where(m => m.ReceiverId == userId && !m.IsRead)
                 .CountAsync();
         }
+
+        public async Task<int> GetUnreadCountByListingAsync(int listingId, int userId)
+        {
+            return await _context.AdoptionMessages
+                .Where(m => m.ListingId == listingId && m.ReceiverId == userId && !m.IsRead)
+                .CountAsync();
+        }
+
+        public async Task<Dictionary<int, int>> GetUnreadCountsByUserListingsAsync(int userId)
+        {
+            // Get all listings owned by this user
+            var userListingIds = await _context.AdoptionListings
+                .Where(l => l.UserId == userId)
+                .Select(l => l.Id)
+                .ToListAsync();
+
+            // Get unread message counts for each listing
+            var unreadCounts = await _context.AdoptionMessages
+                .Where(m => userListingIds.Contains(m.ListingId) && m.ReceiverId == userId && !m.IsRead)
+                .GroupBy(m => m.ListingId)
+                .Select(g => new { ListingId = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(x => x.ListingId, x => x.Count);
+
+            return unreadCounts;
+        }
     }
 }
 

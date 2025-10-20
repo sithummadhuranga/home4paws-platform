@@ -9,11 +9,12 @@ import { Textarea } from "@/components/ui/textarea"
 import Header from "@/components/layout/Header"
 import Link from "next/link"
 import { MessageCircle, Send, ArrowLeft, Loader2 } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 
 export default function MessagesPage() {
   const { isAuthenticated, isLoading: authLoading, user } = useAuth()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [messages, setMessages] = useState<AdoptionMessage[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedListing, setSelectedListing] = useState<number | null>(null)
@@ -28,9 +29,14 @@ export default function MessagesPage() {
 
     if (isAuthenticated) {
       loadMessages()
+      // Auto-select listing from query param
+      const listingParam = searchParams.get('listing')
+      if (listingParam) {
+        setSelectedListing(parseInt(listingParam))
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated, authLoading])
+  }, [isAuthenticated, authLoading, searchParams])
 
   const loadMessages = async () => {
     setLoading(true)

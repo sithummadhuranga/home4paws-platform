@@ -104,6 +104,11 @@ namespace Home4Paws.API.Services.Adoption
         {
             return await _messageRepo.GetUnreadCountAsync(userId);
         }
+
+        public async Task<Dictionary<int, int>> GetUnreadCountsByUserListingsAsync(int userId)
+        {
+            return await _messageRepo.GetUnreadCountsByUserListingsAsync(userId);
+        }
     }
 }
 

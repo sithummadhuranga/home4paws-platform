@@ -21,8 +21,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const navigation = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
-  { name: 'Pending Adoptions', href: '/admin/adoptions', icon: Package },
-  { name: 'All Adoptions', href: '/admin/adoptions/all', icon: FolderTree },
+  { name: 'Adoptions', href: '/admin/adoptions/all', icon: FolderTree },
   { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
   { name: 'Products', href: '/admin/products', icon: Package },
   { name: 'Categories', href: '/admin/categories', icon: FolderTree },

@@ -7,13 +7,15 @@ import type { AdoptionListing } from "@/types/adoption"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/contexts/AuthContext"
 import { useRouter } from "next/navigation"
-import { Plus, Edit, Trash2, Check, Eye, Heart, ArrowLeft } from "lucide-react"
+import { Plus, Edit, Trash2, Check, Eye, Heart, ArrowLeft, MessageCircle } from "lucide-react"
+import Header from "@/components/layout/Header"
 
 export default function MyAdoptionListingsPage() {
   const { isAuthenticated, isLoading } = useAuth()
   const router = useRouter()
   const [items, setItems] = useState<AdoptionListing[]>([])
   const [loading, setLoading] = useState(false)
+  const [messageCounts, setMessageCounts] = useState<Record<number, number>>({})
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -24,8 +26,12 @@ export default function MyAdoptionListingsPage() {
   const load = async () => {
     setLoading(true)
     try {
-      const res = await adoptionService.myListings()
-      setItems(res)
+      const [listings, counts] = await Promise.all([
+        adoptionService.myListings(),
+        adoptionService.unreadCountsByListing().catch(() => ({}))
+      ])
+      setItems(listings)
+      setMessageCounts(counts)
     } finally {
       setLoading(false)
     }
@@ -73,14 +79,16 @@ export default function MyAdoptionListingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-black via-neutral-950 to-black">
-      <div className="container mx-auto px-4 py-8">
-        <Link href="/adoptions">
-          <Button variant="ghost" className="mb-6 rounded-full text-purple-300 hover:bg-purple-500/10">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Browse
-          </Button>
-        </Link>
+    <>
+      <Header />
+      <div className="min-h-screen bg-gradient-to-b from-black via-neutral-950 to-black">
+        <div className="container mx-auto px-4 py-8">
+          <Link href="/adoptions">
+            <Button variant="ghost" className="mb-6 rounded-full text-purple-300 hover:bg-purple-500/10">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Browse
+            </Button>
+          </Link>
 
         {/* Header */}
         <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
@@ -150,6 +158,12 @@ export default function MyAdoptionListingsPage() {
                       <div className={`absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-semibold border backdrop-blur-sm ${getStatusColor(listing.status)}`}>
                         {listing.status}
                       </div>
+                      {messageCounts[listing.id] > 0 && (
+                        <div className="absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-semibold bg-purple-600 text-white border border-purple-400 backdrop-blur-sm flex items-center gap-1.5 shadow-lg">
+                          <MessageCircle className="w-3.5 h-3.5" />
+                          {messageCounts[listing.id]} new
+                        </div>
+                      )}
                     </div>
                   </Link>
                   <div className="p-5 space-y-4">
@@ -177,36 +191,49 @@ export default function MyAdoptionListingsPage() {
                     </div>
 
                     {/* Actions */}
-                    <div className="flex items-center gap-2 pt-2 border-t border-purple-400/10">
-                      <Link href={`/adoptions/edit/${listing.id}`} className="flex-1">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="w-full rounded-full border-purple-400/30 text-purple-200 hover:bg-purple-500/10"
-                        >
-                          <Edit className="w-3.5 h-3.5 mr-1.5" />
-                          Edit
-                        </Button>
-                      </Link>
-                      {listing.status === 'Approved' && (
+                    <div className="space-y-2">
+                      {messageCounts[listing.id] > 0 && (
+                        <Link href={`/messages?listing=${listing.id}`} className="block">
+                          <Button 
+                            className="w-full rounded-full bg-purple-600/20 hover:bg-purple-600/30 text-purple-200 border border-purple-400/30 relative"
+                            size="sm"
+                          >
+                            <MessageCircle className="w-3.5 h-3.5 mr-1.5" />
+                            View Messages ({messageCounts[listing.id]})
+                          </Button>
+                        </Link>
+                      )}
+                      <div className="flex items-center gap-2 pt-2 border-t border-purple-400/10">
+                        <Link href={`/adoptions/edit/${listing.id}`} className="flex-1">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="w-full rounded-full border-purple-400/30 text-purple-200 hover:bg-purple-500/10"
+                          >
+                            <Edit className="w-3.5 h-3.5 mr-1.5" />
+                            Edit
+                          </Button>
+                        </Link>
+                        {listing.status === 'Approved' && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => markAdopted(listing.id)}
+                            className="flex-1 rounded-full border-green-500/30 text-green-300 hover:bg-green-500/10"
+                          >
+                            <Check className="w-3.5 h-3.5 mr-1.5" />
+                            Adopted
+                          </Button>
+                        )}
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => markAdopted(listing.id)}
-                          className="flex-1 rounded-full border-green-500/30 text-green-300 hover:bg-green-500/10"
+                          onClick={() => remove(listing.id)}
+                          className="rounded-full border-red-500/30 text-red-300 hover:bg-red-500/10 px-3"
                         >
-                          <Check className="w-3.5 h-3.5 mr-1.5" />
-                          Adopted
+                          <Trash2 className="w-3.5 h-3.5" />
                         </Button>
-                      )}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => remove(listing.id)}
-                        className="rounded-full border-red-500/30 text-red-300 hover:bg-red-500/10 px-3"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </Button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -216,5 +243,6 @@ export default function MyAdoptionListingsPage() {
         )}
       </div>
     </div>
+    </>
   )
 }
