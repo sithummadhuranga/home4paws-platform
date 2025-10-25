@@ -85,12 +85,8 @@ namespace Home4Paws.API.Controllers
         {
             try
             {
-                var report = await _petReportService.GetByIdAsync(id);
-                if (report == null) return NotFound();
-
-                // Create an update request with the new status
-                var updateRequest = new UpdatePetReportRequest();
-                var updatedReport = await _petReportService.UpdateAsync(id, updateRequest);
+                var updatedReport = await _petReportService.UpdateStatusAsync(id, request.Status, request.AdminNotes);
+                if (updatedReport == null) return NotFound();
                 
                 return Ok(updatedReport);
             }

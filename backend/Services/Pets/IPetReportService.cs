@@ -11,6 +11,7 @@ namespace Home4Paws.API.Services.Pets
         Task<PetReportResponse> GetByIdAsync(Guid id);
         Task<PetReportResponse> CreateAsync(CreatePetReportRequest request);
         Task<PetReportResponse> UpdateAsync(Guid id, UpdatePetReportRequest request);
+        Task<PetReportResponse> UpdateStatusAsync(Guid id, string status, string? adminNotes);
         Task DeleteAsync(Guid id);
         Task<PetReportStatistics> GetStatisticsAsync();
     }

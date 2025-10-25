@@ -46,17 +46,34 @@ namespace Home4Paws.API.Services.Pets
             var petReport = new PetReport
             {
                 Type = request.Type,
-                Breed = request.Breed,
+                Name = request.Name ?? "Unknown",
+                Breed = request.Breed ?? "Unknown",
+                Age = request.Age ?? "Unknown",
+                Gender = request.Gender ?? "Unknown",
+                Size = request.Size ?? "Medium",
                 Color = request.Color,
                 Description = request.Description,
                 ReportType = request.ReportType,
                 Status = "Pending Confirmation",
-                LostOrFoundDate = request.LostOrFoundDate,
+                LostOrFoundDate = request.LostOrFoundDate.Kind == DateTimeKind.Utc 
+                    ? request.LostOrFoundDate 
+                    : DateTime.SpecifyKind(request.LostOrFoundDate, DateTimeKind.Utc),
                 Location = request.Location,
                 ContactName = request.ContactName,
                 Phone = request.Phone,
                 Email = request.Email,
-                PhotoUrls = photoUrls.ToArray()
+                PhotoUrls = photoUrls.ToArray(),
+                IdentifyingFeatures = string.Empty,
+                MedicalConditions = string.Empty,
+                IsChipped = false,
+                ChipNumber = string.Empty,
+                HasReward = false,
+                RewardAmount = string.Empty,
+                Views = 0,
+                IsUrgent = false,
+                IsClosed = false,
+                ClosureReason = string.Empty,
+                AdminNotes = string.Empty
             };
 
             await _repository.CreateAsync(petReport);
@@ -94,6 +111,35 @@ namespace Home4Paws.API.Services.Pets
                 report.PhotoUrls = newPhotoUrls.ToArray();
             }
 
+            await _repository.UpdateAsync(report);
+            return MapToResponse(report);
+        }
+
+        public async Task<PetReportResponse> UpdateStatusAsync(Guid id, string status, string? adminNotes)
+        {
+            var report = await _repository.GetByIdAsync(id);
+            if (report == null) return null;
+
+            // Update status and admin notes
+            report.Status = status;
+            if (!string.IsNullOrWhiteSpace(adminNotes))
+            {
+                report.AdminNotes = adminNotes;
+            }
+
+            // If status is being set to closed/resolved, update closure fields
+            if (status.Equals("Closed", StringComparison.OrdinalIgnoreCase) || 
+                status.Equals("Resolved", StringComparison.OrdinalIgnoreCase))
+            {
+                report.IsClosed = true;
+                report.ClosedAt = DateTime.UtcNow;
+                if (!string.IsNullOrWhiteSpace(adminNotes))
+                {
+                    report.ClosureReason = adminNotes;
+                }
+            }
+
+            report.UpdatedAt = DateTime.UtcNow;
             await _repository.UpdateAsync(report);
             return MapToResponse(report);
         }

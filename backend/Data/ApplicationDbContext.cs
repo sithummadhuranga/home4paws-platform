@@ -281,7 +281,13 @@ namespace Home4Paws.API.Data
                 entity.Property(e => e.ContactName).HasColumnName("contact_name").HasMaxLength(100).IsRequired();
                 entity.Property(e => e.Phone).HasColumnName("phone").HasMaxLength(10).IsRequired();
                 entity.Property(e => e.Email).HasColumnName("email").HasMaxLength(255).IsRequired();
-                entity.Property(e => e.PhotoUrls).HasColumnName("photo_urls").HasColumnType("jsonb");
+                entity.Property(e => e.PhotoUrls)
+                    .HasColumnName("photo_urls")
+                    .HasColumnType("jsonb")
+                    .HasConversion(
+                        v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions)null!),
+                        v => System.Text.Json.JsonSerializer.Deserialize<string[]>(v, (System.Text.Json.JsonSerializerOptions)null!) ?? Array.Empty<string>()
+                    );
                 entity.Property(e => e.IdentifyingFeatures).HasColumnName("identifying_features").HasMaxLength(1000);
                 entity.Property(e => e.MedicalConditions).HasColumnName("medical_conditions").HasMaxLength(500);
                 entity.Property(e => e.IsChipped).HasColumnName("is_chipped");
@@ -500,6 +506,38 @@ namespace Home4Paws.API.Data
                 entity.HasIndex(e => e.SenderId);
                 entity.HasIndex(e => e.ReceiverId);
             });
+        }
+
+        public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            // Convert all DateTime properties to UTC before saving
+            var entries = ChangeTracker.Entries()
+                .Where(e => e.State == EntityState.Added || e.State == EntityState.Modified);
+
+            foreach (var entry in entries)
+            {
+                foreach (var property in entry.Properties)
+                {
+                    if (property.Metadata.ClrType == typeof(DateTime))
+                    {
+                        var value = (DateTime?)property.CurrentValue;
+                        if (value.HasValue && value.Value.Kind != DateTimeKind.Utc)
+                        {
+                            property.CurrentValue = DateTime.SpecifyKind(value.Value, DateTimeKind.Utc);
+                        }
+                    }
+                    else if (property.Metadata.ClrType == typeof(DateTime?))
+                    {
+                        var value = (DateTime?)property.CurrentValue;
+                        if (value.HasValue && value.Value.Kind != DateTimeKind.Utc)
+                        {
+                            property.CurrentValue = DateTime.SpecifyKind(value.Value, DateTimeKind.Utc);
+                        }
+                    }
+                }
+            }
+
+            return base.SaveChangesAsync(cancellationToken);
         }
     }
 }

@@ -11,7 +11,19 @@ namespace Home4Paws.API.Models.Pets
         public string Type { get; set; }
 
         [MaxLength(100)]
+        public string Name { get; set; } = "Unknown"; // Optional, defaults to "Unknown"
+
+        [MaxLength(100)]
         public string Breed { get; set; }
+
+        [MaxLength(20)]
+        public string Age { get; set; } = "Unknown"; // Optional, defaults to "Unknown"
+
+        [MaxLength(20)]
+        public string Gender { get; set; } = "Unknown"; // Optional, defaults to "Unknown"
+
+        [MaxLength(100)]
+        public string Size { get; set; } = "Medium"; // Optional, defaults to "Medium"
 
         [Required]
         [MaxLength(100)]
@@ -132,11 +144,11 @@ namespace Home4Paws.API.Models.Pets
 
     public class PetReportSearchParams
     {
-        public string Type { get; set; }
-        public string ReportType { get; set; }
-        public string Location { get; set; }
+        public string? Type { get; set; }
+        public string? ReportType { get; set; }
+        public string? Location { get; set; }
         public DateTime? FromDate { get; set; }
         public DateTime? ToDate { get; set; }
-        public string Status { get; set; }
+        public string? Status { get; set; }
     }
 }
