@@ -147,7 +147,6 @@ export default function Header() {
               <NavItem href="/pet-finder" className="whitespace-nowrap">Pet Finder</NavItem>
               <NavItem href="/adoptions">Adoption</NavItem>
               <NavItem href="/store">Store</NavItem>
-              <NavItem href="/resources">Resources</NavItem>
               <NavItem href="/feedbacks">Feedback</NavItem>
             </nav>
 
@@ -321,9 +320,6 @@ export default function Header() {
               </NavItem>
               <NavItem href="/store" onClick={closeMenu} className="block w-full">
                 Store
-              </NavItem>
-              <NavItem href="/resources" onClick={closeMenu} className="block w-full">
-                Resources
               </NavItem>
               <NavItem href="/feedbacks" onClick={closeMenu} className="block w-full">
                 Feedback
