@@ -11,9 +11,9 @@ const steps = [
 		title: "Discover Your Match",
 		description:
 			"Browse thousands of pets with advanced filters by breed, age, size, and personality traits.",
-		color: "from-blue-500 to-blue-600",
-		bgColor: "bg-blue-50 dark:bg-blue-900/20",
-		iconColor: "text-blue-600 dark:text-blue-400",
+		color: "from-purple-500 to-purple-600",
+		bgColor: "bg-purple-900/20 dark:bg-purple-900/20",
+		iconColor: "text-purple-400 dark:text-purple-300",
 		features: [
 			"Smart matching algorithm",
 			"Verified shelter profiles",
@@ -26,9 +26,9 @@ const steps = [
 		title: "Connect & Meet",
 		description:
 			"Schedule virtual or in-person meetups with shelters to find your perfect companion.",
-		color: "from-green-500 to-green-600",
-		bgColor: "bg-green-50 dark:bg-green-900/20",
-		iconColor: "text-green-600 dark:text-green-400",
+		color: "from-purple-400 to-purple-500",
+		bgColor: "bg-purple-900/15 dark:bg-purple-900/15",
+		iconColor: "text-purple-400 dark:text-purple-300",
 		features: [
 			"Video calls available",
 			"Meet & greet scheduling",
@@ -41,9 +41,9 @@ const steps = [
 		title: "Welcome Home",
 		description:
 			"Complete secure adoption process and bring your new family member home safely.",
-		color: "from-purple-500 to-purple-600",
-		bgColor: "bg-purple-50 dark:bg-purple-900/20",
-		iconColor: "text-purple-600 dark:text-purple-400",
+		color: "from-purple-500 to-purple-400",
+		bgColor: "bg-purple-900/20 dark:bg-purple-900/20",
+		iconColor: "text-purple-400 dark:text-purple-300",
 		features: [
 			"Digital paperwork",
 			"Follow-up support",
@@ -54,25 +54,27 @@ const steps = [
 
 export default function HowItWorks() {
 	return (
-		<section className="py-16 sm:py-20 bg-calm-gradient">
+		<section className="py-16 sm:py-20 bg-black">
 			<Container>
 				{/* Header */}
 				<div className="text-center mb-12 sm:mb-16 animate-fadeInUp">
-					<div className="inline-flex items-center px-4 py-2 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50 mb-6">
-						<Sparkles className="w-4 h-4 text-blue-600 mr-2" />
-						<span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+					<div className="inline-flex items-center px-4 py-2 rounded-full bg-neutral-900/80 dark:bg-neutral-900/80 backdrop-blur-sm border border-purple-400/20 dark:border-purple-400/20 mb-6">
+						<Sparkles className="w-4 h-4 text-purple-400 mr-2" />
+						<span className="text-sm font-medium text-purple-200 dark:text-purple-200 font-inter">
 							Simple Process
 						</span>
 					</div>
 
-					<h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-6 leading-tight">
+					<h2 className="text-3xl sm:text-4xl lg:text-5xl font-semibold text-purple-200 dark:text-purple-200 mb-6 leading-tight font-urbanist">
 						How Adoption
-						<span className="text-gradient block sm:inline sm:ml-3">Works</span>
+						<span className="bg-gradient-to-r from-purple-400 to-purple-300 bg-clip-text text-transparent block sm:inline sm:ml-3">
+							Works
+						</span>
 					</h2>
 
-					<p className="text-lg sm:text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
+					<p className="text-lg sm:text-xl text-purple-300 dark:text-purple-300 max-w-3xl mx-auto leading-relaxed font-inter">
 						Our streamlined process makes pet adoption simple, secure, and joyful.
-						<span className="font-semibold text-blue-600 dark:text-blue-400">
+						<span className="font-semibold text-purple-400 dark:text-purple-400">
 							{" "}
 							Join thousands of happy families.
 						</span>
@@ -89,16 +91,16 @@ export default function HowItWorks() {
 						>
 							{/* Connection Line - Desktop Only */}
 							{index < steps.length - 1 && (
-								<div className="hidden lg:block absolute top-16 -right-6 w-12 h-0.5 bg-gradient-to-r from-gray-300 to-transparent dark:from-gray-600 z-0">
-									<ArrowRight className="absolute -right-2 -top-2 w-5 h-5 text-gray-400 dark:text-gray-600" />
+								<div className="hidden lg:block absolute top-16 -right-6 w-12 h-0.5 bg-gradient-to-r from-purple-400/30 to-transparent dark:from-purple-400/30 z-0">
+									<ArrowRight className="absolute -right-2 -top-2 w-5 h-5 text-purple-400/50 dark:text-purple-400/50" />
 								</div>
 							)}
 
 							{/* Step Card */}
-							<div className="relative bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 dark:border-gray-700 group-hover:border-gray-200 dark:group-hover:border-gray-600 h-full">
+							<div className="relative bg-neutral-900 dark:bg-neutral-900 rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 border border-purple-400/20 dark:border-purple-400/20 group-hover:border-purple-400/30 dark:group-hover:border-purple-400/30 h-full">
 								{/* Step Number */}
-								<div className="absolute -top-4 -left-4 w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-									<span className="text-white font-bold text-sm">
+								<div className="absolute -top-4 -left-4 w-8 h-8 bg-gradient-to-br from-purple-500 to-purple-400 rounded-xl flex items-center justify-center shadow-lg">
+									<span className="text-white font-bold text-sm font-inter">
 										{step.id}
 									</span>
 								</div>
@@ -112,11 +114,11 @@ export default function HowItWorks() {
 
 								{/* Content */}
 								<div className="space-y-4">
-									<h3 className="text-xl font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">
+									<h3 className="text-xl font-semibold text-purple-200 dark:text-purple-200 group-hover:text-purple-300 dark:group-hover:text-purple-300 transition-colors duration-300 font-inter">
 										{step.title}
 									</h3>
 
-									<p className="text-gray-600 dark:text-gray-300 leading-relaxed">
+									<p className="text-purple-300 dark:text-purple-300 leading-relaxed font-inter">
 										{step.description}
 									</p>
 
@@ -125,9 +127,9 @@ export default function HowItWorks() {
 										{step.features.map((feature, featureIndex) => (
 											<li
 												key={featureIndex}
-												className="flex items-center text-sm text-gray-500 dark:text-gray-400"
+												className="flex items-center text-sm text-purple-400 dark:text-purple-400 font-inter"
 											>
-												<Check className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />
+												<Check className="w-4 h-4 text-purple-500 mr-2 flex-shrink-0" />
 												{feature}
 											</li>
 										))}
@@ -135,7 +137,7 @@ export default function HowItWorks() {
 								</div>
 
 								{/* Hover Effect */}
-								<div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+								<div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-purple-400/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
 							</div>
 						</div>
 					))}
@@ -143,12 +145,12 @@ export default function HowItWorks() {
 
 				{/* Call to Action */}
 				<div className="text-center animate-fadeInUp stagger-3">
-					<div className="inline-flex items-center gap-4 px-8 py-4 bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700">
+					<div className="inline-flex items-center gap-4 px-8 py-4 bg-neutral-900 dark:bg-neutral-900 rounded-2xl shadow-lg border border-purple-400/20 dark:border-purple-400/20">
 						<div className="flex -space-x-2">
 							{[1, 2, 3, 4].map((i) => (
 								<div
 									key={i}
-									className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 border-2 border-white dark:border-gray-800 flex items-center justify-center"
+									className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-purple-400 border-2 border-neutral-900 dark:border-neutral-900 flex items-center justify-center"
 								>
 									<span className="text-white text-sm font-semibold">
 										👨‍👩‍👧‍👦
@@ -157,10 +159,10 @@ export default function HowItWorks() {
 							))}
 						</div>
 						<div className="text-left">
-							<p className="text-sm font-semibold text-gray-900 dark:text-white">
+							<p className="text-sm font-semibold text-purple-200 dark:text-purple-200 font-inter">
 								Join 15,000+ Happy Families
 							</p>
-							<p className="text-xs text-gray-500 dark:text-gray-400">
+							<p className="text-xs text-purple-300 dark:text-purple-300 font-inter">
 								Average adoption time: 3 days
 							</p>
 						</div>

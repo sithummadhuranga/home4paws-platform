@@ -1,26 +1,30 @@
-﻿using Dapper;
 using Home4Paws.API.Models.Entities;
-using Home4Paws.API.Queries;
-using Npgsql;
+using Home4Paws.API.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace Home4Paws.API.DataManager
 {
-    public class UserRepository(IConfiguration configuration, ILogger<UserRepository> logger) : IUserRepository
+    public class UserRepository(ApplicationDbContext context, ILogger<UserRepository> logger) : IUserRepository
     {
-        private readonly string _connectionString = configuration.GetConnectionString("DefaultConnection") 
-            ?? throw new ArgumentNullException(nameof(configuration));
+        private readonly ApplicationDbContext _context = context;
         private readonly ILogger<UserRepository> _logger = logger;
 
         public async Task<User?> GetUserByEmailAsync(string email)
         {
             try
             {
-                using var connection = new NpgsqlConnection(_connectionString);
-                await connection.OpenAsync();
+                var user = await _context.Users
+                    .FirstOrDefaultAsync(u => u.Email == email && u.IsActive);
 
-                var user = await connection.QueryFirstOrDefaultAsync<User>(
-                    AuthQueries.GetUserByEmail(),
-                    new { Email = email });
+                if (user != null)
+                {
+                    _logger.LogInformation("✅ Found user: {UserId}, HasPassword: {HasPassword}", 
+                        user.Id, !string.IsNullOrEmpty(user.PasswordHash));
+                }
+                else
+                {
+                    _logger.LogWarning("⚠️ User not found: {Email}", email);
+                }
 
                 return user;
             }
@@ -35,14 +39,8 @@ namespace Home4Paws.API.DataManager
         {
             try
             {
-                using var connection = new NpgsqlConnection(_connectionString);
-                await connection.OpenAsync();
-
-                var user = await connection.QueryFirstOrDefaultAsync<User>(
-                    AuthQueries.GetUserById(),
-                    new { UserId = userId });
-
-                return user;
+                return await _context.Users
+                    .FirstOrDefaultAsync(u => u.Id == userId && u.IsActive);
             }
             catch (Exception ex)
             {
@@ -55,26 +53,11 @@ namespace Home4Paws.API.DataManager
         {
             try
             {
-                using var connection = new NpgsqlConnection(_connectionString);
-                await connection.OpenAsync();
-
-                var userId = await connection.QuerySingleAsync<int>(
-                    AuthQueries.CreateUser(),
-                    new
-                    {
-                        user.FirstName,
-                        user.LastName,
-                        user.Email,
-                        user.PasswordHash,
-                        user.Role,
-                        user.IsActive,
-                        user.EmailVerified,
-                        user.CreatedAt,
-                        user.UpdatedAt
-                    });
-
-                _logger.LogInformation("User created successfully with ID: {UserId}", userId);
-                return userId;
+                _context.Users.Add(user);
+                await _context.SaveChangesAsync();
+                
+                _logger.LogInformation("User created successfully with ID: {UserId}", user.Id);
+                return user.Id;
             }
             catch (Exception ex)
             {
@@ -87,14 +70,16 @@ namespace Home4Paws.API.DataManager
         {
             try
             {
-                using var connection = new NpgsqlConnection(_connectionString);
-                await connection.OpenAsync();
-
-                var rowsAffected = await connection.ExecuteAsync(
-                    AuthQueries.UpdateLastLogin(),
-                    new { UserId = userId, LastLoginAt = lastLoginAt, UpdatedAt = DateTime.UtcNow });
-
-                return rowsAffected > 0;
+                var user = await _context.Users.FindAsync(userId);
+                if (user != null)
+                {
+                    user.LastLoginAt = lastLoginAt;
+                    user.UpdatedAt = DateTime.UtcNow;
+                    
+                    await _context.SaveChangesAsync();
+                    return true;
+                }
+                return false;
             }
             catch (Exception ex)
             {
@@ -103,49 +88,77 @@ namespace Home4Paws.API.DataManager
             }
         }
 
-        public async Task<bool> UpdatePasswordHashAsync(int userId, string passwordHash)
+        public async Task<bool> UpdateUserAsync(User user)
         {
             try
             {
-                using var connection = new NpgsqlConnection(_connectionString);
-                await connection.OpenAsync();
-
-                var rowsAffected = await connection.ExecuteAsync(
-                    "UPDATE users SET password_hash = @PasswordHash, updated_at = @UpdatedAt WHERE id = @UserId",
-                    new { UserId = userId, PasswordHash = passwordHash, UpdatedAt = DateTime.UtcNow });
-
-                return rowsAffected > 0;
+                _context.Users.Update(user);
+                await _context.SaveChangesAsync();
+                return true;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error updating password hash for user: {UserId}", userId);
+                _logger.LogError(ex, "Error updating user: {UserId}", user.Id);
                 throw;
             }
+        }
+
+        public async Task<bool> VerifyEmailAsync(int userId)
+        {
+            try
+            {
+                var user = await _context.Users.FindAsync(userId);
+                if (user != null)
+                {
+                    user.EmailVerified = true;
+                    user.UpdatedAt = DateTime.UtcNow;
+                    
+                    await _context.SaveChangesAsync();
+                    return true;
+                }
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error verifying email for user: {UserId}", userId);
+                throw;
+            }
+        }
+
+        public async Task<bool> UpdatePasswordAsync(int userId, string newPasswordHash)
+        {
+            try
+            {
+                var user = await _context.Users.FindAsync(userId);
+                if (user != null)
+                {
+                    user.PasswordHash = newPasswordHash;
+                    user.UpdatedAt = DateTime.UtcNow;
+                    
+                    await _context.SaveChangesAsync();
+                    return true;
+                }
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating password for user: {UserId}", userId);
+                throw;
+            }
+        }
+
+        public async Task<bool> UpdatePasswordHashAsync(int userId, string passwordHash)
+        {
+            return await UpdatePasswordAsync(userId, passwordHash);
         }
 
         public async Task<int> CreateUserSessionAsync(UserSession session)
         {
             try
             {
-                using var connection = new NpgsqlConnection(_connectionString);
-                await connection.OpenAsync();
-
-                var sessionId = await connection.QuerySingleAsync<int>(
-                    AuthQueries.CreateUserSession(),
-                    new
-                    {
-                        session.UserId,
-                        session.Token,
-                        session.RefreshToken,
-                        session.ExpiresAt,
-                        session.CreatedAt,
-                        session.IsActive,
-                        session.DeviceInfo,
-                        session.IpAddress
-                    });
-
-                _logger.LogInformation("User session created successfully with ID: {SessionId}", sessionId);
-                return sessionId;
+                _context.UserSessions.Add(session);
+                await _context.SaveChangesAsync();
+                return session.Id;
             }
             catch (Exception ex)
             {
@@ -158,20 +171,8 @@ namespace Home4Paws.API.DataManager
         {
             try
             {
-                using var connection = new NpgsqlConnection(_connectionString);
-                await connection.OpenAsync();
-
-                var result = await connection.QueryAsync<UserSession, User, UserSession>(
-                    AuthQueries.GetUserSession(),
-                    (session, user) =>
-                    {
-                        session.User = user;
-                        return session;
-                    },
-                    new { RefreshToken = refreshToken, CurrentTime = DateTime.UtcNow },
-                    splitOn: "user_id");
-
-                return result.FirstOrDefault();
+                return await _context.UserSessions
+                    .FirstOrDefaultAsync(s => s.RefreshToken == refreshToken && s.IsActive);
             }
             catch (Exception ex)
             {
@@ -184,14 +185,17 @@ namespace Home4Paws.API.DataManager
         {
             try
             {
-                using var connection = new NpgsqlConnection(_connectionString);
-                await connection.OpenAsync();
-
-                var rowsAffected = await connection.ExecuteAsync(
-                    AuthQueries.DeactivateUserSession(),
-                    new { RefreshToken = refreshToken });
-
-                return rowsAffected > 0;
+                var session = await _context.UserSessions
+                    .FirstOrDefaultAsync(s => s.RefreshToken == refreshToken);
+                
+                if (session != null)
+                {
+                    session.IsActive = false;
+                    session.UpdatedAt = DateTime.UtcNow;
+                    await _context.SaveChangesAsync();
+                    return true;
+                }
+                return false;
             }
             catch (Exception ex)
             {
@@ -204,14 +208,18 @@ namespace Home4Paws.API.DataManager
         {
             try
             {
-                using var connection = new NpgsqlConnection(_connectionString);
-                await connection.OpenAsync();
-
-                var rowsAffected = await connection.ExecuteAsync(
-                    AuthQueries.DeactivateAllUserSessions(),
-                    new { UserId = userId });
-
-                return rowsAffected > 0;
+                var sessions = await _context.UserSessions
+                    .Where(s => s.UserId == userId && s.IsActive)
+                    .ToListAsync();
+                
+                foreach (var session in sessions)
+                {
+                    session.IsActive = false;
+                    session.UpdatedAt = DateTime.UtcNow;
+                }
+                
+                await _context.SaveChangesAsync();
+                return true;
             }
             catch (Exception ex)
             {
@@ -224,26 +232,143 @@ namespace Home4Paws.API.DataManager
         {
             try
             {
-                using var connection = new NpgsqlConnection(_connectionString);
-                await connection.OpenAsync();
-
-                var rowsAffected = await connection.ExecuteAsync(
-                    AuthQueries.CleanupExpiredSessions(),
-                    new { CurrentTime = DateTime.UtcNow });
-
-                _logger.LogInformation("Cleaned up {Count} expired sessions", rowsAffected);
+                var expiredSessions = await _context.UserSessions
+                    .Where(s => s.ExpiresAt < DateTime.UtcNow)
+                    .ToListAsync();
+                
+                _context.UserSessions.RemoveRange(expiredSessions);
+                await _context.SaveChangesAsync();
                 return true;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error during session cleanup");
+                _logger.LogError(ex, "Error cleaning up expired sessions");
                 throw;
             }
         }
 
-        public string GetConnectionString()
+        public async Task<bool> UpdateUserRoleAsync(int userId, string role)
         {
-            return _connectionString;
+            try
+            {
+                var user = await _context.Users.FindAsync(userId);
+                if (user != null)
+                {
+                    user.Role = role;
+                    user.UpdatedAt = DateTime.UtcNow;
+                    
+                    await _context.SaveChangesAsync();
+                    return true;
+                }
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating role for user: {UserId}", userId);
+                throw;
+            }
+        }
+
+        public async Task<List<User>> GetAllUsersAsync()
+        {
+            try
+            {
+                return await _context.Users
+                    .Where(u => u.IsActive)
+                    .OrderBy(u => u.FirstName)
+                    .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting all users");
+                throw;
+            }
+        }
+
+        public async Task<bool> DeactivateUserAsync(int userId)
+        {
+            try
+            {
+                var user = await _context.Users.FindAsync(userId);
+                if (user != null)
+                {
+                    user.IsActive = false;
+                    user.UpdatedAt = DateTime.UtcNow;
+                    
+                    await _context.SaveChangesAsync();
+                    return true;
+                }
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deactivating user: {UserId}", userId);
+                throw;
+            }
+        }
+
+        public async Task<IEnumerable<User>> GetUsersAsync()
+        {
+            try
+            {
+                return await _context.Users
+                    .Where(u => u.IsActive)
+                    .OrderBy(u => u.FirstName)
+                    .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting users");
+                throw;
+            }
+        }
+
+        public async Task<bool> UserExistsAsync(string email)
+        {
+            try
+            {
+                return await _context.Users
+                    .AnyAsync(u => u.Email == email);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error checking if user exists: {Email}", email);
+                throw;
+            }
+        }
+
+        public async Task<int> GetUserCountAsync()
+        {
+            try
+            {
+                return await _context.Users
+                    .Where(u => u.IsActive)
+                    .CountAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting user count");
+                throw;
+            }
+        }
+
+        public async Task<IEnumerable<User>> SearchUsersAsync(string searchTerm)
+        {
+            try
+            {
+                return await _context.Users
+                    .Where(u => u.IsActive && 
+                        (u.FirstName.Contains(searchTerm) || 
+                         u.LastName.Contains(searchTerm) || 
+                         u.Email.Contains(searchTerm)))
+                    .OrderBy(u => u.FirstName)
+                    .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error searching users with term: {SearchTerm}", searchTerm);
+                throw;
+            }
         }
     }
 }

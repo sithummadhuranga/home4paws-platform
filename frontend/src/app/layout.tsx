@@ -1,27 +1,29 @@
+// src/app/layout.tsx
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, Urbanist } from "next/font/google";
 import "./globals.css";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { CartProvider } from "@/contexts/CartContext";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+// Inter font
+const inter = Inter({
   subsets: ["latin"],
+  variable: "--font-inter",
   display: "swap",
-  preload: true,
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+// Urbanist font
+const urbanist = Urbanist({
   subsets: ["latin"],
+  variable: "--font-urbanist",
   display: "swap",
-  preload: false,
 });
 
 export const metadata: Metadata = {
-  title: "PawsHome – Find Your Perfect Pet",
+  title: "PawsHome - Find Your Perfect Pet Companion",
   description:
-    "Fast, secure pet adoption platform. Connect with loving pets from verified shelters.",
-  keywords: "pet adoption, dogs, cats, animal shelter, fast adoption",
+    "Connect with loving pets looking for their forever homes. Browse adoptable pets, find shelters, and discover premium pet products.",
 };
 
 export default function RootLayout({
@@ -30,69 +32,22 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <head>
-        {/* Super powerful theme script */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                try {
-                  // Clear any existing theme classes
-                  document.documentElement.className = document.documentElement.className
-                    .replace(/\\s*(dark|light)\\s*/g, ' ')
-                    .trim();
-                  
-                  const theme = localStorage.getItem('theme');
-                  const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                  
-                  let isDark = false;
-                  
-                  if (theme === 'dark') {
-                    isDark = true;
-                  } else if (theme === 'light') {
-                    isDark = false;
-                  } else {
-                    isDark = systemDark;
-                  }
-                  
-                  if (isDark) {
-                    document.documentElement.classList.add('dark');
-                    document.documentElement.setAttribute('data-theme', 'dark');
-                    document.documentElement.style.colorScheme = 'dark';
-                  } else {
-                    document.documentElement.classList.add('light');
-                    document.documentElement.setAttribute('data-theme', 'light');
-                    document.documentElement.style.colorScheme = 'light';
-                  }
-                  
-                  // Prevent flash
-                  document.documentElement.style.visibility = 'visible';
-                  
-                } catch (e) {
-                  console.warn('Theme script failed:', e);
-                  // Fallback to light theme
-                  document.documentElement.classList.add('light');
-                  document.documentElement.setAttribute('data-theme', 'light');
-                }
-              })();
-            `,
-          }}
-        />
-        <style
-          dangerouslySetInnerHTML={{
-            __html: `
-              html { visibility: hidden; }
-              html.dark, html.light { visibility: visible; }
-            `,
-          }}
-        />
-      </head>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground transition-colors duration-200`}
-        suppressHydrationWarning
-      >
-        <AuthProvider>{children}</AuthProvider>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`${inter.variable} ${urbanist.variable}`}
+    >
+      <body className={`font-inter bg-black text-purple-200`}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <AuthProvider>
+            <CartProvider>{children}</CartProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

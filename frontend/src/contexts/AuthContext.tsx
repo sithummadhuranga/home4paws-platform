@@ -1,289 +1,378 @@
-"use client"
+"use client";
 
-import React, { createContext, useState, useEffect, useRef, useCallback, useContext } from "react"
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5185/api';
 
 interface User {
-  id: string
-  firstName: string
-  lastName: string
-  email: string
-  role: string
-  emailVerified: boolean
-  createdAt: string
-  lastLoginAt?: string
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: string;
+  emailVerified: boolean;
+  createdAt: string;
+  lastLoginAt?: string;
 }
 
 interface AuthContextType {
-  user: User | null
-  isLoading: boolean
-  isAuthenticated: boolean
-  login: (email: string, password: string, rememberMe?: boolean) => Promise<{ success: boolean; message: string }>
-  signup: (data: SignupData) => Promise<{ success: boolean; message: string }>
-  logout: () => Promise<void>
-  refreshToken: () => Promise<boolean>
+  user: User | null;
+  token: string | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
+  register: (userData: RegisterData) => Promise<{ success: boolean; message: string }>; // ✅ Fixed return type
+  signup: (userData: SignupData) => Promise<{ success: boolean; message: string }>;
+}
+
+interface RegisterData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
 }
 
 interface SignupData {
-  firstName: string
-  lastName: string
-  email: string
-  password: string
-  confirmPassword: string
-  agreeToTerms: boolean
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  agreeToTerms: boolean;
 }
 
-export const AuthContext = createContext<AuthContextType | undefined>(undefined)
+interface LoginResponse {
+  success: boolean;
+  message: string;
+  errors?: string[];
+  user?: {
+    id: number;
+    firstName: string;
+    lastName: string;
+    email: string;
+    role: string;
+    emailVerified: boolean;
+    createdAt: string;
+    lastLoginAt?: string;
+  };
+  tokens?: {
+    accessToken: string;
+    refreshToken: string;
+    expiresAt: string;
+  };
+}
 
-const getApiUrl = () => process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5185'
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Simple request deduplication
-const pendingRequests = new Map<string, Promise<unknown>>()
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const refreshTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-  const abortControllerRef = useRef<AbortController | null>(null)
-
-  // Optimized API call with better error handling
-  const apiCall = useCallback(async (url: string, options: RequestInit = {}) => {
-    const cacheKey = `${url}-${options.method || 'GET'}`
-    
-    if (pendingRequests.has(cacheKey)) {
-      return pendingRequests.get(cacheKey)
-    }
-
-    const controller = new AbortController()
-    abortControllerRef.current = controller
-
-    const requestOptions: RequestInit = {
-      ...options,
-      signal: controller.signal,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
-    }
-
-    const promise = fetch(url, requestOptions)
-      .then(async res => {
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}: ${res.statusText}`)
-        }
-        return res.json()
-      })
-      .finally(() => {
-        pendingRequests.delete(cacheKey)
-        if (abortControllerRef.current === controller) {
-          abortControllerRef.current = null
-        }
-      })
-
-    pendingRequests.set(cacheKey, promise)
-    return promise
-  }, [])
-
-  const refreshToken = useCallback(async (): Promise<boolean> => {
+  // Helper function to check if token is expired
+  const isTokenExpired = (token: string): boolean => {
     try {
-      const refreshTokenValue = localStorage.getItem('refreshToken')
-      if (!refreshTokenValue) {
-        setUser(null)
-        return false
-      }
-
-      const data = await apiCall(`${getApiUrl()}/api/auth/refresh`, {
-        method: 'POST',
-        body: JSON.stringify({ refreshToken: refreshTokenValue })
-      })
-
-      if (data.success) {
-        localStorage.setItem('accessToken', data.tokens.accessToken)
-        localStorage.setItem('refreshToken', data.tokens.refreshToken)
-        setUser(data.user)
-        return true
-      } else {
-        localStorage.removeItem('accessToken')
-        localStorage.removeItem('refreshToken')
-        setUser(null)
-        return false
-      }
-    } catch (error) {
-      console.error('Token refresh error:', error)
-      localStorage.removeItem('accessToken')
-      localStorage.removeItem('refreshToken')
-      setUser(null)
-      return false
-    }
-  }, [apiCall])
-
-  const checkAuthStatus = useCallback(async () => {
-    try {
-      const token = localStorage.getItem('accessToken')
-      if (!token) {
-        setIsLoading(false)
-        return
-      }
-
-      const data = await apiCall(`${getApiUrl()}/api/auth/verify`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-
-      if (data.success) {
-        setUser(data.user)
-      } else {
-        await refreshToken()
-      }
-    } catch (error) {
-      console.error('Auth check failed:', error)
-      await refreshToken()
-    } finally {
-      setIsLoading(false)
-    }
-  }, [apiCall, refreshToken])
-
-  // Cleanup on unmount
-  useEffect(() => {
-    const currentRefreshTimeout = refreshTimeoutRef.current
-    const currentAbortController = abortControllerRef.current
-    
-    return () => {
-      if (currentAbortController) {
-        currentAbortController.abort()
-      }
-      if (currentRefreshTimeout) {
-        clearTimeout(currentRefreshTimeout)
-      }
-    }
-  }, [])
-
-  useEffect(() => {
-    checkAuthStatus()
-  }, [checkAuthStatus])
-
-  const login = useCallback(async (email: string, password: string, rememberMe = false) => {
-    try {
-      setIsLoading(true)
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const expiryTime = payload.exp * 1000; // Convert to milliseconds
+      const currentTime = Date.now();
+      const bufferTime = 5 * 60 * 1000; // 5 minutes buffer
       
-      const data = await apiCall(`${getApiUrl()}/api/auth/login`, {
-        method: 'POST',
-        body: JSON.stringify({
-          email,
-          password,
-          rememberMe,
-          deviceInfo: typeof navigator !== 'undefined' ? navigator.userAgent : 'Unknown'
-        })
-      })
-
-      if (data.success) {
-        localStorage.setItem('accessToken', data.tokens.accessToken)
-        localStorage.setItem('refreshToken', data.tokens.refreshToken)
-        setUser(data.user)
-        return { success: true, message: 'Login successful!' }
-      } else {
-        return { success: false, message: data.message || 'Login failed' }
-      }
-    } catch (error: unknown) {
-      console.error('Login error:', error)
-      const errorMessage = error instanceof Error && error.name === 'AbortError' 
-        ? 'Request cancelled' 
-        : 'Network error. Please try again.'
-      return { 
-        success: false, 
-        message: errorMessage
-      }
-    } finally {
-      setIsLoading(false)
+      return currentTime >= (expiryTime - bufferTime);
+    } catch {
+      return true;
     }
-  }, [apiCall])
+  };
 
-  const signup = useCallback(async (signupData: SignupData) => {
+  // Verify token with backend
+  const verifyToken = async (storedToken: string): Promise<User | null> => {
     try {
-      setIsLoading(true)
-
-      const data = await apiCall(`${getApiUrl()}/api/auth/signup`, {
-        method: 'POST',
-        body: JSON.stringify({
-          firstName: signupData.firstName,
-          lastName: signupData.lastName,
-          email: signupData.email,
-          password: signupData.password,
-          confirmPassword: signupData.confirmPassword,
-          agreeToTerms: signupData.agreeToTerms,
-          deviceInfo: typeof navigator !== 'undefined' ? navigator.userAgent : 'Unknown'
-        })
-      })
-
-      if (data.success) {
-        localStorage.setItem('accessToken', data.tokens.accessToken)
-        localStorage.setItem('refreshToken', data.tokens.refreshToken)
-        setUser(data.user)
-        return { success: true, message: 'Account created successfully!' }
-      } else {
-        return { success: false, message: data.message || 'Signup failed' }
+      // Check if token is expired before making request
+      if (isTokenExpired(storedToken)) {
+        console.warn('⚠️ Token expired, clearing auth state');
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        return null;
       }
-    } catch (error: unknown) {
-      console.error('Signup error:', error)
-      const errorMessage = error instanceof Error && error.name === 'AbortError' 
-        ? 'Request cancelled' 
-        : 'Network error. Please try again.'
-      return { 
-        success: false, 
-        message: errorMessage
+
+      console.log('🔍 Verifying token with backend...');
+      const response = await fetch(`${API_BASE_URL}/auth/verify`, {
+        headers: {
+          'Authorization': `Bearer ${storedToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        console.error('❌ Token verification failed:', response.status);
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        return null;
       }
-    } finally {
-      setIsLoading(false)
+
+      const data = await response.json();
+      
+      if (data.success && data.user) {
+        console.log('✅ Token verified successfully');
+        return {
+          id: data.user.id.toString(),
+          firstName: data.user.firstName,
+          lastName: data.user.lastName,
+          email: data.user.email,
+          role: data.user.role,
+          emailVerified: data.user.emailVerified,
+          createdAt: data.user.createdAt,
+          lastLoginAt: data.user.lastLoginAt,
+        };
+      }
+
+      return null;
+    } catch (error) {
+      console.error('💥 Error verifying token:', error);
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      return null;
     }
-  }, [apiCall])
+  };
+
+  // Check if user is logged in on mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const storedToken = localStorage.getItem('token');
+        const storedUser = localStorage.getItem('user');
+
+        if (storedToken && storedUser) {
+          console.log('🔄 Found stored credentials, verifying...');
+          
+          const verifiedUser = await verifyToken(storedToken);
+          
+          if (verifiedUser) {
+            setUser(verifiedUser);
+            setToken(storedToken);
+            console.log('✅ User authenticated from storage');
+          } else {
+            console.log('❌ Token verification failed, clearing auth state');
+            setUser(null);
+            setToken(null);
+          }
+        } else {
+          console.log('ℹ️ No stored credentials found');
+        }
+      } catch (error) {
+        console.error('💥 Auth check error:', error);
+        setUser(null);
+        setToken(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkAuth();
+  }, []);
+
+  const login = useCallback(async (email: string, password: string) => {
+    setIsLoading(true);
+    try {
+      console.log('🔐 Attempting login for:', email);
+      
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data: LoginResponse = await response.json();
+
+      if (!response.ok || !data.success) {
+        console.error('❌ Login failed:', data.message);
+        throw new Error(data.message || 'Login failed');
+      }
+
+      if (!data.user || !data.tokens) {
+        throw new Error('Invalid response from server');
+      }
+
+      const userData: User = {
+        id: data.user.id.toString(),
+        firstName: data.user.firstName,
+        lastName: data.user.lastName,
+        email: data.user.email,
+        role: data.user.role,
+        emailVerified: data.user.emailVerified,
+        createdAt: data.user.createdAt,
+        lastLoginAt: data.user.lastLoginAt,
+      };
+
+      // Save to state and localStorage
+      setUser(userData);
+      setToken(data.tokens.accessToken);
+      localStorage.setItem('token', data.tokens.accessToken);
+      localStorage.setItem('user', JSON.stringify(userData));
+
+      console.log('✅ Login successful for user:', userData.email, 'Role:', userData.role);
+
+      // ✅ Redirect based on user role
+      if (userData.role === 'Admin') {
+        console.log('👑 Admin user detected, redirecting to admin dashboard...');
+        router.push('/admin');
+      } else {
+        console.log('👤 Regular user detected, redirecting to home...');
+        router.push('/');
+      }
+
+    } catch (error) {
+      console.error('💥 Login error:', error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [router]);
 
   const logout = useCallback(async () => {
     try {
-      // Cancel any pending requests
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort()
+      console.log('👋 Logging out user...');
+      
+      // Clear local state first for immediate UI update
+      setUser(null);
+      setToken(null);
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+
+      // Try to notify backend, but don't wait for it
+      if (token) {
+        fetch(`${API_BASE_URL}/auth/logout`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ logoutFromAllDevices: false }),
+        }).catch(err => console.warn('Logout notification failed:', err));
       }
 
-      const refreshTokenValue = localStorage.getItem('refreshToken')
-      
-      if (refreshTokenValue) {
-        // Don't await this - logout immediately
-        apiCall(`${getApiUrl()}/api/auth/logout`, {
-          method: 'POST',
-          body: JSON.stringify({ refreshToken: refreshTokenValue })
-        }).catch(console.error)
-      }
+      toast.success('Logged out successfully');
+      router.push('/');
     } catch (error) {
-      console.error('Logout error:', error)
-    } finally {
-      // Clear immediately for instant response
-      localStorage.removeItem('accessToken')
-      localStorage.removeItem('refreshToken')
-      setUser(null)
-      
-      if (refreshTimeoutRef.current) {
-        clearTimeout(refreshTimeoutRef.current)
-      }
+      console.error('💥 Logout error:', error);
+      // Even if logout fails, clear local state
+      setUser(null);
+      setToken(null);
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      router.push('/');
     }
-  }, [apiCall])
+  }, [token, router]);
+
+  const register = useCallback(async (userData: RegisterData): Promise<{ success: boolean; message: string }> => {
+    return signup({
+      ...userData,
+      confirmPassword: userData.password,
+      agreeToTerms: true
+    });
+  }, []);
+
+  const signup = useCallback(async (userData: SignupData): Promise<{ success: boolean; message: string }> => {
+    setIsLoading(true);
+    try {
+      console.log('📝 Attempting signup for:', userData.email);
+      
+      const response = await fetch(`${API_BASE_URL}/auth/signup`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData),
+      });
+
+      const data: LoginResponse = await response.json();
+
+      if (!response.ok || !data.success) {
+        console.error('❌ Signup failed:', data.message);
+        return {
+          success: false,
+          message: data.message || 'Signup failed'
+        };
+      }
+
+      if (!data.user || !data.tokens) {
+        return {
+          success: false,
+          message: 'Invalid response from server'
+        };
+      }
+
+      const newUser: User = {
+        id: data.user.id.toString(),
+        firstName: data.user.firstName,
+        lastName: data.user.lastName,
+        email: data.user.email,
+        role: data.user.role,
+        emailVerified: data.user.emailVerified,
+        createdAt: data.user.createdAt,
+        lastLoginAt: data.user.lastLoginAt,
+      };
+
+      // Save to state and localStorage
+      setUser(newUser);
+      setToken(data.tokens.accessToken);
+      localStorage.setItem('token', data.tokens.accessToken);
+      localStorage.setItem('user', JSON.stringify(newUser));
+
+      console.log('✅ Signup successful for user:', newUser.email);
+
+      // ✅ Redirect based on user role (though new signups are usually regular users)
+      if (newUser.role === 'Admin') {
+        router.push('/admin');
+      } else {
+        router.push('/');
+      }
+
+      return {
+        success: true,
+        message: 'Account created successfully!'
+      };
+
+    } catch (error) {
+      console.error('💥 Signup error:', error);
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Signup failed'
+      };
+    } finally {
+      setIsLoading(false);
+    }
+  }, [router]);
+
+  const isAuthenticated = !!user;
 
   return (
-    <AuthContext.Provider value={{
-      user,
-      isLoading,
-      isAuthenticated: !!user,
-      login,
-      signup,
-      logout,
-      refreshToken
-    }}>
+    <AuthContext.Provider 
+      value={{
+        user,
+        token,
+        isAuthenticated,
+        isLoading,
+        login,
+        logout,
+        register,
+        signup,
+      }}
+    >
       {children}
     </AuthContext.Provider>
-  )
+  );
 }
 
-export const useAuth = () => {
-  const context = useContext(AuthContext)
+export function useAuth() {
+  const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider')
+    throw new Error('useAuth must be used within an AuthProvider');
   }
-  return context
+  return context;
 }

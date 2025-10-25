@@ -4,9 +4,13 @@ using Home4Paws.API.DataManager;
 using Home4Paws.API.Services.Auth;
 using Home4Paws.API.Helpers;
 using Home4Paws.API.Middleware;
+// using Home4Paws.API.Services.Pet; // Removed because the namespace 'Pet' does not exist
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Home4Paws.API.Data;
+using Home4Paws.API.Services.Pets; 
+using Home4Paws.API.Services.Adoption;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -75,36 +79,69 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-// Add Entity Framework with PostgreSQL (Supabase)
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-if (!string.IsNullOrEmpty(connectionString))
+// Add Entity Framework with PostgreSQL Database
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
+    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+
+builder.Services.AddDbContext<Home4Paws.API.Data.ApplicationDbContext>(options =>
 {
-    builder.Services.AddDbContext<Home4Paws.API.Data.ApplicationDbContext>(options =>
+    options.UseNpgsql(connectionString, npgsqlOptions =>
     {
-        options.UseNpgsql(connectionString, npgsqlOptions =>
-        {
-            npgsqlOptions.EnableRetryOnFailure(maxRetryCount: 3);
-        });
-
-        // Add detailed logging in development
-        if (builder.Environment.IsDevelopment())
-        {
-            options.EnableSensitiveDataLogging();
-            options.EnableDetailedErrors();
-        }
+        npgsqlOptions.UseNetTopologySuite(); // For spatial data support
+        npgsqlOptions.CommandTimeout(60);
     });
-}
+    
+    if (builder.Environment.IsDevelopment())
+    {
+        options.EnableSensitiveDataLogging();
+        options.EnableDetailedErrors();
+    }
+    
+    Console.WriteLine("🔧 Using PostgreSQL Database");
+});
 
-// Register Dapper for lightweight queries
+// Register Repositories
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IPetReportRepository, PetReportRepository>();
+builder.Services.AddScoped<IAdoptionListingRepository, AdoptionListingRepository>();
+builder.Services.AddScoped<IAdoptionApplicationRepository, AdoptionApplicationRepository>();
+builder.Services.AddScoped<IAdoptionMessageRepository, AdoptionMessageRepository>();
+
+// Register Pet Adoption Repositories
+builder.Services.AddScoped<IPetListingRepository, PetListingRepository>();
+builder.Services.AddScoped<IPetInquiryRepository, PetInquiryRepository>();
+builder.Services.AddScoped<IPetFavoriteRepository, PetFavoriteRepository>();
 
 // Register Services
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<JwtHelper>();
+builder.Services.AddScoped<IAdoptionService, AdoptionService>();
+builder.Services.AddScoped<IAdoptionApplicationService, AdoptionApplicationService>();
+builder.Services.AddScoped<IAdoptionMessageService, AdoptionMessageService>();
 
-// Add health checks
-builder.Services.AddHealthChecks()
-    .AddNpgSql(connectionString ?? "", name: "database");
+// Register Pet Adoption Services
+builder.Services.AddScoped<IPetListingService, PetListingService>();
+builder.Services.AddScoped<IPetInquiryService, PetInquiryService>();
+
+// Register AutoMapper
+builder.Services.AddAutoMapper(typeof(MappingProfiles));
+// Register Pet Services
+builder.Services.AddScoped<IPetReportService, PetReportService>();
+builder.Services.AddScoped<ILocationSearchService, LocationSearchService>();
+builder.Services.AddScoped<IImageSimilarityService, ImageSimilarityService>();
+
+// Register HTTP Client for Image Similarity Service
+builder.Services.AddHttpClient("ImageSimilarityService", client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration.GetValue<string>("ImageSimilarityService:BaseUrl") ?? "http://localhost:5000");
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
+
+// Configure static files for uploads
+builder.Services.AddDirectoryBrowser();
+
+// Add health checks (simplified for in-memory database)
+builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
@@ -116,7 +153,7 @@ var appName = builder.Configuration.GetValue<string>("ApplicationSettings:Applic
 logger.LogInformation("═══════════════════════════════════════════════════════");
 logger.LogInformation("🐾 {AppName}", appName);
 logger.LogInformation("{EnvironmentBadge} Environment: {Environment}", environmentBadge, app.Environment.EnvironmentName.ToUpper());
-logger.LogInformation("📊 Database: {DatabaseStatus}", !string.IsNullOrEmpty(connectionString) ? "✅ Configured" : "❌ Not Configured");
+logger.LogInformation("📊 Database: ✅ PostgreSQL (Supabase)");
 logger.LogInformation("🌐 Base URL: {BaseUrl}", builder.Configuration.GetValue<string>("ExternalServices:BaseUrl"));
 logger.LogInformation("🔐 JWT: ✅ Configured with {Issuer}", issuer);
 logger.LogInformation("💾 Cache: ✅ Memory Cache Enabled");
@@ -176,6 +213,12 @@ else
     app.UseCors();
 }
 
+// Add this if you use controllers (MVC)
+app.UseRouting();
+
+// Configure static file serving
+app.UseStaticFiles();
+
 // Add Authentication & Authorization (AFTER CORS)
 app.UseAuthentication();
 app.UseAuthorization();
@@ -221,7 +264,7 @@ app.MapGet("/api/info", (IConfiguration config, IWebHostEnvironment env) => new
     },
     Configuration = new
     {
-        DatabaseConfigured = !string.IsNullOrEmpty(connectionString),
+        DatabaseConfigured = true,
         BaseUrl = config.GetValue<string>("ExternalServices:BaseUrl"),
         CorsEnabled = true,
         AllowedOrigins = allowedOrigins,
@@ -251,28 +294,75 @@ logger.LogInformation("   POST /api/auth/signup");
 logger.LogInformation("   POST /api/auth/refresh");
 logger.LogInformation("   POST /api/auth/logout");
 logger.LogInformation("   GET  /api/auth/health");
+logger.LogInformation("   GET  /api/reports");
+logger.LogInformation("   POST /api/reports");
 
-app.Run();
-
-namespace Home4Paws.API
+// Apply database migrations automatically
+using (var scope = app.Services.CreateScope())
 {
-    // Basic DbContext for now - you'll expand this with your actual entities
-    public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, IWebHostEnvironment environment) : DbContext(options)
+    var context = scope.ServiceProvider.GetRequiredService<Home4Paws.API.Data.ApplicationDbContext>();
+    
+    try
     {
-        private readonly IWebHostEnvironment _environment = environment;
-
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        // Check if database connection is working
+        var canConnect = await context.Database.CanConnectAsync();
+        
+        if (!canConnect)
         {
-            base.OnModelCreating(modelBuilder);
-            
-            // Configure schema based on environment
-            var schema = _environment.IsDevelopment() ? "development" : "production";
-            modelBuilder.HasDefaultSchema(schema);
+            logger.LogWarning("⚠️ Cannot connect to database. Skipping migrations.");
         }
-
-        // TODO: Add your DbSets here as you create entities
-        // public DbSet<User> Users { get; set; }
-        // public DbSet<Pet> Pets { get; set; }
-        // public DbSet<Adoption> Adoptions { get; set; }
+        else
+        {
+            // Apply any pending migrations
+            var pendingMigrations = context.Database.GetPendingMigrations().ToList();
+            
+            if (pendingMigrations.Any())
+            {
+                logger.LogInformation("📦 Applying {Count} pending migrations...", pendingMigrations.Count);
+                try
+                {
+                    context.Database.Migrate();
+                    logger.LogInformation("✅ Database migrations applied successfully");
+                }
+                catch (Npgsql.PostgresException ex) when (ex.SqlState == "42P07")
+                {
+                    // Table already exists - this is okay, just log and continue
+                    logger.LogWarning("⚠️ Some tables already exist. Database is ready to use.");
+                }
+            }
+            else
+            {
+                logger.LogInformation("✅ Database is up to date");
+            }
+            
+            // Seed test admin user if not exists (only in development)
+            if (app.Environment.IsDevelopment() && !context.Users.Any())
+            {
+                var adminUser = new Home4Paws.API.Models.Entities.User
+                {
+                    FirstName = "Admin",
+                    LastName = "User", 
+                    Email = "admin@home4paws.lk",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin123!"),
+                    Role = "Admin",
+                    IsActive = true,
+                    EmailVerified = true,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+                
+                context.Users.Add(adminUser);
+                await context.SaveChangesAsync();
+                logger.LogInformation("👤 Admin user seeded: admin@home4paws.lk / Admin123!");
+            }
+        }
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "❌ An error occurred while migrating or seeding the database");
+        // Don't throw - allow the app to start even if migrations fail
+        logger.LogWarning("⚠️ Starting application anyway. Database may need manual migration.");
     }
 }
+
+app.Run();
