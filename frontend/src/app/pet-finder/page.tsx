@@ -44,7 +44,7 @@ export default function PetFinderPage() {
         setLoading(true)
         
         // First try to call the API with better error handling
-        const response = await fetch('http://localhost:5185/api/reports/simple', {
+        const response = await fetch('http://localhost:5185/api/reports', {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',

@@ -27,6 +27,10 @@ namespace Home4Paws.API.Data
         public DbSet<AdoptionApplication> AdoptionApplications { get; set; } = null!;
         public DbSet<AdoptionFavorite> AdoptionFavorites { get; set; } = null!;
         public DbSet<AdoptionMessage> AdoptionMessages { get; set; } = null!;
+        public DbSet<PetListing> PetListings { get; set; } = null!;
+        public DbSet<PetInquiry> PetInquiries { get; set; } = null!;
+        public DbSet<PetFavorite> PetFavorites { get; set; } = null!;
+        public DbSet<PetPhoto> PetPhotos { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

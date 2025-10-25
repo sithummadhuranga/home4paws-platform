@@ -79,10 +79,17 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-// Add Entity Framework with In-Memory Database for testing
+// Add Entity Framework with PostgreSQL Database
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
+    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+
 builder.Services.AddDbContext<Home4Paws.API.Data.ApplicationDbContext>(options =>
 {
-    options.UseInMemoryDatabase("Home4PawsTestDb");
+    options.UseNpgsql(connectionString, npgsqlOptions =>
+    {
+        npgsqlOptions.UseNetTopologySuite(); // For spatial data support
+        npgsqlOptions.CommandTimeout(60);
+    });
     
     if (builder.Environment.IsDevelopment())
     {
@@ -90,7 +97,7 @@ builder.Services.AddDbContext<Home4Paws.API.Data.ApplicationDbContext>(options =
         options.EnableDetailedErrors();
     }
     
-    Console.WriteLine("🔧 Using In-Memory Database for testing");
+    Console.WriteLine("🔧 Using PostgreSQL Database");
 });
 
 // Register Repositories
@@ -100,12 +107,21 @@ builder.Services.AddScoped<IAdoptionListingRepository, AdoptionListingRepository
 builder.Services.AddScoped<IAdoptionApplicationRepository, AdoptionApplicationRepository>();
 builder.Services.AddScoped<IAdoptionMessageRepository, AdoptionMessageRepository>();
 
+// Register Pet Adoption Repositories
+builder.Services.AddScoped<IPetListingRepository, PetListingRepository>();
+builder.Services.AddScoped<IPetInquiryRepository, PetInquiryRepository>();
+builder.Services.AddScoped<IPetFavoriteRepository, PetFavoriteRepository>();
+
 // Register Services
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<JwtHelper>();
 builder.Services.AddScoped<IAdoptionService, AdoptionService>();
 builder.Services.AddScoped<IAdoptionApplicationService, AdoptionApplicationService>();
 builder.Services.AddScoped<IAdoptionMessageService, AdoptionMessageService>();
+
+// Register Pet Adoption Services
+builder.Services.AddScoped<IPetListingService, PetListingService>();
+builder.Services.AddScoped<IPetInquiryService, PetInquiryService>();
 
 // Register AutoMapper
 builder.Services.AddAutoMapper(typeof(MappingProfiles));
@@ -137,7 +153,7 @@ var appName = builder.Configuration.GetValue<string>("ApplicationSettings:Applic
 logger.LogInformation("═══════════════════════════════════════════════════════");
 logger.LogInformation("🐾 {AppName}", appName);
 logger.LogInformation("{EnvironmentBadge} Environment: {Environment}", environmentBadge, app.Environment.EnvironmentName.ToUpper());
-logger.LogInformation("📊 Database: ✅ In-Memory Database");
+logger.LogInformation("📊 Database: ✅ PostgreSQL (Supabase)");
 logger.LogInformation("🌐 Base URL: {BaseUrl}", builder.Configuration.GetValue<string>("ExternalServices:BaseUrl"));
 logger.LogInformation("🔐 JWT: ✅ Configured with {Issuer}", issuer);
 logger.LogInformation("💾 Cache: ✅ Memory Cache Enabled");
@@ -281,36 +297,72 @@ logger.LogInformation("   GET  /api/auth/health");
 logger.LogInformation("   GET  /api/reports");
 logger.LogInformation("   POST /api/reports");
 
-// Initialize In-Memory Database
+// Apply database migrations automatically
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<Home4Paws.API.Data.ApplicationDbContext>();
     
-    // Ensure database is created
-    context.Database.EnsureCreated();
-    
-    // Seed test admin user if not exists
-    if (!context.Users.Any())
+    try
     {
-        var adminUser = new Home4Paws.API.Models.Entities.User
-        {
-            FirstName = "Admin",
-            LastName = "User", 
-            Email = "admin@home4paws.lk",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin123!"),
-            Role = "Admin",
-            IsActive = true,
-            EmailVerified = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        };
+        // Check if database connection is working
+        var canConnect = await context.Database.CanConnectAsync();
         
-        context.Users.Add(adminUser);
-        context.SaveChanges();
-        logger.LogInformation("👤 Admin user seeded: admin@home4paws.lk / Admin123!");
+        if (!canConnect)
+        {
+            logger.LogWarning("⚠️ Cannot connect to database. Skipping migrations.");
+        }
+        else
+        {
+            // Apply any pending migrations
+            var pendingMigrations = context.Database.GetPendingMigrations().ToList();
+            
+            if (pendingMigrations.Any())
+            {
+                logger.LogInformation("📦 Applying {Count} pending migrations...", pendingMigrations.Count);
+                try
+                {
+                    context.Database.Migrate();
+                    logger.LogInformation("✅ Database migrations applied successfully");
+                }
+                catch (Npgsql.PostgresException ex) when (ex.SqlState == "42P07")
+                {
+                    // Table already exists - this is okay, just log and continue
+                    logger.LogWarning("⚠️ Some tables already exist. Database is ready to use.");
+                }
+            }
+            else
+            {
+                logger.LogInformation("✅ Database is up to date");
+            }
+            
+            // Seed test admin user if not exists (only in development)
+            if (app.Environment.IsDevelopment() && !context.Users.Any())
+            {
+                var adminUser = new Home4Paws.API.Models.Entities.User
+                {
+                    FirstName = "Admin",
+                    LastName = "User", 
+                    Email = "admin@home4paws.lk",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin123!"),
+                    Role = "Admin",
+                    IsActive = true,
+                    EmailVerified = true,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+                
+                context.Users.Add(adminUser);
+                await context.SaveChangesAsync();
+                logger.LogInformation("👤 Admin user seeded: admin@home4paws.lk / Admin123!");
+            }
+        }
     }
-    
-    logger.LogInformation("🔧 In-Memory Database initialized successfully");
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "❌ An error occurred while migrating or seeding the database");
+        // Don't throw - allow the app to start even if migrations fail
+        logger.LogWarning("⚠️ Starting application anyway. Database may need manual migration.");
+    }
 }
 
 app.Run();

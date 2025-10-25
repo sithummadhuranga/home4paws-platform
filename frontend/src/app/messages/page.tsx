@@ -90,7 +90,7 @@ export default function MessagesPage() {
     petName: msgs[0].petName,
     messages: msgs.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()),
     lastMessage: msgs[msgs.length - 1],
-    unreadCount: msgs.filter(m => !m.isRead && m.receiverId === user?.id).length
+    unreadCount: msgs.filter(m => !m.isRead && m.receiverId === parseInt(user?.id || '0')).length
   }))
 
   const selectedConversation = selectedListing
@@ -184,7 +184,7 @@ export default function MessagesPage() {
                     {/* Messages */}
                     <div className="flex-1 overflow-y-auto p-4 space-y-3">
                       {selectedConversation.messages.map((msg) => {
-                        const isMe = msg.senderId === user?.id
+                        const isMe = msg.senderId === parseInt(user?.id || '0')
                         return (
                           <div
                             key={msg.id}

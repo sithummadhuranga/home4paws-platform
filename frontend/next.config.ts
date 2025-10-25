@@ -41,6 +41,11 @@ const nextConfig: NextConfig = {
     optimizeCss: true,
     optimizeServerReact: true,
   },
+
+  // Disable SSR for faster development
+  ...(process.env.NODE_ENV === 'development' && {
+    reactStrictMode: false, // Disable for faster dev
+  }),
   
   // API route optimization
   async rewrites() {

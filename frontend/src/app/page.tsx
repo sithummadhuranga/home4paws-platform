@@ -1,3 +1,7 @@
+// Disable SSR for faster development
+export const dynamic = 'force-dynamic'
+export const fetchCache = 'force-no-store'
+
 import Header from "@/components/layout/Header"
 import Hero from "@/components/landing/Hero"
 import HowItWorks from "@/components/landing/HowItWorks"
