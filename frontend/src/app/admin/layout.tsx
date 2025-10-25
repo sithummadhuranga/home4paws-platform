@@ -15,18 +15,20 @@ import {
   LogOut,
   FolderTree,
   MessageSquare,
+  Proportions
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 
 const navigation = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
+  { name: 'Adoptions', href: '/admin/adoptions/all', icon: FolderTree },
   { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
   { name: 'Products', href: '/admin/products', icon: Package },
   { name: 'Categories', href: '/admin/categories', icon: FolderTree },
   { name: 'Users', href: '/admin/users', icon: Users },
-  { name: 'Feedbacks', href: '/admin/feedbacks', icon: MessageSquare }, // ✅ Add this
-  { name: 'Reports' , href: '/admin/reports', icon: BarChart3 },
+  { name: 'Reports', href: '/admin/reports', icon: Proportions },
+  { name: 'Feedbacks', href: '/admin/feedbacks', icon: MessageSquare },
   { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
 ];
 

@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Menu, X, ShoppingCart, User, LogOut } from "lucide-react";
+import { Menu, X, ShoppingCart, User, LogOut, MessageCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/contexts/CartContext";
 import { ThemeToggle } from "@/components/common/ThemeToggle";
@@ -145,7 +145,7 @@ export default function Header() {
             <nav className="hidden md:flex items-center justify-center flex-1">
               <NavItem href="/about">About</NavItem>
               <NavItem href="/pet-finder" className="whitespace-nowrap">Pet Finder</NavItem>
-              <NavItem href="/shelters">Shelters</NavItem>
+              <NavItem href="/adoptions">Adoption</NavItem>
               <NavItem href="/store">Store</NavItem>
               <NavItem href="/resources">Resources</NavItem>
               <NavItem href="/feedbacks">Feedback</NavItem>
@@ -207,6 +207,29 @@ export default function Header() {
                               Profile
                             </Link>
                           </DropdownMenuItem>
+                          <DropdownMenuItem className="cursor-pointer hover:bg-purple-900/20 text-purple-200" asChild>
+                            <Link href="/messages">
+                              <MessageCircle className="w-4 h-4 mr-3 text-purple-300" />
+                              Messages
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="cursor-pointer hover:bg-purple-900/20 text-purple-200" asChild>
+                            <Link href="/adoptions/my-listings">
+                              <User className="w-4 h-4 mr-3 text-purple-300" />
+                              My Listings
+                            </Link>
+                          </DropdownMenuItem>
+                          {user.role === 'Admin' && (
+                            <>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem className="cursor-pointer hover:bg-purple-900/20 text-purple-200" asChild>
+                                <Link href="/admin/adoptions">
+                                  <User className="w-4 h-4 mr-3 text-purple-300" />
+                                  Adoption Admin
+                                </Link>
+                              </DropdownMenuItem>
+                            </>
+                          )}
                           <DropdownMenuSeparator />
                           <DropdownMenuItem 
                             onClick={handleLogout} 
@@ -287,11 +310,14 @@ export default function Header() {
           <nav className="p-5 space-y-2">
             {/* Navigation Links */}
             <div className="space-y-2 pb-5 border-b border-purple-400/20">
-              <NavItem href="/adopt" onClick={closeMenu} className="block w-full">
-                Adopt Pets
+              <NavItem href="/about" onClick={closeMenu} className="block w-full">
+                About
               </NavItem>
-              <NavItem href="/shelters" onClick={closeMenu} className="block w-full">
-                Shelters
+              <NavItem href="/pet-finder" onClick={closeMenu} className="block w-full">
+                Pet Finder
+              </NavItem>
+              <NavItem href="/adoptions" onClick={closeMenu} className="block w-full">
+                Adoption
               </NavItem>
               <NavItem href="/store" onClick={closeMenu} className="block w-full">
                 Store
@@ -299,11 +325,8 @@ export default function Header() {
               <NavItem href="/resources" onClick={closeMenu} className="block w-full">
                 Resources
               </NavItem>
-              <NavItem href="/about" onClick={closeMenu} className="block w-full">
-                About
-              </NavItem>
-              <NavItem href="/feedbacks" onClick={closeMenu}>
-                Feedbacks
+              <NavItem href="/feedbacks" onClick={closeMenu} className="block w-full">
+                Feedback
               </NavItem>
             </div>
             
@@ -328,19 +351,39 @@ export default function Header() {
                     </div>
                     
                     {/* Action Buttons */}
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-2 gap-3">
+                        <Link 
+                          href="/profile" 
+                          onClick={closeMenu}
+                          className="flex items-center justify-center px-4 py-2 bg-neutral-800 text-purple-200 hover:bg-purple-900/40 rounded-xl transition-colors duration-200 font-urbanist font-medium"
+                        >
+                          <User className="w-4 h-4 mr-2 text-purple-300" />
+                          Profile
+                        </Link>
+                        
+                        <Link 
+                          href="/messages" 
+                          onClick={closeMenu}
+                          className="flex items-center justify-center px-4 py-2 bg-neutral-800 text-purple-200 hover:bg-purple-900/40 rounded-xl transition-colors duration-200 font-urbanist font-medium"
+                        >
+                          <MessageCircle className="w-4 h-4 mr-2 text-purple-300" />
+                          Messages
+                        </Link>
+                      </div>
+                      
                       <Link 
-                        href="/profile" 
+                        href="/adoptions/my-listings" 
                         onClick={closeMenu}
-                        className="flex items-center justify-center px-4 py-2 bg-neutral-800 text-purple-200 hover:bg-purple-900/40 rounded-xl transition-colors duration-200 font-urbanist font-medium"
+                        className="flex items-center justify-center w-full px-4 py-2 bg-neutral-800 text-purple-200 hover:bg-purple-900/40 rounded-xl transition-colors duration-200 font-urbanist font-medium"
                       >
                         <User className="w-4 h-4 mr-2 text-purple-300" />
-                        Profile
+                        My Listings
                       </Link>
                       
                       <button 
                         onClick={handleLogout}
-                        className="flex items-center justify-center px-4 py-2 bg-neutral-800 text-red-400 hover:bg-red-900/20 rounded-xl transition-colors duration-200 font-urbanist font-medium"
+                        className="flex items-center justify-center w-full px-4 py-2 bg-neutral-800 text-red-400 hover:bg-red-900/20 rounded-xl transition-colors duration-200 font-urbanist font-medium"
                       >
                         <LogOut className="w-4 h-4 mr-2" />
                         Sign Out

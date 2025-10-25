@@ -3,6 +3,7 @@ using System;
 using Home4Paws.API.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Home4Paws.API.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251020120027_AddAdoptionSystem")]
+    partial class AddAdoptionSystem
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -344,7 +347,7 @@ namespace Home4Paws.API.Migrations
                         .HasColumnType("character varying(50)")
                         .HasColumnName("pet_type");
 
-                    b.Property<string>("PhotoUrls")
+                    b.Property<string[]>("PhotoUrls")
                         .IsRequired()
                         .HasColumnType("jsonb")
                         .HasColumnName("photo_urls");
@@ -421,55 +424,6 @@ namespace Home4Paws.API.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("adoption_listings", "development");
-                });
-
-            modelBuilder.Entity("Home4Paws.API.Models.Entities.AdoptionMessage", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at")
-                        .HasDefaultValueSql("NOW()");
-
-                    b.Property<bool>("IsRead")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(false)
-                        .HasColumnName("is_read");
-
-                    b.Property<int>("ListingId")
-                        .HasColumnType("integer")
-                        .HasColumnName("listing_id");
-
-                    b.Property<string>("Message")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("message");
-
-                    b.Property<int>("ReceiverId")
-                        .HasColumnType("integer")
-                        .HasColumnName("receiver_id");
-
-                    b.Property<int>("SenderId")
-                        .HasColumnType("integer")
-                        .HasColumnName("sender_id");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ListingId");
-
-                    b.HasIndex("ReceiverId");
-
-                    b.HasIndex("SenderId");
-
-                    b.ToTable("adoption_messages", "development");
                 });
 
             modelBuilder.Entity("Home4Paws.API.Models.Entities.Category", b =>
@@ -1261,33 +1215,6 @@ namespace Home4Paws.API.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("Home4Paws.API.Models.Entities.AdoptionMessage", b =>
-                {
-                    b.HasOne("Home4Paws.API.Models.Entities.AdoptionListing", "Listing")
-                        .WithMany()
-                        .HasForeignKey("ListingId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Home4Paws.API.Models.Entities.User", "Receiver")
-                        .WithMany()
-                        .HasForeignKey("ReceiverId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Home4Paws.API.Models.Entities.User", "Sender")
-                        .WithMany()
-                        .HasForeignKey("SenderId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Listing");
-
-                    b.Navigation("Receiver");
-
-                    b.Navigation("Sender");
                 });
 
             modelBuilder.Entity("Home4Paws.API.Models.Entities.Feedback", b =>
