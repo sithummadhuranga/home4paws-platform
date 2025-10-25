@@ -481,11 +481,44 @@ export default function ReportLostPetPage() {
   // Handler for confirmation actions
   const handleConfirm = async () => {
     try {
-      // Simulated API call - would actually save data to backend
-      await new Promise(resolve => setTimeout(resolve, 2000))
+      // Prepare form data for API submission
+      const formDataToSubmit = new FormData()
+      
+      // Add form fields matching the backend CreatePetReportRequest
+      formDataToSubmit.append('Type', formData.petType || 'Dog')
+      formDataToSubmit.append('Breed', formData.breed || 'Unknown')
+      formDataToSubmit.append('Color', formData.colorMarkings)
+      formDataToSubmit.append('Description', formData.lastSeenNotes)
+      formDataToSubmit.append('ReportType', 'Lost')
+      formDataToSubmit.append('LostOrFoundDate', formData.dateLost)
+      formDataToSubmit.append('Location', formData.locationLost)
+      formDataToSubmit.append('ContactName', formData.ownerName)
+      formDataToSubmit.append('Phone', formData.phoneNumber)
+      formDataToSubmit.append('Email', formData.email)
+      
+      // Add photos if available
+      if (formData.photos && formData.photos.length > 0) {
+        for (let i = 0; i < formData.photos.length; i++) {
+          formDataToSubmit.append('Photos', formData.photos[i])
+        }
+      }
+
+      // Submit to backend API
+      const response = await fetch('http://localhost:5185/api/reports', {
+        method: 'POST',
+        body: formDataToSubmit,
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`)
+      }
+
+      const result = await response.json()
+      console.log('Report submitted successfully:', result)
 
       // Show success message in bottom right corner
-      toast.success('Information added successfully!', {
+      toast.success('Lost pet report submitted successfully!', {
         position: 'bottom-right',
         duration: 3000
       })
@@ -515,10 +548,15 @@ export default function ReportLostPetPage() {
       setErrors({})
       setShowConfirmation(false)
     } catch (error) {
+      console.error('Error submitting report:', error)
       // Show error in bottom right if something fails
-      toast.error('Failed to submit report. Please try again.', {
-        position: 'bottom-right'
-      })
+      toast.error(
+        `Failed to submit report: ${error instanceof Error ? error.message : 'Please try again.'}`, 
+        {
+          position: 'bottom-right',
+          duration: 5000
+        }
+      )
     }
   }
 

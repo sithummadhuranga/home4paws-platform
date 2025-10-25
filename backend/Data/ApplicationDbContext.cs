@@ -66,6 +66,7 @@ namespace Home4Paws.API.Data
                 entity.Property(e => e.RefreshToken).HasColumnName("refresh_token").HasMaxLength(500).IsRequired();
                 entity.Property(e => e.ExpiresAt).HasColumnName("expires_at").IsRequired();
                 entity.Property(e => e.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("NOW()");
+                entity.Property(e => e.UpdatedAt).HasColumnName("updated_at").HasDefaultValueSql("NOW()");
                 entity.Property(e => e.IsActive).HasColumnName("is_active").HasDefaultValue(true);
                 entity.Property(e => e.DeviceInfo).HasColumnName("device_info");
                 entity.Property(e => e.IpAddress).HasColumnName("ip_address").HasMaxLength(45);

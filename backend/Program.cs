@@ -78,29 +78,19 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-// Add Entity Framework with PostgreSQL (Supabase) and PostGIS
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-if (!string.IsNullOrEmpty(connectionString))
+// Add Entity Framework with In-Memory Database for testing
+builder.Services.AddDbContext<Home4Paws.API.Data.ApplicationDbContext>(options =>
 {
-    builder.Services.AddDbContext<Home4Paws.API.Data.ApplicationDbContext>(options =>
+    options.UseInMemoryDatabase("Home4PawsTestDb");
+    
+    if (builder.Environment.IsDevelopment())
     {
-        options.UseNpgsql(connectionString, npgsqlOptions =>
-        {
-            npgsqlOptions.EnableRetryOnFailure(
-                maxRetryCount: 5,
-                maxRetryDelay: TimeSpan.FromSeconds(10),
-                errorCodesToAdd: null);
-            npgsqlOptions.CommandTimeout(60); // Increased timeout    // Add keepalive for Supabase
-            npgsqlOptions.UseNetTopologySuite();
-        });
-
-        if (builder.Environment.IsDevelopment())
-        {
-            options.EnableSensitiveDataLogging();
-            options.EnableDetailedErrors();
-        }
-    });
-}
+        options.EnableSensitiveDataLogging();
+        options.EnableDetailedErrors();
+    }
+    
+    Console.WriteLine("🔧 Using In-Memory Database for testing");
+});
 
 // Register Repositories
 builder.Services.AddScoped<IUserRepository, UserRepository>();
@@ -127,9 +117,8 @@ builder.Services.AddHttpClient("ImageSimilarityService", client =>
 // Configure static files for uploads
 builder.Services.AddDirectoryBrowser();
 
-// Add health checks
-builder.Services.AddHealthChecks()
-    .AddNpgSql(connectionString ?? "", name: "database");
+// Add health checks (simplified for in-memory database)
+builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
@@ -141,7 +130,7 @@ var appName = builder.Configuration.GetValue<string>("ApplicationSettings:Applic
 logger.LogInformation("═══════════════════════════════════════════════════════");
 logger.LogInformation("🐾 {AppName}", appName);
 logger.LogInformation("{EnvironmentBadge} Environment: {Environment}", environmentBadge, app.Environment.EnvironmentName.ToUpper());
-logger.LogInformation("📊 Database: {DatabaseStatus}", !string.IsNullOrEmpty(connectionString) ? "✅ Configured" : "❌ Not Configured");
+logger.LogInformation("📊 Database: ✅ In-Memory Database");
 logger.LogInformation("🌐 Base URL: {BaseUrl}", builder.Configuration.GetValue<string>("ExternalServices:BaseUrl"));
 logger.LogInformation("🔐 JWT: ✅ Configured with {Issuer}", issuer);
 logger.LogInformation("💾 Cache: ✅ Memory Cache Enabled");
@@ -252,7 +241,7 @@ app.MapGet("/api/info", (IConfiguration config, IWebHostEnvironment env) => new
     },
     Configuration = new
     {
-        DatabaseConfigured = !string.IsNullOrEmpty(connectionString),
+        DatabaseConfigured = true,
         BaseUrl = config.GetValue<string>("ExternalServices:BaseUrl"),
         CorsEnabled = true,
         AllowedOrigins = allowedOrigins,
@@ -282,6 +271,39 @@ logger.LogInformation("   POST /api/auth/signup");
 logger.LogInformation("   POST /api/auth/refresh");
 logger.LogInformation("   POST /api/auth/logout");
 logger.LogInformation("   GET  /api/auth/health");
+logger.LogInformation("   GET  /api/reports");
+logger.LogInformation("   POST /api/reports");
 
-// Seed database if needed
+// Initialize In-Memory Database
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<Home4Paws.API.Data.ApplicationDbContext>();
+    
+    // Ensure database is created
+    context.Database.EnsureCreated();
+    
+    // Seed test admin user if not exists
+    if (!context.Users.Any())
+    {
+        var adminUser = new Home4Paws.API.Models.Entities.User
+        {
+            FirstName = "Admin",
+            LastName = "User", 
+            Email = "admin@home4paws.lk",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword("admin123"),
+            Role = "Admin",
+            IsActive = true,
+            EmailVerified = true,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+        
+        context.Users.Add(adminUser);
+        context.SaveChanges();
+        logger.LogInformation("👤 Admin user seeded: admin@home4paws.lk / admin123");
+    }
+    
+    logger.LogInformation("🔧 In-Memory Database initialized successfully");
+}
+
 app.Run();

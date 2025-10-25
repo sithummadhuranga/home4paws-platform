@@ -30,7 +30,14 @@ import {
   Star,
   MessageSquare,
   Trash2,
-  Edit
+  Edit,
+  Dog,
+  Cat,
+  Search,
+  Clock,
+  CheckCircle,
+  Eye,
+  FileText
 } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import Header from "@/components/layout/Header"
@@ -45,10 +52,12 @@ export default function ProfilePage() {
   const [orders, setOrders] = React.useState<Order[]>([])
   const [stats, setStats] = React.useState<UserStats | null>(null)
   const [feedbacks, setFeedbacks] = React.useState<Feedback[]>([])
+  const [petReports, setPetReports] = React.useState<any[]>([])
   const [loadingAddresses, setLoadingAddresses] = React.useState(false)
   const [loadingOrders, setLoadingOrders] = React.useState(false)
   const [loadingStats, setLoadingStats] = React.useState(false)
   const [loadingFeedbacks, setLoadingFeedbacks] = React.useState(false)
+  const [loadingPetReports, setLoadingPetReports] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
   const [cancellingOrder, setCancellingOrder] = React.useState<number | null>(null)
   const [deletingFeedback, setDeletingFeedback] = React.useState<number | null>(null)
@@ -62,6 +71,7 @@ export default function ProfilePage() {
         setLoadingOrders(false)
         setLoadingStats(false)
         setLoadingFeedbacks(false)
+        setLoadingPetReports(false)
         return
       }
 
@@ -128,6 +138,24 @@ export default function ProfilePage() {
           console.error('Error loading feedbacks:', err)
         }
         setLoadingFeedbacks(false)
+
+        // Load pet reports
+        setLoadingPetReports(true)
+        try {
+          const response = await fetch(`http://localhost:5185/api/reports/user/${user?.id}`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          })
+          if (response.ok) {
+            const petReportsData = await response.json()
+            setPetReports(petReportsData)
+            console.log('Loaded pet reports:', petReportsData.length);
+          }
+        } catch (err) {
+          console.error('Error loading pet reports:', err)
+        }
+        setLoadingPetReports(false)
         
       } catch (err) {
         console.error('Error loading profile data:', err)
@@ -136,6 +164,7 @@ export default function ProfilePage() {
         setLoadingOrders(false)
         setLoadingStats(false)
         setLoadingFeedbacks(false)
+        setLoadingPetReports(false)
       }
     }
 
@@ -396,10 +425,11 @@ export default function ProfilePage() {
 
           {/* Main Content Tabs */}
           <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-6">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="orders">Orders ({orders.length})</TabsTrigger>
               <TabsTrigger value="addresses">Addresses ({addresses.length})</TabsTrigger>
+              <TabsTrigger value="reports">Pet Reports</TabsTrigger>
               <TabsTrigger value="reviews">Reviews ({feedbacks.length})</TabsTrigger>
               <TabsTrigger value="settings">Settings</TabsTrigger>
             </TabsList>
@@ -645,6 +675,231 @@ export default function ProfilePage() {
                   )}
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            {/* Pet Reports Tab */}
+            <TabsContent value="reports" className="space-y-6">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h3 className="text-lg font-semibold">My Pet Reports</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Track the status of your lost and found pet reports
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <Button asChild variant="outline">
+                    <Link href="/pet-finder/report-lost">
+                      <FileText className="w-4 h-4 mr-2" />
+                      Report Lost Pet
+                    </Link>
+                  </Button>
+                  <Button asChild>
+                    <Link href="/pet-finder/report-found">
+                      <Search className="w-4 h-4 mr-2" />
+                      Report Found Pet
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+
+              {loadingPetReports ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="w-8 h-8 animate-spin" />
+                  <span className="ml-2 text-sm text-muted-foreground">Loading pet reports...</span>
+                </div>
+              ) : petReports.length > 0 ? (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {petReports.map((report) => (
+                    <Card key={report.id} className="relative">
+                      <CardContent className="p-6">
+                        <div className="space-y-4">
+                          {/* Header */}
+                          <div className="flex items-start justify-between">
+                            <div className="flex items-center gap-3">
+                              {report.type?.toLowerCase() === 'dog' ? (
+                                <Dog className="h-6 w-6 text-blue-500" />
+                              ) : report.type?.toLowerCase() === 'cat' ? (
+                                <Cat className="h-6 w-6 text-orange-500" />
+                              ) : (
+                                <Search className="h-6 w-6 text-gray-500" />
+                              )}
+                              <div>
+                                <h4 className="font-semibold">
+                                  {report.reportType} {report.type}
+                                  {report.name && ` - ${report.name}`}
+                                </h4>
+                                <p className="text-sm text-muted-foreground">
+                                  Report #{report.id}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex flex-col items-end gap-2">
+                              <Badge 
+                                variant={
+                                  report.status === 'Approved' ? 'default' :
+                                  report.status === 'Pending' ? 'secondary' :
+                                  report.status === 'Rejected' ? 'destructive' :
+                                  'outline'
+                                }
+                                className={
+                                  report.status === 'Approved' ? 'bg-green-600' :
+                                  report.status === 'Resolved' ? 'bg-blue-600' : ''
+                                }
+                              >
+                                {report.status === 'Pending' && <Clock className="w-3 h-3 mr-1" />}
+                                {report.status === 'Approved' && <CheckCircle className="w-3 h-3 mr-1" />}
+                                {report.status === 'Rejected' && <XCircle className="w-3 h-3 mr-1" />}
+                                {report.status === 'Resolved' && <Eye className="w-3 h-3 mr-1" />}
+                                {report.status}
+                              </Badge>
+                              {report.reportType === 'Lost' && (
+                                <Badge variant="outline" className="text-red-600 border-red-600">
+                                  Lost
+                                </Badge>
+                              )}
+                              {report.reportType === 'Found' && (
+                                <Badge variant="outline" className="text-green-600 border-green-600">
+                                  Found
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Pet Details */}
+                          <div className="space-y-2">
+                            <div className="grid grid-cols-2 gap-4 text-sm">
+                              {report.breed && (
+                                <div>
+                                  <span className="text-muted-foreground">Breed:</span>
+                                  <p className="font-medium">{report.breed}</p>
+                                </div>
+                              )}
+                              <div>
+                                <span className="text-muted-foreground">Color:</span>
+                                <p className="font-medium">{report.color}</p>
+                              </div>
+                              {report.gender && (
+                                <div>
+                                  <span className="text-muted-foreground">Gender:</span>
+                                  <p className="font-medium">{report.gender}</p>
+                                </div>
+                              )}
+                              {report.size && (
+                                <div>
+                                  <span className="text-muted-foreground">Size:</span>
+                                  <p className="font-medium">{report.size}</p>
+                                </div>
+                              )}
+                            </div>
+                            
+                            {report.description && (
+                              <div>
+                                <span className="text-muted-foreground text-sm">Description:</span>
+                                <p className="text-sm mt-1 line-clamp-2">{report.description}</p>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Location & Date */}
+                          <div className="pt-3 border-t space-y-2 text-sm">
+                            <div className="flex items-center gap-2">
+                              <MapPinIcon className="w-4 h-4 text-muted-foreground" />
+                              <span>{report.location}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <CalendarIcon className="w-4 h-4 text-muted-foreground" />
+                              <span>
+                                {report.reportType === 'Lost' ? 'Lost on:' : 'Found on:'} {
+                                  new Date(report.lostOrFoundDate).toLocaleDateString()
+                                }
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Clock className="w-4 h-4 text-muted-foreground" />
+                              <span>
+                                Reported: {new Date(report.createdAt || report.dateReported).toLocaleDateString()}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Status Messages */}
+                          {report.status === 'Pending' && (
+                            <div className="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                              <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                                <Clock className="w-4 h-4 inline mr-1" />
+                                Your report is being reviewed by our admin team.
+                              </p>
+                            </div>
+                          )}
+                          
+                          {report.status === 'Approved' && (
+                            <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg border border-green-200 dark:border-green-800">
+                              <p className="text-sm text-green-800 dark:text-green-200">
+                                <CheckCircle className="w-4 h-4 inline mr-1" />
+                                Your report has been approved and is now visible on PetFinder!
+                              </p>
+                            </div>
+                          )}
+
+                          {report.status === 'Rejected' && (
+                            <div className="bg-red-50 dark:bg-red-900/20 p-3 rounded-lg border border-red-200 dark:border-red-800">
+                              <p className="text-sm text-red-800 dark:text-red-200">
+                                <XCircle className="w-4 h-4 inline mr-1" />
+                                Your report was not approved. Please contact support for more information.
+                              </p>
+                            </div>
+                          )}
+
+                          {report.status === 'Resolved' && (
+                            <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
+                              <p className="text-sm text-blue-800 dark:text-blue-200">
+                                <Eye className="w-4 h-4 inline mr-1" />
+                                Great news! This case has been marked as resolved.
+                              </p>
+                            </div>
+                          )}
+
+                          {/* Action Buttons */}
+                          {report.status === 'Approved' && (
+                            <div className="pt-3 border-t">
+                              <Button asChild variant="outline" size="sm" className="w-full">
+                                <Link href="/pet-finder">
+                                  <Eye className="w-4 h-4 mr-2" />
+                                  View on PetFinder
+                                </Link>
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <Card>
+                  <CardContent className="p-12 text-center">
+                    <Search className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-xl font-bold mb-2">No pet reports yet</h3>
+                    <p className="text-muted-foreground mb-6">
+                      Help reunite pets with their families by reporting lost or found pets.
+                    </p>
+                    <div className="flex gap-3 justify-center">
+                      <Button asChild variant="outline">
+                        <Link href="/pet-finder/report-lost">
+                          <FileText className="w-4 h-4 mr-2" />
+                          Report Lost Pet
+                        </Link>
+                      </Button>
+                      <Button asChild>
+                        <Link href="/pet-finder/report-found">
+                          <Search className="w-4 h-4 mr-2" />
+                          Report Found Pet
+                        </Link>
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </TabsContent>
 
             {/* Reviews Tab - NEW */}

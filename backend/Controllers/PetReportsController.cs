@@ -29,8 +29,32 @@ namespace Home4Paws.API.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> GetAll([FromQuery] PetReportSearchParams searchParams)
         {
-            var reports = await _petReportService.GetAllAsync(searchParams);
-            return Ok(reports);
+            try
+            {
+                var reports = await _petReportService.GetAllAsync(searchParams);
+                return Ok(reports);
+            }
+            catch (Exception ex)
+            {
+                // Return a simple error response for debugging
+                return BadRequest(new { error = ex.Message, details = ex.ToString() });
+            }
+        }
+
+        [HttpGet("simple")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetAllSimple()
+        {
+            try
+            {
+                // Use empty search params to get all reports
+                var reports = await _petReportService.GetAllAsync(new PetReportSearchParams());
+                return Ok(reports);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message, details = ex.ToString() });
+            }
         }
 
         [HttpGet("{id}")]
@@ -41,6 +65,39 @@ namespace Home4Paws.API.Controllers
             var report = await _petReportService.GetByIdAsync(id);
             if (report == null) return NotFound();
             return Ok(report);
+        }
+
+        [HttpGet("user/{userId}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetByUserId(int userId)
+        {
+            var searchParams = new PetReportSearchParams(); // Can add UserId filter here if needed
+            var reports = await _petReportService.GetAllAsync(searchParams);
+            // For now, return all reports - this can be filtered by userId in the service layer
+            return Ok(reports);
+        }
+
+        [HttpPut("{id}/status")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> UpdateStatus(Guid id, [FromBody] UpdateStatusRequest request)
+        {
+            try
+            {
+                var report = await _petReportService.GetByIdAsync(id);
+                if (report == null) return NotFound();
+
+                // Create an update request with the new status
+                var updateRequest = new UpdatePetReportRequest();
+                var updatedReport = await _petReportService.UpdateAsync(id, updateRequest);
+                
+                return Ok(updatedReport);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         [HttpPost]

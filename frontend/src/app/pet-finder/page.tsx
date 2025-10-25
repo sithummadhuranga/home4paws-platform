@@ -4,15 +4,101 @@ import { Button } from "@/components/ui/button"
 import { PetCard } from "@/components/pet-finder/PetCard"
 import { SearchFilters } from "@/components/pet-finder/SearchFilters"
 import Link from "next/link"
-import { useCallback, useState } from "react"
+import { useCallback, useState, useEffect } from "react"
 import Header from "@/components/layout/Header"
 import Footer from "@/components/layout/Footer"
-import { MOCK_PETS, type Pet } from "@/lib/mock-data"
-import { Sparkles, Heart, Search, ArrowRight } from "lucide-react"
+import { Sparkles, Heart, Search, ArrowRight, Loader2 } from "lucide-react"
+
+interface Pet {
+  id: string
+  photo?: string
+  status: "lost" | "found"
+  type: string
+  breed?: string
+  location: string
+  date: string
+  name?: string
+  age?: string
+  gender?: string
+  lastSeen?: string
+  foundArea?: string
+  color: string
+  description?: string
+  reportType: "Lost" | "Found"
+  contactName: string
+  phone: string
+  email: string
+}
 
 export default function PetFinderPage() {
-  const [filteredPets, setFilteredPets] = useState(MOCK_PETS)
+  const [allPets, setAllPets] = useState<Pet[]>([])
+  const [filteredPets, setFilteredPets] = useState<Pet[]>([])
   const [isFiltered, setIsFiltered] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  // Fetch approved pet reports from API
+  useEffect(() => {
+    const fetchPets = async () => {
+      try {
+        setLoading(true)
+        
+        // First try to call the API with better error handling
+        const response = await fetch('http://localhost:5185/api/reports/simple', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        })
+        
+        if (!response.ok) {
+          const errorText = await response.text()
+          console.error('API Error:', response.status, errorText)
+          throw new Error(`HTTP error! status: ${response.status} - ${errorText}`)
+        }
+        
+        const reports = await response.json()
+        console.log('Fetched reports:', reports)
+        
+        // Filter only approved reports and map to Pet interface
+        const approvedPets: Pet[] = reports
+          .filter((report: any) => report.status === 'Approved')
+          .map((report: any) => ({
+            id: report.id,
+            photo: report.photoUrls?.[0] || '/images/default-pet.jpg', // Default image if no photo
+            status: report.reportType === 'Lost' ? 'lost' : 'found',
+            type: report.type,
+            breed: report.breed || '',
+            location: report.location,
+            date: report.lostOrFoundDate,
+            name: report.name || '',
+            age: report.age || '',
+            gender: report.gender || '',
+            lastSeen: report.reportType === 'Lost' ? report.location : undefined,
+            foundArea: report.reportType === 'Found' ? report.location : undefined,
+            color: report.color,
+            description: report.description || '',
+            reportType: report.reportType,
+            contactName: report.contactName,
+            phone: report.phone,
+            email: report.email
+          }))
+        
+        setAllPets(approvedPets)
+        setFilteredPets(approvedPets)
+      } catch (error) {
+        console.error('Error fetching pets:', error)
+        setError('Failed to load pet reports. Please try again later.')
+        // Keep empty arrays for error state
+        setAllPets([])
+        setFilteredPets([])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchPets()
+  }, [])
 
   const handleSearch = useCallback((filters: {
     query: string
@@ -28,19 +114,21 @@ export default function PetFinderPage() {
 
     if (hasNoFilters) {
       setIsFiltered(false)
-      setFilteredPets(MOCK_PETS)
+      setFilteredPets(allPets)
       return
     }
 
-    let results = [...MOCK_PETS]
+    let results = [...allPets]
     
     // Search query (case insensitive)
     if (filters.query) {
       const searchQuery = filters.query.toLowerCase()
       results = results.filter(pet => 
         pet.type.toLowerCase().includes(searchQuery) ||
-        pet.breed.toLowerCase().includes(searchQuery) ||
-        pet.location.toLowerCase().includes(searchQuery)
+        pet.breed?.toLowerCase().includes(searchQuery) ||
+        pet.location.toLowerCase().includes(searchQuery) ||
+        pet.name?.toLowerCase().includes(searchQuery) ||
+        pet.color.toLowerCase().includes(searchQuery)
       )
     }
 
@@ -53,50 +141,68 @@ export default function PetFinderPage() {
 
     // Breed filter
     if (filters.breed) {
-      results = results.filter(pet => 
-        pet.breed.toLowerCase() === filters.breed.replace('-', ' ').toLowerCase()
+      results = results.filter(pet =>
+        pet.breed?.toLowerCase().includes(filters.breed.toLowerCase())
       )
     }
 
     // Location filter
     if (filters.location) {
-      results = results.filter(pet => 
+      results = results.filter(pet =>
         pet.location.toLowerCase().includes(filters.location.toLowerCase())
       )
     }
 
-    // Date filter
+    // Date filter (pets reported within selected timeframe)
     if (filters.date) {
-      results = results.filter(pet => 
-        pet.date === filters.date
-      )
+      const now = new Date()
+      let cutoffDate = new Date()
+      
+      switch (filters.date) {
+        case 'today':
+          cutoffDate.setHours(0, 0, 0, 0)
+          break
+        case 'week':
+          cutoffDate.setDate(now.getDate() - 7)
+          break
+        case 'month':
+          cutoffDate.setMonth(now.getMonth() - 1)
+          break
+        case '3months':
+          cutoffDate.setMonth(now.getMonth() - 3)
+          break
+      }
+      
+      results = results.filter(pet => {
+        const petDate = new Date(pet.date)
+        return petDate >= cutoffDate
+      })
     }
 
     // Age filter
     if (filters.age) {
-      results = results.filter(pet => 
-        pet.age.toLowerCase() === filters.age.toLowerCase()
+      results = results.filter(pet =>
+        pet.age?.toLowerCase().includes(filters.age.toLowerCase())
       )
     }
 
     setIsFiltered(true)
     setFilteredPets(results)
-  }, [])
+  }, [allPets])
 
   return (
     <>
       <Header />
       <main className="min-h-screen bg-black">
         {/* Hero Section */}
-        <section className="relative py-20 sm:py-24 lg:py-28 overflow-hidden">
+        <section className="relative py-20 sm:py-28 md:py-32 overflow-hidden bg-black">
           {/* Background Elements */}
-          <div className="absolute inset-0 bg-gradient-to-br from-black via-neutral-900 to-black" />
-          <div className="absolute inset-0 bg-gradient-to-t from-purple-900/5 via-transparent to-transparent" />
-          <div className="absolute -top-20 -left-20 w-60 h-60 bg-purple-500/10 rounded-full blur-3xl animate-pulse" />
-          <div className="absolute -bottom-20 -right-20 w-80 h-80 bg-purple-400/8 rounded-full blur-3xl animate-pulse" />
-
-          <div className="relative z-10 max-w-7xl mx-auto px-4">
-            <div className="text-center mb-12">
+          <div className="absolute inset-0 bg-gradient-to-br from-black via-purple-900/20 to-black" />
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl animate-pulse" />
+          
+          <div className="relative max-w-7xl mx-auto px-4">
+            <div className="text-center animate-fadeInUp">
               {/* Badge */}
               <div className="inline-flex items-center px-4 py-2 rounded-full bg-neutral-900/80 backdrop-blur-sm border border-purple-400/20 mb-6 animate-fadeInUp">
                 <Sparkles className="w-4 h-4 text-purple-400 mr-2" />
@@ -203,23 +309,34 @@ export default function PetFinderPage() {
                   No pets found matching your search criteria. Try adjusting your filters.
                 </p>
               )}
+
+              {error && (
+                <p className="text-base sm:text-lg text-red-400 mt-4 font-inter">
+                  {error}
+                </p>
+              )}
             </div>
 
-            {filteredPets.length > 0 ? (
+            {loading ? (
+              <div className="flex items-center justify-center py-16">
+                <Loader2 className="w-8 h-8 animate-spin text-purple-400" />
+                <span className="ml-2 text-purple-300">Loading pet reports...</span>
+              </div>
+            ) : filteredPets.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 {filteredPets.map((pet) => (
                   <div key={pet.id} className="animate-fadeInUp">
                     <PetCard
-                      id={pet.id}
-                      photo={pet.photo}
+                      id={parseInt(pet.id)}
+                      photo={pet.photo || '/images/default-pet.jpg'}
                       status={pet.status}
                       type={pet.type}
-                      breed={pet.breed}
+                      breed={pet.breed || 'Unknown'}
                       location={pet.location}
                       date={pet.date}
-                      name={pet.name}
-                      age={pet.age}
-                      gender={pet.gender}
+                      name={pet.name || 'Unknown'}
+                      age={pet.age || 'Unknown'}
+                      gender={pet.gender || 'Unknown'}
                       lastSeen={pet.lastSeen}
                       foundArea={pet.foundArea}
                     />
@@ -231,8 +348,29 @@ export default function PetFinderPage() {
                 <div className="w-20 h-20 mx-auto mb-6 bg-purple-900/30 rounded-full flex items-center justify-center">
                   <Search className="w-10 h-10 text-purple-400" />
                 </div>
-                <h3 className="text-2xl font-semibold text-purple-200 mb-3 font-urbanist">No Pets Found</h3>
-                <p className="text-purple-300 mb-6 font-inter">Try adjusting your search filters or check back later</p>
+                <h3 className="text-2xl font-semibold text-purple-200 mb-3 font-urbanist">
+                  {error ? 'Error Loading Pets' : 'No Pets Found'}
+                </h3>
+                <p className="text-purple-300 mb-6 font-inter">
+                  {error 
+                    ? 'Please check if the backend is running and try again.'
+                    : 'No approved pet reports available. Check back later or try adjusting your search filters.'}
+                </p>
+                {!error && (
+                  <div className="flex flex-wrap justify-center gap-4">
+                    <Link href="/pet-finder/report-lost">
+                      <Button size="lg" className="bg-purple-600 hover:bg-purple-700">
+                        <Heart className="w-4 h-4 mr-2" />
+                        Report Lost Pet
+                      </Button>
+                    </Link>
+                    <Link href="/pet-finder/report-found">
+                      <Button variant="outline" size="lg">
+                        Report Found Pet
+                      </Button>
+                    </Link>
+                  </div>
+                )}
               </div>
             )}
           </div>

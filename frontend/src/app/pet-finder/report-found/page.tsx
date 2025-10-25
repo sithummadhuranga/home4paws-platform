@@ -316,10 +316,55 @@ export default function ReportFoundPetPage() {
     }
 
     try {
-      // Generate ticket ID (using timestamp)
-      const ticketId = Date.now().toString().slice(-6)
+      // Prepare form data for API submission
+      const formDataToSubmit = new FormData()
+      
+      // Add form fields matching the backend CreatePetReportRequest
+      formDataToSubmit.append('Type', formData.petType || 'Dog')
+      formDataToSubmit.append('Breed', formData.breed || 'Unknown')
+      formDataToSubmit.append('Color', formData.color)
+      formDataToSubmit.append('Description', formData.uniqueFeatures || 'Found pet')
+      formDataToSubmit.append('ReportType', 'Found')
+      formDataToSubmit.append('LostOrFoundDate', formData.dateFound)
+      formDataToSubmit.append('Location', formData.locationFound)
+      formDataToSubmit.append('ContactName', formData.finderName)
+      formDataToSubmit.append('Phone', formData.contactNumber || '0000000000')
+      formDataToSubmit.append('Email', formData.email || `${formData.finderName.toLowerCase().replace(/\s+/g, '')}@temp.com`)
+      
+      // Add photos if available
+      if (formData.photos && formData.photos.length > 0) {
+        for (let i = 0; i < formData.photos.length; i++) {
+          formDataToSubmit.append('Photos', formData.photos[i])
+        }
+      }
 
-      // Convert photos to URLs
+      // Show loading message
+      toast.loading('Submitting your report...')
+
+      // Submit to backend API
+      const response = await fetch('http://localhost:5185/api/reports', {
+        method: 'POST',
+        body: formDataToSubmit,
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`)
+      }
+
+      const result = await response.json()
+      console.log('Report submitted successfully:', result)
+
+      // Show success message
+      toast.success('Found pet report submitted successfully!', {
+        position: 'bottom-right',
+        duration: 3000
+      })
+
+      // Generate ticket ID for display
+      const ticketId = result.id || Date.now().toString().slice(-6)
+
+      // Convert photos to URLs for display
       const imageUrls = Array.from(formData.photos).map(file => URL.createObjectURL(file))
 
       // Prepare data to pass to ticket page
@@ -341,14 +386,15 @@ export default function ReportFoundPetPage() {
         imageUrls: imageUrls.join(',')
       })
 
-      // Show loading message
-      toast.loading('Submitting your report...')
-
       // Navigate to ticket page with all the data
       router.push(`/pet-finder/report-found/ticket?${params.toString()}`)
 
     } catch (error) {
-      toast.error('Failed to submit report. Please try again.')
+      console.error('Error submitting report:', error)
+      toast.error(
+        `Failed to submit report: ${error instanceof Error ? error.message : 'Please try again.'}`,
+        { duration: 5000 }
+      )
     }
   }
 

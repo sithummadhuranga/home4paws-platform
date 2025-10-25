@@ -120,6 +120,16 @@ namespace Home4Paws.API.Models.Pets
         public double? Longitude { get; set; }
     }
 
+    public class UpdateStatusRequest
+    {
+        [Required]
+        [MaxLength(50)]
+        public string Status { get; set; } = string.Empty;
+        
+        [MaxLength(500)]
+        public string? AdminNotes { get; set; }
+    }
+
     public class PetReportSearchParams
     {
         public string Type { get; set; }
