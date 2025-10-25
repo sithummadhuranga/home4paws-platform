@@ -26,6 +26,7 @@ const navigation = [
   { name: 'Categories', href: '/admin/categories', icon: FolderTree },
   { name: 'Users', href: '/admin/users', icon: Users },
   { name: 'Feedbacks', href: '/admin/feedbacks', icon: MessageSquare }, // ✅ Add this
+  { name: 'Reports' , href: '/admin/reports', icon: BarChart3 },
   { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
 ];
 
