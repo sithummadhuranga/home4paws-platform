@@ -1,0 +1,202 @@
+using System;
+using System.Threading.Tasks;
+using Home4Paws.API.Models.Pets;
+using Home4Paws.API.Services.Pets;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+
+namespace Home4Paws.API.Controllers
+{
+    [ApiController]
+    [Route("api/reports")]
+    public class PetReportsController : ControllerBase
+    {
+        private readonly IPetReportService _petReportService;
+        private readonly ILocationSearchService _locationSearchService;
+        private readonly IImageSimilarityService _imageSimilarityService;
+
+        public PetReportsController(
+            IPetReportService petReportService,
+            ILocationSearchService locationSearchService,
+            IImageSimilarityService imageSimilarityService)
+        {
+            _petReportService = petReportService;
+            _locationSearchService = locationSearchService;
+            _imageSimilarityService = imageSimilarityService;
+        }
+
+        [HttpGet]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetAll([FromQuery] PetReportSearchParams searchParams)
+        {
+            try
+            {
+                var reports = await _petReportService.GetAllAsync(searchParams);
+                return Ok(reports);
+            }
+            catch (Exception ex)
+            {
+                // Return a simple error response for debugging
+                return BadRequest(new { error = ex.Message, details = ex.ToString() });
+            }
+        }
+
+        [HttpGet("simple")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetAllSimple()
+        {
+            try
+            {
+                // Use empty search params to get all reports
+                var reports = await _petReportService.GetAllAsync(new PetReportSearchParams());
+                return Ok(reports);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message, details = ex.ToString() });
+            }
+        }
+
+        [HttpGet("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetById(Guid id)
+        {
+            var report = await _petReportService.GetByIdAsync(id);
+            if (report == null) return NotFound();
+            return Ok(report);
+        }
+
+        [HttpGet("user/{userId}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetByUserId(int userId)
+        {
+            var searchParams = new PetReportSearchParams(); // Can add UserId filter here if needed
+            var reports = await _petReportService.GetAllAsync(searchParams);
+            // For now, return all reports - this can be filtered by userId in the service layer
+            return Ok(reports);
+        }
+
+        [HttpPut("{id}/status")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> UpdateStatus(Guid id, [FromBody] UpdateStatusRequest request)
+        {
+            try
+            {
+                var updatedReport = await _petReportService.UpdateStatusAsync(id, request.Status, request.AdminNotes);
+                if (updatedReport == null) return NotFound();
+                
+                return Ok(updatedReport);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> Create([FromForm] CreatePetReportRequest request)
+        {
+            try
+            {
+                var report = await _petReportService.CreateAsync(request);
+                return CreatedAtAction(nameof(GetById), new { id = report.Id }, report);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpPut("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> Update(Guid id, [FromForm] UpdatePetReportRequest request)
+        {
+            try
+            {
+                var report = await _petReportService.UpdateAsync(id, request);
+                if (report == null) return NotFound();
+                return Ok(report);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpDelete("{id}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> Delete(Guid id)
+        {
+            try
+            {
+                await _petReportService.DeleteAsync(id);
+                return NoContent();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpGet("statistics")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetStatistics([FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate)
+        {
+            var stats = await _petReportService.GetStatisticsAsync();
+            return Ok(stats);
+        }
+
+        [HttpGet("hotspots")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetHotspots()
+        {
+            var hotspots = await _locationSearchService.GetHotspotAreas();
+            return Ok(hotspots);
+        }
+
+        [HttpGet("similar/{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> FindSimilar(Guid id)
+        {
+            var report = await _petReportService.GetByIdAsync(id);
+            if (report == null) return NotFound();
+
+            var similarReports = await _imageSimilarityService.FindSimilarPets(
+                report,
+                (await _petReportService.GetAllAsync(new PetReportSearchParams
+                {
+                    Type = report.Type,
+                    ReportType = report.ReportType == "Lost" ? "Found" : "Lost"
+                })).ToList()
+            );
+
+            return Ok(similarReports);
+        }
+
+        [HttpGet("nearby")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<IActionResult> SearchNearby(
+            [FromQuery] double latitude,
+            [FromQuery] double longitude,
+            [FromQuery] double radiusKm,
+            [FromQuery] PetReportSearchParams filters)
+        {
+            var results = await _locationSearchService.SearchByRadius(latitude, longitude, radiusKm, filters);
+            return Ok(results);
+        }
+    }
+}

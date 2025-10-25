@@ -1,0 +1,1000 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
+import dynamic from "next/dynamic"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { toast } from "sonner"
+import { Sparkles, Camera, MapPin, Clock, User, Heart } from 'lucide-react'
+
+// Define the form data type
+type FormErrors = {
+  [key: string]: string;
+}
+
+type LostPetFormData = {
+  // Pet Details
+  petName: string
+  petType: string
+  breed: string
+  age: string
+  gender: string
+  colorMarkings: string
+  // Lost Details
+  dateLost: string
+  locationLost: string
+  lastSeenNotes: string
+  // Photos
+  photos: FileList | null
+  // Owner Details
+  ownerName: string
+  phoneNumber: string
+  email: string
+}
+
+export default function ReportLostPetPage() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const [errors, setErrors] = useState<FormErrors>({})
+  const [touched, setTouched] = useState<{ [key: string]: boolean }>({})
+  const [isEditing] = useState(() => searchParams.get('isEditing') === 'true')
+  const [hasEdited, setHasEdited] = useState(false)
+  const [showConfirmation, setShowConfirmation] = useState(false)
+  const [originalFormData, setOriginalFormData] = useState<LostPetFormData>(() => {
+    const formDataParam = searchParams.get('formData')
+    if (formDataParam) {
+      try {
+        return JSON.parse(decodeURIComponent(formDataParam))
+      } catch (error) {
+        console.error('Error parsing original form data:', error)
+      }
+    }
+    return {
+      petName: "",
+      petType: "",
+      breed: "",
+      age: "",
+      gender: "",
+      colorMarkings: "",
+      dateLost: "",
+      locationLost: "",
+      lastSeenNotes: "",
+      photos: null,
+      ownerName: "",
+      phoneNumber: "",
+      email: "",
+    }
+  })
+
+  // Initialize form data
+  const [formData, setFormData] = useState<LostPetFormData>(() => {
+    const formDataParam = searchParams.get('formData')
+    if (formDataParam) {
+      try {
+        const parsedData = JSON.parse(decodeURIComponent(formDataParam))
+        return {
+          petName: parsedData.petName || "",
+          petType: parsedData.petType || "",
+          breed: parsedData.breed || "",
+          age: parsedData.age || "",
+          gender: parsedData.gender || "",
+          colorMarkings: parsedData.colorMarkings || "",
+          dateLost: parsedData.dateLost || "",
+          locationLost: parsedData.locationLost || "",
+          lastSeenNotes: parsedData.lastSeenNotes || "",
+          photos: parsedData.photos || null,
+          ownerName: parsedData.ownerName || "",
+          phoneNumber: parsedData.phoneNumber || "",
+          email: parsedData.email || "",
+        }
+      } catch (error) {
+        console.error('Error parsing form data:', error)
+      }
+    }
+    return {
+      petName: "",
+      petType: "",
+      breed: "",
+      age: "",
+      gender: "",
+      colorMarkings: "",
+      dateLost: "",
+      locationLost: "",
+      lastSeenNotes: "",
+      photos: null,
+      ownerName: "",
+      phoneNumber: "",
+      email: "",
+    }
+  })
+
+  // Check if the form is valid and complete
+  const isFormValid = () => {
+    // List of all required fields
+    const requiredFields = {
+      petName: 'Pet Name',
+      petType: 'Pet Type',
+      age: 'Age',
+      gender: 'Gender',
+      colorMarkings: 'Color/Markings',
+      dateLost: 'Date Lost',
+      locationLost: 'Location Lost',
+      lastSeenNotes: 'Last Seen Notes',
+      ownerName: 'Owner Name',
+      phoneNumber: 'Phone Number',
+      email: 'Email'
+    }
+
+    // When editing, we need at least one change and all fields to be valid
+    if (isEditing && !hasEdited) {
+      return false
+    }
+
+    // Validate each required field
+    for (const [key, _] of Object.entries(requiredFields)) {
+      const value = formData[key as keyof LostPetFormData]
+      
+      // Check if field is empty
+      if (!value || (typeof value === 'string' && !value.trim())) {
+        return false
+      }
+
+      // Check if field has validation errors
+      if (errors[key]) {
+        return false
+      }
+    }
+
+    // Check if exactly 3 photos are uploaded
+    if (!formData.photos || formData.photos.length !== 3) {
+      return false
+    }
+
+    return true
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    // Mark all fields as touched to show all error messages
+    const allFields = Object.keys(formData).reduce((acc, key) => ({
+      ...acc,
+      [key]: true
+    }), {})
+    setTouched(allFields)
+
+    // Validate all fields
+    const newErrors: FormErrors = {}
+    const emptyFields: string[] = []
+    
+    // Required fields list (excluding breed which is optional)
+    const requiredFields = {
+      petName: 'Pet Name',
+      petType: 'Pet Type',
+      age: 'Age',
+      gender: 'Gender',
+      colorMarkings: 'Color/Markings',
+      dateLost: 'Date Lost',
+      locationLost: 'Location Lost',
+      lastSeenNotes: 'Last Seen Notes',
+      ownerName: 'Owner Name',
+      phoneNumber: 'Phone Number',
+      email: 'Email'
+    }
+    
+    // Check for empty required fields
+    Object.entries(requiredFields).forEach(([key, label]) => {
+      const value = formData[key as keyof LostPetFormData]
+      if (!value || (typeof value === 'string' && !value.trim())) {
+        newErrors[key] = `${label} is required`
+        emptyFields.push(label)
+      }
+    })
+    
+    // Validate non-empty fields
+    Object.keys(formData).forEach(key => {
+      if (key === 'photos') return // Handle photos separately
+      const value = formData[key as keyof LostPetFormData]
+      if (value && typeof value === 'string' && value.trim()) {
+        const error = validateFormField(key, value)
+        if (error) {
+          newErrors[key] = error
+        }
+      }
+    })
+    
+    // Validate photo upload
+    if (!formData.photos || formData.photos.length === 0) {
+      newErrors.photos = 'Please upload at least one photo of your pet'
+      emptyFields.push('Photos')
+    }
+
+    setErrors(newErrors)
+
+    // If there are any errors, handle them appropriately
+    if (Object.keys(newErrors).length > 0) {
+      // Show specific empty fields in toast message
+      if (emptyFields.length > 0) {
+        toast.error(
+          `Please fill in the following required fields: ${emptyFields.join(', ')}`,
+          { duration: 6000 }
+        )
+      } else {
+        // Show validation errors for filled fields
+        const errorCount = Object.keys(newErrors).length
+        toast.error(
+          `Please fix the ${errorCount} ${errorCount === 1 ? 'error' : 'errors'} in your form`,
+          { duration: 4000 }
+        )
+      }
+      
+      // Scroll to the first error
+      const firstErrorField = document.querySelector('.border-red-500')
+      if (firstErrorField) {
+        firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }
+      return
+    }
+
+    // Show confirmation page instead of submitting
+    setShowConfirmation(true)
+  }
+
+  const validateField = (name: string, value: string): string => {
+    // First check if the field is empty
+    if (!value) {
+      switch (name) {
+        case 'petName':
+          return 'Please enter pet name'
+        case 'breed':
+          return 'Please enter breed'
+        case 'colorMarkings':
+          return 'Please enter color/markings'
+        case 'locationLost':
+          return 'Please enter location'
+        case 'lastSeenNotes':
+          return 'Please enter last seen details'
+        case 'ownerName':
+          return 'Please enter name'
+        case 'age':
+          return 'Please enter age'
+        case 'phoneNumber':
+          return 'Please enter phone number'
+        case 'email':
+          return 'Please enter email address'
+        case 'petType':
+          return 'Please select pet type'
+        case 'gender':
+          return 'Please select gender'
+        case 'dateLost':
+          return 'Please select date'
+        default:
+          return 'This field is required'
+      }
+    }
+
+    // Then validate the content
+    switch (name) {
+      case 'petName':
+      case 'breed':
+      case 'colorMarkings':
+      case 'locationLost':
+      case 'lastSeenNotes':
+      case 'ownerName':
+        if (/\d/.test(value)) return 'This field should not contain numbers'
+        return ''
+      
+      case 'age':
+        if (!/^\d+$/.test(value)) return 'Please enter only numbers'
+        return ''
+      
+      case 'phoneNumber':
+        if (!/^\d+$/.test(value)) return 'Please enter only numbers'
+        if (value.length < 10) return 'Phone number should have at least 10 digits'
+        return ''
+      
+      case 'email':
+        if (!value.includes('@')) return 'Please enter a valid email address'
+        return ''
+      
+      default:
+        return ''
+    }
+  }
+
+  const validateFormField = (name: string, value: any): string => {
+    // Empty field validation
+    if (!value || (typeof value === 'string' && !value.trim())) {
+      switch (name) {
+        case 'petName':
+          return 'Pet name is required'
+        case 'petType':
+          return 'Please select your pet type'
+        case 'age':
+          return 'Age is required'
+        case 'gender':
+          return 'Please select your pet\'s gender'
+        case 'colorMarkings':
+          return 'Please describe your pet\'s appearance'
+        case 'dateLost':
+          return 'Please select when your pet was lost'
+        case 'locationLost':
+          return 'Please enter where your pet was last seen'
+        case 'lastSeenNotes':
+          return 'Please provide details about when/where your pet was last seen'
+        case 'ownerName':
+          return 'Your name is required'
+        case 'phoneNumber':
+          return 'Phone number is required'
+        case 'email':
+          return 'Email address is required'
+        default:
+          return 'This field is required'
+      }
+    }
+
+    // Content validation for non-empty fields
+    switch (name) {
+      case 'petName':
+      case 'breed':
+      case 'ownerName':
+        // Allow only letters, spaces, and hyphens for names
+        if (!/^[A-Za-z\s-]+$/.test(value)) {
+          return `${name === 'ownerName' ? 'Full name' : name} should contain only letters, spaces, and hyphens`
+        }
+        if (value.length < 2) {
+          return `${name === 'ownerName' ? 'Full name' : name} should be at least 2 characters long`
+        }
+        return ''
+
+      case 'age':
+        // Allow only numbers for age, and must be reasonable
+        if (!/^\d+$/.test(value)) {
+          return 'Age must contain only numbers'
+        }
+        const age = parseInt(value)
+        if (age <= 0 || age > 30) {
+          return 'Please enter a reasonable age (1-30 years)'
+        }
+        return ''
+
+      case 'phoneNumber':
+        // Phone number validation: must be exactly 10 digits
+        if (!/^\d+$/.test(value)) {
+          return 'Phone number must contain only numbers'
+        }
+        if (value.length !== 10) {
+          return 'Phone number must be exactly 10 digits'
+        }
+        return ''
+
+      case 'email':
+        // More comprehensive email validation
+        const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/
+        if (!emailRegex.test(value)) {
+          return 'Please enter a valid email address'
+        }
+        return ''
+
+      case 'locationLost':
+        // Allow letters, numbers, spaces, and common punctuation
+        if (!/^[A-Za-z0-9\s,.-]+$/.test(value)) {
+          return 'Location should contain only letters, numbers, and basic punctuation'
+        }
+        return ''
+
+      default:
+        return ''
+    }
+  }
+
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({ ...prev, [name]: value }))
+    setTouched(prev => ({ ...prev, [name]: true }))
+    
+    // Check if the value is different from the original
+    if (isEditing && originalFormData[name as keyof LostPetFormData] !== value) {
+      setHasEdited(true)
+    }
+    
+    const error = validateFormField(name, value)
+    setErrors(prev => ({
+      ...prev,
+      [name]: error
+    }))
+  }
+
+  const handleSelectChange = (value: string, name: keyof LostPetFormData) => {
+    setFormData((prev) => ({ ...prev, [name]: value }))
+    setTouched(prev => ({ ...prev, [name]: true }))
+    
+    // Check if the value is different from the original
+    if (isEditing && originalFormData[name] !== value) {
+      setHasEdited(true)
+    }
+    
+    const error = validateFormField(name, value)
+    setErrors(prev => ({
+      ...prev,
+      [name]: error
+    }))
+  }
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setTouched(prev => ({ ...prev, photos: true }))
+    
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0] // Handle one file at a time
+
+      // Validate file size (5MB)
+      const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+      if (file.size > maxSize) {
+        toast.error(`File '${file.name}' exceeds 5MB limit`)
+        return
+      }
+
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
+        toast.error(`File '${file.name}' must be JPG, PNG, or WEBP`)
+        return
+      }
+
+      // Check if we already have 3 photos
+      if (formData.photos && formData.photos.length >= 3) {
+        toast.error("Maximum 3 photos allowed. Remove a photo to add a new one.")
+        return
+      }
+
+      // Create a new FileList with existing photos plus the new one
+      const dt = new DataTransfer()
+      if (formData.photos) {
+        Array.from(formData.photos).forEach(existingFile => dt.items.add(existingFile))
+      }
+      dt.items.add(file)
+
+      // Update form data with the new FileList
+      setFormData(prev => ({ ...prev, photos: dt.files }))
+      setErrors(prev => ({
+        ...prev,
+        photos: dt.files.length === 3 ? '' : 'Please upload 3 photos of your pet'
+      }))
+
+      // Show success message
+      toast.success(`Photo ${dt.files.length}/3 uploaded successfully`)
+    }
+  }
+
+  // Handler for confirmation actions
+  const handleConfirm = async () => {
+    try {
+      // Prepare form data for API submission
+      const formDataToSubmit = new FormData()
+      
+      // Add form fields matching the backend CreatePetReportRequest
+      formDataToSubmit.append('Type', formData.petType || 'Dog')
+      formDataToSubmit.append('Breed', formData.breed || 'Unknown')
+      formDataToSubmit.append('Color', formData.colorMarkings)
+      formDataToSubmit.append('Description', formData.lastSeenNotes)
+      formDataToSubmit.append('ReportType', 'Lost')
+      formDataToSubmit.append('LostOrFoundDate', formData.dateLost)
+      formDataToSubmit.append('Location', formData.locationLost)
+      formDataToSubmit.append('ContactName', formData.ownerName)
+      formDataToSubmit.append('Phone', formData.phoneNumber)
+      formDataToSubmit.append('Email', formData.email)
+      
+      // Add photos if available
+      if (formData.photos && formData.photos.length > 0) {
+        for (let i = 0; i < formData.photos.length; i++) {
+          formDataToSubmit.append('Photos', formData.photos[i])
+        }
+      }
+
+      // Submit to backend API
+      const response = await fetch('http://localhost:5185/api/reports', {
+        method: 'POST',
+        body: formDataToSubmit,
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`)
+      }
+
+      const result = await response.json()
+      console.log('Report submitted successfully:', result)
+
+      // Show success message in bottom right corner
+      toast.success('Lost pet report submitted successfully!', {
+        position: 'bottom-right',
+        duration: 3000
+      })
+
+      // Wait for 1 second, then navigate to pet-finder page
+      setTimeout(() => {
+        router.push('/pet-finder')
+      }, 1000)
+
+      // Reset form and state
+      setFormData({
+        petName: "",
+        petType: "",
+        breed: "",
+        age: "",
+        gender: "",
+        colorMarkings: "",
+        dateLost: "",
+        locationLost: "",
+        lastSeenNotes: "",
+        photos: null,
+        ownerName: "",
+        phoneNumber: "",
+        email: "",
+      })
+      setTouched({})
+      setErrors({})
+      setShowConfirmation(false)
+    } catch (error) {
+      console.error('Error submitting report:', error)
+      // Show error in bottom right if something fails
+      toast.error(
+        `Failed to submit report: ${error instanceof Error ? error.message : 'Please try again.'}`, 
+        {
+          position: 'bottom-right',
+          duration: 5000
+        }
+      )
+    }
+  }
+
+  const handleUpdate = () => {
+    setShowConfirmation(false) // Go back to form view
+    setHasEdited(false) // Reset edit tracking
+  }
+
+  const handleDelete = () => {
+    if (confirm('Are you sure you want to delete this report? This action cannot be undone.')) {
+      // Reset form and go back to form view
+      setFormData({
+        petName: "",
+        petType: "",
+        breed: "",
+        age: "",
+        gender: "",
+        colorMarkings: "",
+        dateLost: "",
+        locationLost: "",
+        lastSeenNotes: "",
+        photos: null,
+        ownerName: "",
+        phoneNumber: "",
+        email: "",
+      })
+      setTouched({})
+      setErrors({})
+      setShowConfirmation(false)
+      toast.success('Report deleted')
+    }
+  }
+
+  // Import the confirmation component
+  const LostPetConfirmation = dynamic(
+    () => import('@/components/pet-finder/LostPetConfirmation'),
+    { ssr: false }
+  )
+
+  return (
+    <main className="min-h-screen bg-black">
+      {showConfirmation ? (
+        <LostPetConfirmation
+          formData={formData}
+          onUpdate={handleUpdate}
+          onDelete={handleDelete}
+          onConfirm={handleConfirm}
+        />
+      ) : (
+        <section className="relative py-12 sm:py-16 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-black via-neutral-900 to-black" />
+          <div className="absolute inset-0 bg-gradient-to-t from-purple-900/5 via-transparent to-transparent" />
+          <div className="absolute -top-20 -left-20 w-60 h-60 bg-purple-500/10 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute -bottom-20 -right-20 w-80 h-80 bg-purple-400/8 rounded-full blur-3xl animate-pulse" />
+
+          <div className="relative z-10 container mx-auto px-4">
+            {/* Header Badge */}
+            <div className="max-w-4xl mx-auto mb-8 text-center animate-fadeInUp">
+              <div className="inline-flex items-center px-4 py-2 rounded-full bg-neutral-900/80 backdrop-blur-sm border border-purple-400/20 mb-6">
+                <Heart className="w-4 h-4 text-purple-400 mr-2" />
+                <span className="text-sm font-medium text-purple-200 font-inter">Report Lost Pet</span>
+              </div>
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 text-purple-200 font-urbanist">
+                Help Find Your Beloved Pet
+              </h1>
+              <p className="text-purple-300 font-inter text-lg max-w-2xl mx-auto">
+                Provide detailed information about your lost pet to help us reunite you with your furry friend.
+              </p>
+            </div>
+
+            {/* Form Container */}
+            <div className="max-w-4xl mx-auto bg-neutral-900/60 backdrop-blur-sm rounded-2xl shadow-xl p-6 sm:p-8 md:p-10 border-2 border-purple-400/20 animate-fadeInUp">
+              <form onSubmit={handleSubmit} className="space-y-8">
+                {/* Pet Details Section */}
+                <div className="space-y-6 bg-black/30 backdrop-blur-sm p-6 rounded-xl border border-purple-400/10">
+                  <h2 className="text-xl font-semibold flex items-center gap-3 text-purple-200 font-urbanist">
+                    <div className="w-10 h-10 bg-purple-900/30 rounded-full flex items-center justify-center border border-purple-400/30">
+                      <span className="font-semibold text-purple-200">1</span>
+                    </div>
+                    Pet Details
+                  </h2>
+                  
+                  <div className="grid gap-4">
+                    <div>
+                      <Label htmlFor="petName" className="text-purple-200 font-inter">Pet Name *</Label>
+                      <Input
+                        id="petName"
+                        name="petName"
+                        value={formData.petName}
+                        onChange={handleInputChange}
+                        className={`bg-neutral-900/80 border-purple-400/30 text-purple-100 placeholder:text-purple-300/50 ${errors.petName && touched.petName ? 'border-red-500' : ''}`}
+                        placeholder="Enter your pet's name"
+                        required
+                      />
+                      {errors.petName && touched.petName && (
+                        <p className="text-sm text-red-400 mt-1 font-inter">{errors.petName}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <Label htmlFor="petType" className="text-purple-200 font-inter">Pet Type *</Label>
+                        <Select
+                        onValueChange={(value: string) => handleSelectChange(value, "petType")}
+                        value={formData.petType}
+                      >
+                        <SelectTrigger className={`bg-neutral-900/80 border-purple-400/30 text-purple-100 ${errors.petType && touched.petType ? 'border-red-500' : ''}`}>
+                          <SelectValue placeholder="Select pet type" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-neutral-900 border-purple-400/30">
+                          <SelectItem value="Dog">Dog</SelectItem>
+                          <SelectItem value="Cat">Cat</SelectItem>
+                          <SelectItem value="Bird">Bird</SelectItem>
+                          <SelectItem value="Rabbit">Rabbit</SelectItem>
+                          <SelectItem value="Turtle">Turtle</SelectItem>
+                          <SelectItem value="Hamster">Hamster</SelectItem>
+                          <SelectItem value="Horse">Horse</SelectItem>
+                          <SelectItem value="Other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {errors.petType && touched.petType && (
+                        <p className="text-sm text-red-400 mt-1 font-inter">{errors.petType}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <Label htmlFor="breed" className="text-purple-200 font-inter">Breed (Optional)</Label>
+                      <Input
+                        id="breed"
+                        name="breed"
+                        value={formData.breed}
+                        onChange={handleInputChange}
+                        className={`bg-neutral-900/80 border-purple-400/30 text-purple-100 placeholder:text-purple-300/50 ${errors.breed && touched.breed ? 'border-red-500' : ''}`}
+                        placeholder="e.g., Labrador"
+                      />
+                      {errors.breed && touched.breed && (
+                        <p className="text-sm text-red-400 mt-1 font-inter">{errors.breed}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <Label htmlFor="age" className="text-purple-200 font-inter">Age / Approximate Age *</Label>
+                      <Input
+                        id="age"
+                        name="age"
+                        value={formData.age}
+                        onChange={handleInputChange}
+                        placeholder="Enter age in numbers"
+                        className={`bg-neutral-900/80 border-purple-400/30 text-purple-100 placeholder:text-purple-300/50 ${errors.age && touched.age ? 'border-red-500' : ''}`}
+                        required
+                      />
+                      {errors.age && touched.age && (
+                        <p className="text-sm text-red-400 mt-1 font-inter">{errors.age}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <Label htmlFor="gender" className="text-purple-200 font-inter">Gender *</Label>
+                      <Select
+                        onValueChange={(value: string) => handleSelectChange(value, "gender")}
+                        value={formData.gender}
+                      >
+                        <SelectTrigger className={`bg-neutral-900/80 border-purple-400/30 text-purple-100 ${errors.gender && touched.gender ? 'border-red-500' : ''}`}>
+                          <SelectValue placeholder="Select gender" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-neutral-900 border-purple-400/30">
+                          <SelectItem value="male">Male</SelectItem>
+                          <SelectItem value="female">Female</SelectItem>
+                          <SelectItem value="unknown">Unknown</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {errors.gender && touched.gender && (
+                        <p className="text-sm text-red-400 mt-1 font-inter">{errors.gender}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <Label htmlFor="colorMarkings" className="text-purple-200 font-inter">Color / Special Markings *</Label>
+                      <Textarea
+                        id="colorMarkings"
+                        name="colorMarkings"
+                        value={formData.colorMarkings}
+                        onChange={handleInputChange}
+                        placeholder="Describe any collar, spots, scars, tags, or unique features"
+                        className={`bg-neutral-900/80 border-purple-400/30 text-purple-100 placeholder:text-purple-300/50 min-h-[100px] ${errors.colorMarkings && touched.colorMarkings ? 'border-red-500' : ''}`}
+                        required
+                      />
+                      {errors.colorMarkings && touched.colorMarkings && (
+                        <p className="text-sm text-red-400 mt-1 font-inter">{errors.colorMarkings}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Lost Details Section */}
+                <div className="space-y-6 bg-black/30 backdrop-blur-sm p-6 rounded-xl border border-purple-400/10">
+                  <h2 className="text-xl font-semibold flex items-center gap-3 text-purple-200 font-urbanist">
+                    <div className="w-10 h-10 bg-purple-900/30 rounded-full flex items-center justify-center border border-purple-400/30">
+                      <MapPin className="w-5 h-5 text-purple-400" />
+                    </div>
+                    Lost Details
+                  </h2>
+                  
+                  <div className="grid gap-4">
+                    <div>
+                      <Label htmlFor="dateLost" className="text-purple-200 font-inter flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-purple-400" />
+                        Date Lost *
+                      </Label>
+                      <Input
+                        id="dateLost"
+                        name="dateLost"
+                        type="date"
+                        value={formData.dateLost}
+                        onChange={handleInputChange}
+                        className={`bg-neutral-900/80 border-purple-400/30 text-purple-100 ${errors.dateLost && touched.dateLost ? 'border-red-500' : ''}`}
+                        required
+                      />
+                      {errors.dateLost && touched.dateLost && (
+                        <p className="text-sm text-red-400 mt-1 font-inter">{errors.dateLost}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <Label htmlFor="locationLost" className="text-purple-200 font-inter">Location Lost *</Label>
+                      <Input
+                        id="locationLost"
+                        name="locationLost"
+                        value={formData.locationLost}
+                        onChange={handleInputChange}
+                        placeholder="City / Street / Area"
+                        className={`bg-neutral-900/80 border-purple-400/30 text-purple-100 placeholder:text-purple-300/50 ${errors.locationLost && touched.locationLost ? 'border-red-500' : ''}`}
+                        required
+                      />
+                      {errors.locationLost && touched.locationLost && (
+                        <p className="text-sm text-red-400 mt-1 font-inter">{errors.locationLost}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <Label htmlFor="lastSeenNotes" className="text-purple-200 font-inter">Last Seen Notes *</Label>
+                      <Textarea
+                        id="lastSeenNotes"
+                        name="lastSeenNotes"
+                        value={formData.lastSeenNotes}
+                        onChange={handleInputChange}
+                        placeholder="Describe behavior, direction it ran, any distinctive traits"
+                        className={`bg-neutral-900/80 border-purple-400/30 text-purple-100 placeholder:text-purple-300/50 min-h-[100px] ${errors.lastSeenNotes && touched.lastSeenNotes ? 'border-red-500' : ''}`}
+                        required
+                      />
+                      {errors.lastSeenNotes && touched.lastSeenNotes && (
+                        <p className="text-sm text-red-400 mt-1 font-inter">{errors.lastSeenNotes}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Photo Upload Section */}
+                <div className="space-y-6 bg-black/30 backdrop-blur-sm p-6 rounded-xl border border-purple-400/10">
+                  <h2 className="text-xl font-semibold flex items-center gap-3 text-purple-200 font-urbanist">
+                    <div className="w-10 h-10 bg-purple-900/30 rounded-full flex items-center justify-center border border-purple-400/30">
+                      <Camera className="w-5 h-5 text-purple-400" />
+                    </div>
+                    Photos
+                  </h2>
+                  
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="photos" className="text-base text-purple-200 font-inter">Upload Photos (Required) *</Label>
+                      <span className="text-sm text-purple-300 font-medium font-inter">
+                        {formData.photos ? `${formData.photos.length}/3 photos uploaded` : '0/3 photos'}
+                      </span>
+                    </div>
+                    
+                    <div className="border-2 border-dashed border-purple-400/30 rounded-xl p-8 bg-neutral-900/40">
+                      <div className="flex flex-col items-center justify-center gap-4">
+                        <div className="w-16 h-16 bg-purple-900/30 rounded-full flex items-center justify-center border border-purple-400/30">
+                          <Camera className="w-8 h-8 text-purple-400" />
+                        </div>
+                        
+                        <div className="text-center">
+                          <Input
+                            id="photos"
+                            name="photos"
+                            type="file"
+                            onChange={handleFileChange}
+                            accept="image/jpeg,image/png,image/webp"
+                            className="hidden"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="mb-2 bg-purple-900/30 border-purple-400/30 text-purple-200 hover:bg-purple-900/50 hover:text-purple-100 font-inter"
+                            onClick={() => document.getElementById('photos')?.click()}
+                            disabled={formData.photos?.length === 3}
+                          >
+                            {formData.photos?.length === 3 ? 'Max Photos Added' : 'Add Photo'}
+                          </Button>
+                          <p className="text-sm text-purple-300 font-medium font-inter">
+                            Add up to 3 photos of your pet
+                          </p>
+                          <div className="flex flex-col gap-1 mt-2">
+                            <p className="text-xs text-purple-400 font-inter">
+                              • Required: 3 photos of your pet
+                            </p>
+                            <p className="text-xs text-purple-400 font-inter">
+                              • Supported formats: JPG, PNG, WEBP
+                            </p>
+                            <p className="text-xs text-purple-400 font-inter">
+                              • Maximum size: 5MB per photo
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    {errors.photos && touched.photos && (
+                      <p className="text-sm text-red-400 mt-1 font-inter">{errors.photos}</p>
+                    )}
+
+                    {formData.photos && formData.photos.length > 0 && (
+                      <div className="grid grid-cols-3 gap-4 mt-4">
+                        {Array.from(formData.photos).map((file, index) => (
+                          <div
+                            key={index}
+                            className="relative aspect-square rounded-lg overflow-hidden bg-neutral-900/80 border border-purple-400/20"
+                          >
+                            <img
+                              src={URL.createObjectURL(file)}
+                              alt={`Preview ${index + 1}`}
+                              className="w-full h-full object-cover"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const dt = new DataTransfer()
+                                const files = Array.from(formData.photos || [])
+                                files.splice(index, 1)
+                                files.forEach(file => dt.items.add(file))
+                                setFormData(prev => ({ ...prev, photos: dt.files }))
+                              }}
+                              className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+                            >
+                              <svg
+                                className="w-4 h-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M6 18L18 6M6 6l12 12"
+                                />
+                              </svg>
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Owner Contact Details Section */}
+                <div className="space-y-6 bg-black/30 backdrop-blur-sm p-6 rounded-xl border border-purple-400/10">
+                  <h2 className="text-xl font-semibold flex items-center gap-3 text-purple-200 font-urbanist">
+                    <div className="w-10 h-10 bg-purple-900/30 rounded-full flex items-center justify-center border border-purple-400/30">
+                      <User className="w-5 h-5 text-purple-400" />
+                    </div>
+                    Owner Contact Details
+                  </h2>
+                  
+                  <div className="grid gap-4">
+                    <div>
+                      <Label htmlFor="ownerName" className="text-purple-200 font-inter">Full Name *</Label>
+                      <Input
+                        id="ownerName"
+                        name="ownerName"
+                        value={formData.ownerName}
+                        onChange={handleInputChange}
+                        className={`bg-neutral-900/80 border-purple-400/30 text-purple-100 placeholder:text-purple-300/50 ${errors.ownerName && touched.ownerName ? 'border-red-500' : ''}`}
+                        placeholder="Enter your full name"
+                        required
+                      />
+                      {errors.ownerName && touched.ownerName && (
+                        <p className="text-sm text-red-400 mt-1 font-inter">{errors.ownerName}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <Label htmlFor="phoneNumber" className="text-purple-200 font-inter">Phone Number *</Label>
+                      <Input
+                        id="phoneNumber"
+                        name="phoneNumber"
+                        type="tel"
+                        value={formData.phoneNumber}
+                        onChange={handleInputChange}
+                        className={`bg-neutral-900/80 border-purple-400/30 text-purple-100 placeholder:text-purple-300/50 ${errors.phoneNumber && touched.phoneNumber ? 'border-red-500' : ''}`}
+                        placeholder="Enter numbers only"
+                        required
+                      />
+                      {errors.phoneNumber && touched.phoneNumber && (
+                        <p className="text-sm text-red-400 mt-1 font-inter">{errors.phoneNumber}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <Label htmlFor="email" className="text-purple-200 font-inter">Email Address *</Label>
+                      <Input
+                        id="email"
+                        name="email"
+                        type="email"
+                        value={formData.email}
+                        onChange={handleInputChange}
+                        className={`bg-neutral-900/80 border-purple-400/30 text-purple-100 placeholder:text-purple-300/50 ${errors.email && touched.email ? 'border-red-500' : ''}`}
+                        placeholder="your.email@example.com"
+                        required
+                      />
+                      {errors.email && touched.email && (
+                        <p className="text-sm text-red-400 mt-1 font-inter">{errors.email}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Submit Button */}
+                <Button 
+                  type="submit" 
+                  className="w-full bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white font-semibold py-6 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg shadow-purple-500/20 font-inter"
+                  disabled={!isFormValid()}
+                >
+                  <Sparkles className="w-5 h-5 mr-2" />
+                  Submit Report
+                </Button>
+              </form>
+            </div>
+          </div>
+        </section>
+      )}
+    </main>
+  )
+}
