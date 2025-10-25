@@ -11,7 +11,7 @@ const items = [
 	{
 		title: "Premium Pet Supplies",
 		subtitle: "Curated food, toys & essentials",
-		img: "https://images.unsplash.com/photo-1517849845537-4d257902454a?w=800&q=80",
+		img: "https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=800&auto=format&fit=crop&q=80",
 		badge: "Best Sellers",
 		price: "From $9.99",
 		rating: 4.9,
@@ -20,7 +20,7 @@ const items = [
 	{
 		title: "Expert Grooming",
 		subtitle: "Certified professionals near you",
-		img: "https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?w=800&q=80",
+		img: "https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?w=800&auto=format&fit=crop&q=80",
 		badge: "Verified",
 		price: "From $25",
 		rating: 4.8,
@@ -29,7 +29,7 @@ const items = [
 	{
 		title: "Professional Training",
 		subtitle: "Behavior experts & specialists",
-		img: "https://images.unsplash.com/photo-1558944351-9f9a5d4f4f0a?w=800&q=80",
+		img: "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=800&auto=format&fit=crop&q=80",
 		badge: "Top Rated",
 		price: "From $35",
 		rating: 5.0,
@@ -38,7 +38,7 @@ const items = [
 	{
 		title: "Luxury Accessories",
 		subtitle: "Designer beds & comfort items",
-		img: "https://images.unsplash.com/photo-1601758123927-3d6f52e5e44c?w=800&q=80",
+		img: "https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=800&auto=format&fit=crop&q=80",
 		badge: "Premium",
 		price: "From $19.99",
 		rating: 4.7,
@@ -47,7 +47,7 @@ const items = [
 	{
 		title: "Adoption Center",
 		subtitle: "Verified listings & profiles",
-		img: "https://images.unsplash.com/photo-1517423440428-a5a00ad493e8?w=800&q=80",
+		img: "https://images.unsplash.com/photo-1450778869180-41d0601e046e?w=800&auto=format&fit=crop&q=80",
 		badge: "Trusted",
 		price: "Free to browse",
 		rating: 4.9,
@@ -57,10 +57,27 @@ const items = [
 
 export default function MarketplaceHighlights() {
 	const [mounted, setMounted] = useState(false)
+	const [imageErrors, setImageErrors] = useState<Record<number, boolean>>({})
 
 	useEffect(() => {
 		setMounted(true)
 	}, [])
+
+	const handleImageError = (index: number) => {
+		setImageErrors((prev) => ({ ...prev, [index]: true }))
+	}
+
+	// Fallback image URL
+	const getFallbackImage = (index: number) => {
+		const fallbackImages = [
+			"https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=800&auto=format&fit=crop&q=80",
+			"https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?w=800&auto=format&fit=crop&q=80",
+			"https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=800&auto=format&fit=crop&q=80",
+			"https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=800&auto=format&fit=crop&q=80",
+			"https://images.unsplash.com/photo-1450778869180-41d0601e046e?w=800&auto=format&fit=crop&q=80",
+		]
+		return fallbackImages[index % fallbackImages.length]
+	}
 
 	if (!mounted) {
 		return (
@@ -118,13 +135,15 @@ export default function MarketplaceHighlights() {
 							style={{ animationDelay: `${idx * 0.1}s` }}
 						>
 							{/* Image Container */}
-							<div className="relative aspect-[16/9] overflow-hidden">
+							<div className="relative aspect-[16/9] overflow-hidden bg-neutral-800">
 								<Image
-									src={item.img}
+									src={imageErrors[idx] ? getFallbackImage(idx) : item.img}
 									alt={item.title}
 									fill
 									sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
 									className="object-cover group-hover:scale-110 transition-transform duration-700"
+									onError={() => handleImageError(idx)}
+									loading="lazy"
 								/>
 
 								<div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
