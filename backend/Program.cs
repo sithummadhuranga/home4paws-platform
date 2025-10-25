@@ -290,7 +290,7 @@ using (var scope = app.Services.CreateScope())
             FirstName = "Admin",
             LastName = "User", 
             Email = "admin@home4paws.lk",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword("admin123"),
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin123!"),
             Role = "Admin",
             IsActive = true,
             EmailVerified = true,
@@ -300,7 +300,7 @@ using (var scope = app.Services.CreateScope())
         
         context.Users.Add(adminUser);
         context.SaveChanges();
-        logger.LogInformation("👤 Admin user seeded: admin@home4paws.lk / admin123");
+        logger.LogInformation("👤 Admin user seeded: admin@home4paws.lk / Admin123!");
     }
     
     logger.LogInformation("🔧 In-Memory Database initialized successfully");
