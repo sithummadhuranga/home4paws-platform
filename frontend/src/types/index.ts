@@ -97,6 +97,20 @@ export interface CreateUpdateAddressDto {
   isDefault: boolean;
 }
 
+export interface ShippingAddress {
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email: string;
+  address: string;
+  apartment?: string;
+  city: string;
+  province: string;
+  district: string;
+  postalCode: string;
+  country: string;
+}
+
 // Order related types
 export interface OrderItem {
   id: number;

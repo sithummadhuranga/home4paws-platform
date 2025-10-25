@@ -1,9 +1,5 @@
 "use client"
 
-export const dynamic = 'force-dynamic'
-export const fetchCache = 'force-no-store'
-export const revalidate = 0
-
 import { useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { CheckCircle2, Home, Search, ArrowRight } from "lucide-react"
