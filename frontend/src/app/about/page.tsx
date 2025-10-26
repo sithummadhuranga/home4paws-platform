@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import Header from "@/components/layout/Header"
 import Footer from "@/components/layout/Footer"
 import { Container } from "@/components/common/Container"
+import { BreedRecognition } from "@/components/features/BreedRecognition"
 
 export default function AboutPage() {
   return (
@@ -141,6 +142,13 @@ export default function AboutPage() {
                 </div>
               </div>
             </div>
+          </Container>
+        </section>
+
+        {/* AI Breed Recognition Section */}
+        <section className="py-16 sm:py-20 bg-black">
+          <Container>
+            <BreedRecognition />
           </Container>
         </section>
 
